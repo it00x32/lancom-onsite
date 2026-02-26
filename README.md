@@ -74,6 +74,7 @@ http://server:3000/?host=192.168.1.1&community=public
 | LLDP-Nachbarn | Benachbarte Geräte via LLDP |
 | WiFi Mesh | WDS-Links mit Band, Status, Signal, Peer-MAC, Tx/Rx, WPA (nur LCOS LX) |
 | L2TPv3 | L2TP-Endpunkte mit Gegenstelle, Remote-IP, Port, Status, Interface, Verbindungszeit (nur LCOS LX) |
+| Scanner | Subnetz/IP-Bereich nach LANCOM-Geräten durchsuchen, direkt auswählen und abfragen |
 
 ## Unterstützte Geräte
 
