@@ -437,6 +437,84 @@ async function snmpWlan(host, community, version) {
   return { entries, count: entries.length };
 }
 
+// ── Netzwerk-Scanner ──────────────────────────────────────────────────────────
+
+function subnetToHosts(input) {
+  input = input.trim();
+
+  // Bereich: 192.168.1.1-254  oder  192.168.1.1-192.168.1.254
+  const rangeShort = input.match(/^(\d+\.\d+\.\d+)\.(\d+)-(\d+)$/);
+  if (rangeShort) {
+    const base = rangeShort[1], from = parseInt(rangeShort[2]), to = parseInt(rangeShort[3]);
+    if (from > to || to > 255) throw new Error('Ungültiger Bereich');
+    const hosts = [];
+    for (let i = from; i <= to; i++) hosts.push(`${base}.${i}`);
+    return hosts;
+  }
+
+  // CIDR: 192.168.1.0/24
+  const cidr = input.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)\/(\d+)$/);
+  if (!cidr) throw new Error('Ungültiges Format – bitte CIDR (z.B. 192.168.1.0/24) oder Bereich (z.B. 192.168.1.1-254) angeben');
+  const [, a, b, c, d, prefix] = cidr;
+  const mask = parseInt(prefix, 10);
+  if (mask < 16 || mask > 30) throw new Error('Subnetzmaske muss zwischen /16 und /30 liegen');
+  const base     = ((+a << 24) | (+b << 16) | (+c << 8) | +d) >>> 0;
+  const hostMask = (0xFFFFFFFF >>> mask) >>> 0;
+  const net      = (base & ~hostMask) >>> 0;
+  const bcast    = (net | hostMask) >>> 0;
+  const hosts    = [];
+  for (let i = net + 1; i < bcast; i++) {
+    hosts.push(`${(i >>> 24) & 0xFF}.${(i >>> 16) & 0xFF}.${(i >>> 8) & 0xFF}.${i & 0xFF}`);
+  }
+  return hosts;
+}
+
+function runSnmpGet(host, community, version, oids, timeout = 2000) {
+  return new Promise((resolve) => {
+    const args = ['-v', version, '-c', community, '-t', '1', '-r', '0', '-On', host, ...oids];
+    const proc = spawn('snmpget', args);
+    let out = '';
+    proc.stdout.on('data', d => (out += d));
+    proc.stderr.on('data', () => {});
+    const timer = setTimeout(() => { try { proc.kill(); } catch {} }, timeout);
+    proc.on('close', () => { clearTimeout(timer); resolve(out); });
+    proc.on('error', () => { clearTimeout(timer); resolve(''); });
+  });
+}
+
+function detectLancomOs(sysDescr, sysObjectId) {
+  const desc = (sysDescr || '').toUpperCase();
+  if (desc.includes('LCOS LX')) return 'LCOS LX';
+  if (desc.includes('LCOS SX')) return 'LCOS SX';
+  if (desc.includes('LCOS FX')) return 'LCOS FX';
+  if (desc.includes('LCOS'))    return 'LCOS';
+  if ((sysObjectId || '').includes('.2356.')) return 'LANCOM';
+  return null;
+}
+
+async function scanHost(host, community, version) {
+  const out = await runSnmpGet(host, community, version, [
+    '1.3.6.1.2.1.1.1.0', // sysDescr
+    '1.3.6.1.2.1.1.2.0', // sysObjectID
+    '1.3.6.1.2.1.1.5.0', // sysName
+    '1.3.6.1.2.1.1.6.0', // sysLocation
+  ]);
+  if (!out.trim()) return null;
+
+  let sysDescr = '', sysObjectId = '', sysName = '', sysLocation = '';
+  out.split('\n').forEach(line => {
+    if (/\.1\.1\.0\s*=/.test(line)) sysDescr    = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.1\.2\.0\s*=/.test(line)) sysObjectId = (line.match(/OID:\s*(.+)/) || [])[1]?.trim() || '';
+    if (/\.1\.5\.0\s*=/.test(line)) sysName     = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.1\.6\.0\s*=/.test(line)) sysLocation = snmpVal(line.split('=').slice(1).join('='));
+  });
+
+  const os = detectLancomOs(sysDescr, sysObjectId);
+  if (!os) return null;
+
+  return { ip: host, sysName, sysDescr, sysLocation, os };
+}
+
 // ── HTTP Server ───────────────────────────────────────────────────────────────
 
 const server = http.createServer(async (req, res) => {
@@ -445,6 +523,58 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  // Netzwerk-Scanner (SSE-Stream)
+  if (req.method === 'POST' && req.url === '/scan') {
+    let body = '';
+    req.on('data', d => (body += d));
+    req.on('end', async () => {
+      let hosts, community, version;
+      try {
+        const parsed = JSON.parse(body);
+        if (!parsed.subnet) throw new Error('subnet fehlt');
+        community = parsed.community || 'public';
+        version   = parsed.version   || '2c';
+        hosts     = subnetToHosts(parsed.subnet);
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+        return;
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection':    'keep-alive',
+      });
+
+      const send = (obj) => { try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch {} };
+
+      send({ type: 'start', total: hosts.length });
+
+      const CONCURRENCY = 30;
+      let idx = 0, done = 0, found = 0;
+
+      async function worker() {
+        while (idx < hosts.length) {
+          const host = hosts[idx++];
+          const device = await scanHost(host, community, version);
+          done++;
+          if (device) {
+            found++;
+            send({ type: 'found', device, scanned: done, total: hosts.length, found });
+          } else if (done % 5 === 0 || done === hosts.length) {
+            send({ type: 'progress', scanned: done, total: hosts.length, found });
+          }
+        }
+      }
+
+      await Promise.all(Array(Math.min(CONCURRENCY, hosts.length)).fill(null).map(() => worker()));
+      send({ type: 'done', total: hosts.length, found });
+      res.end();
+    });
+    return;
+  }
 
   // SNMP endpoint
   if (req.method === 'POST' && req.url === '/snmp') {
