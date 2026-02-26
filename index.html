@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LANCOM OnSite</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f1117;
+  --bg2:      #181c27;
+  --bg3:      #1e2333;
+  --border:   #2a3050;
+  --blue:     #2563eb;
+  --blue2:    #1d4ed8;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --yellow:   #f59e0b;
+  --text:     #e2e8f0;
+  --text2:    #94a3b8;
+  --text3:    #64748b;
+  --radius:   8px;
+}
+
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 14px; min-height: 100vh; }
+
+/* Header */
+.header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px; }
+.header-logo { font-size: 18px; font-weight: 700; color: var(--blue); letter-spacing: -0.5px; white-space: nowrap; }
+.header-logo span { color: var(--text2); font-weight: 400; }
+
+/* Settings bar */
+.settings-bar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.settings-bar label { color: var(--text2); font-size: 12px; white-space: nowrap; }
+.settings-bar input, .settings-bar select {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: 6px 10px; font-size: 13px; outline: none; transition: border-color .15s;
+}
+.settings-bar input:focus, .settings-bar select:focus { border-color: var(--blue); }
+.settings-bar input[type=text] { width: 160px; }
+.settings-bar input[name=community] { width: 120px; }
+.btn { background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .15s; white-space: nowrap; }
+.btn:hover { background: var(--blue2); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.sep { width: 1px; height: 24px; background: var(--border); }
+.refresh-label { display: flex; align-items: center; gap: 6px; color: var(--text2); font-size: 12px; cursor: pointer; }
+.refresh-label input { accent-color: var(--blue); }
+#refresh-countdown { color: var(--text3); font-size: 11px; }
+
+/* Status */
+.status-bar { padding: 8px 20px; font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; min-height: 34px; }
+.status-bar.loading { color: var(--blue); }
+.status-bar.error   { color: var(--red); }
+.status-bar.ok      { color: var(--green); }
+.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; padding: 0 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+.tab { padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab .badge { display: inline-block; background: var(--bg3); color: var(--text3); font-size: 11px; padding: 1px 6px; border-radius: 10px; margin-left: 5px; }
+.tab.active .badge { background: var(--blue); color: #fff; }
+
+/* Content */
+.content { padding: 20px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Info cards (system) */
+.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.info-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.info-card .value { font-size: 15px; font-weight: 600; color: var(--text); word-break: break-all; }
+.info-card .value.mono { font-family: monospace; font-size: 13px; }
+
+/* Tables */
+.table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-title { padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-title .cnt { color: var(--text3); font-weight: 400; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg3); color: var(--text3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+td { padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+td.mono { font-family: monospace; font-size: 12px; }
+
+/* Status dot */
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
+.dot-green  { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.dot-red    { background: var(--red); }
+.dot-yellow { background: var(--yellow); }
+.dot-gray   { background: var(--text3); }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+.badge-red    { background: rgba(239,68,68,.15);   color: var(--red); }
+.badge-yellow { background: rgba(245,158,11,.15);  color: var(--yellow); }
+.badge-gray   { background: rgba(100,116,139,.15); color: var(--text3); }
+
+/* Placeholder */
+.empty { color: var(--text3); text-align: center; padding: 48px 20px; font-size: 13px; }
+.empty .icon { font-size: 32px; margin-bottom: 8px; opacity: .4; }
+
+/* Search */
+.search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.search-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 12px; font-size: 13px; outline: none; width: 260px; }
+.search-input:focus { border-color: var(--blue); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">LANCOM <span>OnSite</span></div>
+  <div style="flex:1"></div>
+  <div id="device-name" style="color:var(--text2);font-size:13px;"></div>
+</div>
+
+<div class="settings-bar">
+  <label>IP / Hostname</label>
+  <input type="text" id="host" placeholder="192.168.1.1" value="">
+  <label>Community</label>
+  <input type="text" name="community" id="community" placeholder="public" value="public">
+  <label>Version</label>
+  <select id="version">
+    <option value="2c" selected>SNMPv2c</option>
+    <option value="1">SNMPv1</option>
+  </select>
+  <button class="btn" id="btn-query" onclick="queryAll()">Abfragen</button>
+  <div class="sep"></div>
+  <label class="refresh-label">
+    <input type="checkbox" id="auto-refresh"> Auto-Refresh
+  </label>
+  <span id="refresh-countdown"></span>
+</div>
+
+<div id="status-bar" class="status-bar">Gerät eingeben und auf „Abfragen" klicken.</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('system')"    id="tab-system">    Gerät</div>
+  <div class="tab"        onclick="showTab('interfaces')"id="tab-interfaces">Interfaces <span class="badge" id="badge-interfaces"></span></div>
+  <div class="tab"        onclick="showTab('mac')"       id="tab-mac">       Verbundene Geräte <span class="badge" id="badge-mac"></span></div>
+  <div class="tab"        onclick="showTab('wlan')"      id="tab-wlan">      WLAN-Clients <span class="badge" id="badge-wlan"></span></div>
+  <div class="tab"        onclick="showTab('lldp')"      id="tab-lldp">      LLDP-Nachbarn <span class="badge" id="badge-lldp"></span></div>
+</div>
+
+<div class="content">
+
+  <!-- SYSTEM -->
+  <div class="panel active" id="panel-system">
+    <div class="info-grid" id="sys-cards">
+      <div class="empty"><div class="icon">🔌</div>Noch keine Daten</div>
+    </div>
+  </div>
+
+  <!-- INTERFACES -->
+  <div class="panel" id="panel-interfaces">
+    <div class="search-row">
+      <input class="search-input" id="search-iface" placeholder="Interface suchen…" oninput="filterTable('tbl-ifaces', this.value, [0,1])">
+    </div>
+    <div class="table-wrap">
+      <div class="table-title">Interfaces <span class="cnt" id="cnt-ifaces"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-ifaces">
+          <thead><tr><th>Name</th><th>Beschreibung</th><th>Status</th><th>Speed</th><th>RX</th><th>TX</th></tr></thead>
+          <tbody><tr><td colspan="6" class="empty">Noch keine Daten</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAC / VERBUNDENE GERÄTE -->
+  <div class="panel" id="panel-mac">
+    <div class="search-row">
+      <input class="search-input" id="search-mac" placeholder="MAC / IP / Port suchen…" oninput="filterTable('tbl-mac', this.value, [0,1,2])">
+    </div>
+    <div class="table-wrap">
+      <div class="table-title">Verbundene Geräte <span class="cnt" id="cnt-mac"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-mac">
+          <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>Port / Interface</th></tr></thead>
+          <tbody><tr><td colspan="3" class="empty">Noch keine Daten</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- WLAN -->
+  <div class="panel" id="panel-wlan">
+    <div class="search-row">
+      <input class="search-input" id="search-wlan" placeholder="MAC / IP / SSID suchen…" oninput="filterTable('tbl-wlan', this.value, [0,1,2])">
+    </div>
+    <div class="table-wrap">
+      <div class="table-title">WLAN-Clients <span class="cnt" id="cnt-wlan"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-wlan">
+          <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th></tr></thead>
+          <tbody><tr><td colspan="5" class="empty">Noch keine Daten</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLDP -->
+  <div class="panel" id="panel-lldp">
+    <div class="table-wrap">
+      <div class="table-title">LLDP-Nachbarn <span class="cnt" id="cnt-lldp"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-lldp">
+          <thead><tr><th>Lokaler Port</th><th>Gerätename</th><th>Remote Port</th><th>Systembeschreibung</th></tr></thead>
+          <tbody><tr><td colspan="4" class="empty">Noch keine Daten</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function q(id) { return document.getElementById(id); }
+
+function setStatus(msg, type = '') {
+  const el = q('status-bar');
+  el.className = 'status-bar' + (type ? ' ' + type : '');
+  el.innerHTML = type === 'loading'
+    ? `<span class="spinner"></span> ${msg}`
+    : msg;
+}
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024)       return n + ' B';
+  if (n < 1048576)    return (n/1024).toFixed(1) + ' KB';
+  if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
+  return (n/1073741824).toFixed(2) + ' GB';
+}
+
+function fmtSpeed(mbps, fallbackBps) {
+  if (mbps && mbps > 0) return mbps >= 1000 ? (mbps/1000) + ' Gbit/s' : mbps + ' Mbit/s';
+  const bps = Number(fallbackBps) || 0;
+  if (bps <= 0) return '—';
+  if (bps >= 1e9) return (bps/1e9) + ' Gbit/s';
+  if (bps >= 1e6) return (bps/1e6) + ' Mbit/s';
+  return (bps/1e3) + ' kbit/s';
+}
+
+function fmtUptime(raw) {
+  if (!raw) return '—';
+  // "(123456) 0:14:15.06" oder "Timeticks: (123456) 1:23:45.60"
+  const m = raw.match(/\((\d+)\)/);
+  if (!m) return raw;
+  let s = Math.floor(parseInt(m[1]) / 100);
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600);  s %= 3600;
+  const mi = Math.floor(s / 60);   s %= 60;
+  let out = '';
+  if (d > 0) out += d + 'd ';
+  out += String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  return out;
+}
+
+function statusBadge(val) {
+  const up = val === '1' || val === 'up(1)' || String(val).startsWith('up');
+  return up
+    ? `<span class="dot dot-green"></span><span class="badge badge-green">UP</span>`
+    : `<span class="dot dot-red"></span><span class="badge badge-red">DOWN</span>`;
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  q('tab-' + name).classList.add('active');
+  q('panel-' + name).classList.add('active');
+}
+
+function filterTable(tblId, search, cols) {
+  const s = search.toLowerCase();
+  const rows = q(tblId).querySelectorAll('tbody tr');
+  rows.forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    const match = cols.some(c => tds[c] && tds[c].textContent.toLowerCase().includes(s));
+    tr.style.display = (!s || match) ? '' : 'none';
+  });
+}
+
+function setBadge(id, n) {
+  const el = q('badge-' + id);
+  if (el) { el.textContent = n > 0 ? n : ''; }
+}
+
+// ── SNMP request ─────────────────────────────────────────────────────────────
+
+async function snmp(type) {
+  const host      = q('host').value.trim();
+  const community = q('community').value.trim() || 'public';
+  const version   = q('version').value;
+  const res = await fetch('/snmp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ host, community, version, type }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+// ── Render functions ──────────────────────────────────────────────────────────
+
+function renderSystem(data) {
+  const cards = [
+    { label: 'Gerätename',    value: data.sysName     || '—' },
+    { label: 'Beschreibung',  value: data.sysDescr    || '—', mono: true },
+    { label: 'Standort',      value: data.sysLocation || '—' },
+    { label: 'Kontakt',       value: data.sysContact  || '—' },
+    { label: 'Uptime',        value: fmtUptime(data.sysUpTime) },
+  ];
+  q('sys-cards').innerHTML = cards.map(c =>
+    `<div class="info-card"><div class="label">${c.label}</div><div class="value${c.mono?' mono':''}">${h(c.value)}</div></div>`
+  ).join('');
+  q('device-name').textContent = data.sysName || '';
+}
+
+function renderInterfaces(data) {
+  const tbody = q('tbl-ifaces').querySelector('tbody');
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Interfaces gefunden</td></tr>`; return; }
+  tbody.innerHTML = data.map(i => {
+    const name  = h(i.name || i.descr || `If ${i.idx}`);
+    const descr = i.name && i.descr !== i.name ? h(i.descr) : '';
+    const speed = fmtSpeed(i.highSpeed, i.speed);
+    return `<tr>
+      <td><strong>${name}</strong></td>
+      <td class="mono" style="color:var(--text2)">${descr}</td>
+      <td>${statusBadge(i.operStatus)}</td>
+      <td style="color:var(--text2)">${speed}</td>
+      <td class="mono">${fmtBytes(i.inOctets)}</td>
+      <td class="mono">${fmtBytes(i.outOctets)}</td>
+    </tr>`;
+  }).join('');
+  const up = data.filter(i => i.operStatus === '1' || String(i.operStatus).startsWith('up')).length;
+  q('cnt-ifaces').textContent = `${up} up / ${data.length} gesamt`;
+  setBadge('interfaces', data.length);
+}
+
+function renderMac(data) {
+  const tbody = q('tbl-mac').querySelector('tbody');
+  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="3" class="empty">Keine Einträge gefunden</td></tr>`; return; }
+  tbody.innerHTML = data.entries.map(e => `<tr>
+    <td class="mono">${h(e.mac)}</td>
+    <td class="mono" style="color:var(--text2)">${e.ip ? h(e.ip) : '<span style="color:var(--text3)">—</span>'}</td>
+    <td>${h(e.port)}</td>
+  </tr>`).join('');
+  q('cnt-mac').textContent = `${data.count} Gerät${data.count !== 1 ? 'e' : ''}`;
+  setBadge('mac', data.count);
+}
+
+function renderWlan(data) {
+  const tbody = q('tbl-wlan').querySelector('tbody');
+  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">Keine WLAN-Clients gefunden<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Access Points werden unterstützt</small></td></tr>`; return; }
+  tbody.innerHTML = data.entries.map(e => `<tr>
+    <td class="mono">${h(e.mac)}</td>
+    <td class="mono" style="color:var(--text2)">${e.ip ? h(e.ip) : '<span style="color:var(--text3)">—</span>'}</td>
+    <td>${h(e.ssid) || '<span style="color:var(--text3)">—</span>'}</td>
+    <td>${e.band ? `<span class="badge badge-gray">${h(e.band)}</span>` : '—'}</td>
+    <td style="color:var(--text2)">${e.channel ? `CH ${e.channel}` : '—'}</td>
+  </tr>`).join('');
+  q('cnt-wlan').textContent = `${data.count} Client${data.count !== 1 ? 's' : ''}`;
+  setBadge('wlan', data.count);
+}
+
+function renderLldp(data) {
+  const tbody = q('tbl-lldp').querySelector('tbody');
+  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">Keine LLDP-Nachbarn gefunden</td></tr>`; return; }
+  tbody.innerHTML = data.entries.map(e => `<tr>
+    <td><strong>${h(e.localPortName)}</strong></td>
+    <td>${h(e.remSysName || '—')}</td>
+    <td class="mono" style="color:var(--text2)">${h(e.remPortDesc || e.remPortId || '—')}</td>
+    <td style="color:var(--text2);font-size:12px;">${h((e.remSysDesc || '').split('\n')[0] || '—')}</td>
+  </tr>`).join('');
+  q('cnt-lldp').textContent = `${data.count} Nachbar${data.count !== 1 ? 'n' : ''}`;
+  setBadge('lldp', data.count);
+}
+
+function h(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Main query ────────────────────────────────────────────────────────────────
+
+let _refreshTimer = null;
+let _refreshInterval = 30;
+let _countdown = 0;
+
+async function queryAll() {
+  const host = q('host').value.trim();
+  if (!host) { setStatus('Bitte IP-Adresse eingeben.', 'error'); return; }
+
+  q('btn-query').disabled = true;
+  setStatus(`Abfrage von ${host} …`, 'loading');
+
+  const t0 = Date.now();
+  let errors = 0;
+
+  try {
+    // Parallel: System + Interfaces + MAC + WLAN + LLDP
+    const [sys, ifaces, mac, wlan, lldp] = await Promise.allSettled([
+      snmp('system'),
+      snmp('interfaces'),
+      snmp('mac'),
+      snmp('wlan'),
+      snmp('lldp'),
+    ]);
+
+    if (sys.status === 'fulfilled')    renderSystem(sys.value);    else { q('sys-cards').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(sys.reason?.message || 'Fehler')}</div>`; errors++; }
+    if (ifaces.status === 'fulfilled') renderInterfaces(ifaces.value); else { q('tbl-ifaces').querySelector('tbody').innerHTML = `<tr><td colspan="6" class="empty">${h(ifaces.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (mac.status === 'fulfilled')    renderMac(mac.value);       else { q('tbl-mac').querySelector('tbody').innerHTML    = `<tr><td colspan="3" class="empty">${h(mac.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (wlan.status === 'fulfilled')   renderWlan(wlan.value);     else { q('tbl-wlan').querySelector('tbody').innerHTML   = `<tr><td colspan="5" class="empty">${h(wlan.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (lldp.status === 'fulfilled')   renderLldp(lldp.value);     else { q('tbl-lldp').querySelector('tbody').innerHTML   = `<tr><td colspan="4" class="empty">${h(lldp.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+
+    const ms = Date.now() - t0;
+    if (errors === 0) setStatus(`Abfrage erfolgreich (${(ms/1000).toFixed(1)}s) — ${new Date().toLocaleTimeString('de-DE')}`, 'ok');
+    else              setStatus(`Abfrage abgeschlossen mit ${errors} Fehlern (${(ms/1000).toFixed(1)}s) — ${new Date().toLocaleTimeString('de-DE')}`, 'error');
+  } catch(err) {
+    setStatus('Fehler: ' + err.message, 'error');
+  }
+
+  q('btn-query').disabled = false;
+  scheduleRefresh();
+}
+
+function scheduleRefresh() {
+  if (_refreshTimer) clearInterval(_refreshTimer);
+  if (!q('auto-refresh').checked) { q('refresh-countdown').textContent = ''; return; }
+  _countdown = _refreshInterval;
+  _refreshTimer = setInterval(() => {
+    _countdown--;
+    q('refresh-countdown').textContent = `(${_countdown}s)`;
+    if (_countdown <= 0) { clearInterval(_refreshTimer); queryAll(); }
+  }, 1000);
+}
+
+q('auto-refresh').addEventListener('change', () => {
+  if (q('auto-refresh').checked) scheduleRefresh();
+  else { clearInterval(_refreshTimer); q('refresh-countdown').textContent = ''; }
+});
+
+// Enter = Abfragen
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.target.id === 'host' || e.target.id === 'community')) queryAll();
+});
+
+// URL-Parameter vorbelegen
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('host')) q('host').value = urlParams.get('host');
+if (urlParams.get('community')) q('community').value = urlParams.get('community');
+if (urlParams.get('host')) queryAll();
+</script>
+</body>
+</html>
