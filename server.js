@@ -271,6 +271,123 @@ async function snmpLldp(host, community, version) {
   return { entries, count: entries.length };
 }
 
+// ── WiFi Mesh / WDS (LCOS LX) ────────────────────────────────────────────────
+
+function snmpStr(raw) {
+  const s = raw.trim();
+  let m = s.match(/STRING:\s*"(.*)"/);   if (m) return m[1];
+      m = s.match(/STRING:\s*(.*)/);     if (m) return m[1].trim();
+      m = s.match(/:\s*(\d+)/);          if (m) return m[1];
+      m = s.match(/^"(.*)"$/);           if (m) return m[1];
+  return s;
+}
+
+// lcosLXSetupWLANWDSLinks config (1.3.6.1.4.1.2356.13.2.20.13.1)
+function parseWdsConfig(raw) {
+  const links = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.2\.20\.13\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/)
+           || line.match(/2356\.13\.2\.20\.13\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1], 10);
+    const [linkName] = decodeOidStr(m[2].split('.'), 0);
+    if (!linkName) return;
+    if (!links[linkName]) links[linkName] = { linkName };
+    const val = m[3].trim().replace(/^(STRING|INTEGER):\s*/, '').replace(/^"(.*)"$/, '$1');
+    if (col === 2) links[linkName].ssid  = val;
+    if (col === 4) links[linkName].radio = parseInt(val, 10) || 0;
+  });
+  return links;
+}
+
+// lcosLXStatusWLANWDSLinks status (1.3.6.1.4.1.2356.13.1.3.101.1)
+function parseWdsStatus(raw) {
+  const entries = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.1\.3\.101\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/)
+           || line.match(/2356\.13\.1\.3\.101\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1], 10);
+    const idxParts = m[2].split('.');
+    const [linkName, off2] = decodeOidStr(idxParts, 0);
+    const [macRaw]         = decodeOidStr(idxParts, off2);
+    const mac = macRaw.length === 6
+      ? Array.from(macRaw).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(':')
+      : macRaw;
+    const key = `${linkName}|${mac}`;
+    if (!entries[key]) entries[key] = { linkName, mac };
+    const rawVal = m[3].trim();
+    const n = parseInt((rawVal.match(/:\s*(\d+)/) || rawVal.match(/(\d+)/) || [])[1], 10);
+    if (col === 3)  entries[key].connected  = n === 1;
+    if (col === 4)  entries[key].radio      = n;
+    if (col === 5)  entries[key].signal     = n;
+    if (col === 7)  entries[key].txRate     = n;
+    if (col === 8)  entries[key].rxRate     = n;
+    if (col === 13) entries[key].wpaVersion = n;
+  });
+  return Object.values(entries);
+}
+
+async function snmpWds(host, community, version) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.20.13.1');
+  const configMap = parseWdsConfig(cfgRaw);
+  if (!Object.keys(configMap).length) return { configured: false, links: [] };
+  const staRaw        = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.101.1');
+  const statusEntries = parseWdsStatus(staRaw);
+  return { configured: true, configLinks: Object.values(configMap), statusEntries };
+}
+
+// ── L2TPv3 (LCOS LX) ─────────────────────────────────────────────────────────
+
+// lcosLXSetupL2TPEndpoints config (1.3.6.1.4.1.2356.13.2.61.1)
+function parseL2tpConfig(raw) {
+  const endpoints = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.2\.61\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col    = parseInt(m[1], 10);
+    const [name] = decodeOidStr(m[2].split('.'), 0);
+    if (!name) return;
+    if (!endpoints[name]) endpoints[name] = { name };
+    const val = snmpStr(m[3]);
+    if (col === 2) endpoints[name].remoteIp  = val;
+    if (col === 3) endpoints[name].port      = parseInt(val, 10) || 0;
+    if (col === 4) endpoints[name].hostname  = val;
+    if (col === 8) endpoints[name].operating = parseInt(val, 10);
+  });
+  return endpoints;
+}
+
+// lcosLXStatusL2TPEthernet status (1.3.6.1.4.1.2356.13.1.61.2)
+function parseL2tpStatus(raw) {
+  const entries = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.1\.61\.2\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col               = parseInt(m[1], 10);
+    const idxParts          = m[2].split('.');
+    const [remoteEnd, off2] = decodeOidStr(idxParts, 0);
+    const [endpointName]    = decodeOidStr(idxParts, off2);
+    const key = `${remoteEnd}|${endpointName}`;
+    if (!entries[key]) entries[key] = { remoteEnd, endpointName };
+    const val = snmpStr(m[3]);
+    if (col === 3) entries[key].state         = val;
+    if (col === 4) entries[key].iface         = val;
+    if (col === 5) entries[key].bridgeAddr    = val;
+    if (col === 7) entries[key].connStartTime = val;
+  });
+  return Object.values(entries);
+}
+
+async function snmpL2tp(host, community, version) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.61.1');
+  const configMap = parseL2tpConfig(cfgRaw);
+  if (!Object.keys(configMap).length) return { configured: false };
+  const staRaw        = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.61.2');
+  const statusEntries = parseL2tpStatus(staRaw);
+  return { configured: true, configEndpoints: Object.values(configMap), statusEntries };
+}
+
 // ── WLAN Clients (LCOS LX) ────────────────────────────────────────────────────
 
 async function snmpWlan(host, community, version) {
@@ -345,6 +462,8 @@ const server = http.createServer(async (req, res) => {
           case 'mac':        result = await snmpMac(host, community, version);        break;
           case 'lldp':       result = await snmpLldp(host, community, version);       break;
           case 'wlan':       result = await snmpWlan(host, community, version);       break;
+          case 'wds':        result = await snmpWds(host, community, version);        break;
+          case 'l2tp':       result = await snmpL2tp(host, community, version);       break;
           default:           throw new Error(`Unbekannter Typ: ${type}`);
         }
 

@@ -115,6 +115,22 @@ td.mono { font-family: monospace; font-size: 12px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Mesh / L2TP cards */
+.mesh-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.mesh-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--bg3); border-bottom: 1px solid var(--border); }
+.mesh-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: rgba(37,99,235,.2); color: #60a5fa; border: 1px solid rgba(37,99,235,.35); }
+.mesh-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mesh-table th { padding: 8px 14px; text-align: left; color: var(--text3); font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(0,0,0,.2); }
+.mesh-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+.mesh-table tr:last-child td { border-bottom: none; }
+.mesh-table tr:hover td { background: var(--bg3); }
+.mesh-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.mesh-dot-on  { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.mesh-dot-off { background: var(--text3); }
+.mesh-summary { display: flex; gap: 24px; padding: 0 4px 16px; }
+.mesh-stat .ms-num { font-size: 24px; font-weight: 800; color: #60a5fa; }
+.mesh-stat .ms-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
 </style>
 </head>
 <body>
@@ -151,6 +167,8 @@ td.mono { font-family: monospace; font-size: 12px; }
   <div class="tab"        onclick="showTab('mac')"       id="tab-mac">       Verbundene Geräte <span class="badge" id="badge-mac"></span></div>
   <div class="tab"        onclick="showTab('wlan')"      id="tab-wlan">      WLAN-Clients <span class="badge" id="badge-wlan"></span></div>
   <div class="tab"        onclick="showTab('lldp')"      id="tab-lldp">      LLDP-Nachbarn <span class="badge" id="badge-lldp"></span></div>
+  <div class="tab"        onclick="showTab('wds')"       id="tab-wds">       WiFi Mesh <span class="badge" id="badge-wds"></span></div>
+  <div class="tab"        onclick="showTab('l2tp')"      id="tab-l2tp">      L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
 </div>
 
 <div class="content">
@@ -220,6 +238,21 @@ td.mono { font-family: monospace; font-size: 12px; }
           <tbody><tr><td colspan="4" class="empty">Noch keine Daten</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+
+  <!-- WIFI MESH (WDS) -->
+  <div class="panel" id="panel-wds">
+    <div id="wds-wrap">
+      <div class="empty"><div class="icon">&#x1F4F6;</div>Noch keine Daten – Abfragen klicken</div>
+    </div>
+  </div>
+
+  <!-- L2TPv3 -->
+  <div class="panel" id="panel-l2tp">
+    <div id="l2tp-wrap">
+      <div class="empty"><div class="icon">&#x1F517;</div>Noch keine Daten – Abfragen klicken</div>
     </div>
   </div>
 
@@ -378,6 +411,117 @@ function renderWlan(data) {
   setBadge('wlan', data.count);
 }
 
+function renderWds(data) {
+  const wrap = q('wds-wrap');
+  if (!data.configured) {
+    wrap.innerHTML = `<div class="empty"><div class="icon">&#x1F4F6;</div>Kein WiFi Mesh (WDS) konfiguriert<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Access Points werden unterstützt</small></div>`;
+    setBadge('wds', 0);
+    return;
+  }
+
+  // Config + Status zusammenführen
+  const linkMap = {};
+  (data.configLinks || []).forEach(cl => { linkMap[cl.linkName] = { ...cl }; });
+  (data.statusEntries || []).forEach(se => {
+    if (!linkMap[se.linkName]) linkMap[se.linkName] = {};
+    Object.assign(linkMap[se.linkName], se);
+  });
+
+  const links = Object.values(linkMap);
+  const connected = links.filter(l => l.connected).length;
+
+  let html = `<div class="mesh-summary">
+    <div class="mesh-stat"><div class="ms-num">${links.length}</div><div class="ms-lbl">WDS-Links</div></div>
+    <div class="mesh-stat"><div class="ms-num" style="color:var(--green)">${connected}</div><div class="ms-lbl">Verbunden</div></div>
+    ${links.length - connected > 0 ? `<div class="mesh-stat"><div class="ms-num" style="color:var(--text3)">${links.length - connected}</div><div class="ms-lbl">Getrennt</div></div>` : ''}
+  </div>
+  <div class="mesh-card">
+    <div class="mesh-header">
+      <span style="font-weight:600;font-size:13px">WDS-Verbindungen</span>
+      <span class="mesh-badge">WDS aktiv</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="mesh-table">
+      <thead><tr><th>Link</th><th>Band</th><th>Status</th><th>Signal</th><th>Peer MAC</th><th>Tx / Rx</th><th>WPA</th></tr></thead>
+      <tbody>`;
+
+  for (const l of links) {
+    const band     = l.radio === 1 ? '2.4 GHz' : l.radio === 2 ? '5 GHz' : '–';
+    const conn     = !!l.connected;
+    const sig      = l.signal != null ? l.signal : null;
+    const sigColor = sig >= 200 ? 'var(--green)' : sig >= 100 ? 'var(--yellow)' : 'var(--red)';
+    const txRx     = (l.txRate != null && l.rxRate != null) ? `${l.txRate} / ${l.rxRate} Mbps` : '–';
+    const wpa      = l.wpaVersion === 3 ? 'WPA3' : l.wpaVersion === 2 ? 'WPA2' : l.wpaVersion === 1 ? 'WPA1' : l.wpaVersion === 0 ? 'Offen' : '–';
+    html += `<tr>
+      <td style="font-weight:600">${h(l.linkName || '–')}</td>
+      <td style="color:var(--text2)">${band}</td>
+      <td><span class="mesh-dot ${conn ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${conn ? 'Verbunden' : 'Getrennt'}</td>
+      <td style="color:${conn && sig != null ? sigColor : 'var(--text3)'};font-weight:600">${conn && sig != null ? sig : '–'}</td>
+      <td class="mono" style="color:var(--text2)">${h(l.mac || '–')}</td>
+      <td style="color:var(--text2)">${conn ? txRx : '–'}</td>
+      <td>${conn ? wpa : '–'}</td>
+    </tr>`;
+  }
+
+  html += `</tbody></table></div></div>`;
+  wrap.innerHTML = html;
+  setBadge('wds', links.length);
+}
+
+function renderL2tp(data) {
+  const wrap = q('l2tp-wrap');
+  if (!data.configured) {
+    wrap.innerHTML = `<div class="empty"><div class="icon">&#x1F517;</div>Kein L2TPv3 konfiguriert<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Geräte werden unterstützt</small></div>`;
+    setBadge('l2tp', 0);
+    return;
+  }
+
+  // Config + Status zusammenführen
+  const epMap = {};
+  (data.configEndpoints || []).forEach(ep => { epMap[ep.name] = { ...ep }; });
+  (data.statusEntries   || []).forEach(se => {
+    const key = se.endpointName || se.remoteEnd;
+    if (!epMap[key]) epMap[key] = {};
+    Object.assign(epMap[key], se);
+  });
+
+  const eps = Object.values(epMap);
+  const upCount = eps.filter(e => e.state === 'UP').length;
+
+  let html = `<div class="mesh-summary">
+    <div class="mesh-stat"><div class="ms-num">${eps.length}</div><div class="ms-lbl">Endpunkte</div></div>
+    <div class="mesh-stat"><div class="ms-num" style="color:var(--green)">${upCount}</div><div class="ms-lbl">UP</div></div>
+    ${eps.length - upCount > 0 ? `<div class="mesh-stat"><div class="ms-num" style="color:var(--text3)">${eps.length - upCount}</div><div class="ms-lbl">DOWN</div></div>` : ''}
+  </div>
+  <div class="mesh-card">
+    <div class="mesh-header">
+      <span style="font-weight:600;font-size:13px">L2TPv3-Endpunkte</span>
+      <span class="mesh-badge">L2TPv3 aktiv</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="mesh-table">
+      <thead><tr><th>Endpoint</th><th>Gegenstelle</th><th>Remote-IP</th><th>Port</th><th>Status</th><th>Interface</th><th>Verbunden seit</th></tr></thead>
+      <tbody>`;
+
+  for (const ep of eps) {
+    const up      = ep.state === 'UP';
+    const opBadge = ep.operating === 0 ? ` <span style="color:var(--text3);font-size:10px">(inaktiv)</span>` : '';
+    html += `<tr>
+      <td style="font-weight:600">${h(ep.name || '–')}${opBadge}</td>
+      <td>${h(ep.remoteEnd || '–')}</td>
+      <td class="mono" style="color:var(--text2)">${h(ep.remoteIp || '–')}</td>
+      <td style="color:var(--text2)">${ep.port || '–'}</td>
+      <td><span class="mesh-dot ${up ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${h(ep.state || '–')}</td>
+      <td class="mono" style="color:var(--text2)">${h(ep.iface || '–')}</td>
+      <td style="font-size:11px;color:var(--text2)">${h(ep.connStartTime || '–')}</td>
+    </tr>`;
+  }
+
+  html += `</tbody></table></div></div>`;
+  wrap.innerHTML = html;
+  setBadge('l2tp', eps.length);
+}
+
 function renderLldp(data) {
   const tbody = q('tbl-lldp').querySelector('tbody');
   if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">Keine LLDP-Nachbarn gefunden</td></tr>`; return; }
@@ -412,20 +556,24 @@ async function queryAll() {
   let errors = 0;
 
   try {
-    // Parallel: System + Interfaces + MAC + WLAN + LLDP
-    const [sys, ifaces, mac, wlan, lldp] = await Promise.allSettled([
+    // Parallel: alle Abfragen gleichzeitig
+    const [sys, ifaces, mac, wlan, lldp, wds, l2tp] = await Promise.allSettled([
       snmp('system'),
       snmp('interfaces'),
       snmp('mac'),
       snmp('wlan'),
       snmp('lldp'),
+      snmp('wds'),
+      snmp('l2tp'),
     ]);
 
-    if (sys.status === 'fulfilled')    renderSystem(sys.value);    else { q('sys-cards').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(sys.reason?.message || 'Fehler')}</div>`; errors++; }
+    if (sys.status === 'fulfilled')    renderSystem(sys.value);       else { q('sys-cards').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(sys.reason?.message || 'Fehler')}</div>`; errors++; }
     if (ifaces.status === 'fulfilled') renderInterfaces(ifaces.value); else { q('tbl-ifaces').querySelector('tbody').innerHTML = `<tr><td colspan="6" class="empty">${h(ifaces.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (mac.status === 'fulfilled')    renderMac(mac.value);       else { q('tbl-mac').querySelector('tbody').innerHTML    = `<tr><td colspan="3" class="empty">${h(mac.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (wlan.status === 'fulfilled')   renderWlan(wlan.value);     else { q('tbl-wlan').querySelector('tbody').innerHTML   = `<tr><td colspan="5" class="empty">${h(wlan.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (lldp.status === 'fulfilled')   renderLldp(lldp.value);     else { q('tbl-lldp').querySelector('tbody').innerHTML   = `<tr><td colspan="4" class="empty">${h(lldp.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (mac.status === 'fulfilled')    renderMac(mac.value);          else { q('tbl-mac').querySelector('tbody').innerHTML    = `<tr><td colspan="3" class="empty">${h(mac.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (wlan.status === 'fulfilled')   renderWlan(wlan.value);        else { q('tbl-wlan').querySelector('tbody').innerHTML   = `<tr><td colspan="5" class="empty">${h(wlan.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (lldp.status === 'fulfilled')   renderLldp(lldp.value);        else { q('tbl-lldp').querySelector('tbody').innerHTML   = `<tr><td colspan="4" class="empty">${h(lldp.reason?.message || 'Fehler')}</td></tr>`; errors++; }
+    if (wds.status === 'fulfilled')    renderWds(wds.value);          else { q('wds-wrap').innerHTML  = `<div class="empty"><div class="icon">⚠️</div>${h(wds.reason?.message  || 'Fehler')}</div>`; errors++; }
+    if (l2tp.status === 'fulfilled')   renderL2tp(l2tp.value);        else { q('l2tp-wrap').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(l2tp.reason?.message || 'Fehler')}</div>`; errors++; }
 
     const ms = Date.now() - t0;
     if (errors === 0) setStatus(`Abfrage erfolgreich (${(ms/1000).toFixed(1)}s) — ${new Date().toLocaleTimeString('de-DE')}`, 'ok');
