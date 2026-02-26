@@ -178,6 +178,7 @@ td.mono { font-family: monospace; font-size: 12px; }
   <div class="tab"        onclick="showTab('wds')"       id="tab-wds">       WiFi Mesh <span class="badge" id="badge-wds"></span></div>
   <div class="tab"        onclick="showTab('l2tp')"      id="tab-l2tp">      L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
   <div class="tab"        onclick="showTab('scanner')"   id="tab-scanner">   Scanner <span class="badge" id="badge-scanner"></span></div>
+  <div class="tab"        onclick="showTab('devices')"   id="tab-devices">   Geräte <span class="badge" id="badge-devices"></span></div>
 </div>
 
 <div class="content">
@@ -273,6 +274,8 @@ td.mono { font-family: monospace; font-size: 12px; }
       </select>
       <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
       <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
+      <div class="sep" id="sep-query-all" style="display:none"></div>
+      <button class="btn" id="btn-query-all" onclick="queryAllFound()" style="display:none;background:var(--green);color:#000">Alle abfragen &amp; speichern</button>
     </div>
 
     <div id="scan-progress-wrap" style="display:none;margin-bottom:14px">
@@ -300,6 +303,24 @@ td.mono { font-family: monospace; font-size: 12px; }
   <div class="panel" id="panel-l2tp">
     <div id="l2tp-wrap">
       <div class="empty"><div class="icon">&#x1F517;</div>Noch keine Daten – Abfragen klicken</div>
+    </div>
+  </div>
+
+  <!-- GERÄTE-LISTE -->
+  <div class="panel" id="panel-devices">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="refreshAllDevices()" id="btn-refresh-devices">Alle neu abfragen</button>
+      <button class="btn btn-sm" onclick="clearDevices()" style="background:transparent;border:1px solid var(--border);color:var(--text2)">Liste leeren</button>
+      <span id="devices-status" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+    <div class="table-wrap">
+      <div class="table-title">Gespeicherte Geräte <span class="cnt" id="cnt-devices"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-devices">
+          <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Standort</th><th>Uptime</th><th>Zuletzt gesehen</th><th></th></tr></thead>
+          <tbody><tr><td colspan="7" class="empty">Noch keine Geräte – Scanner verwenden und „Alle abfragen &amp; speichern" klicken</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -362,6 +383,7 @@ function showTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   q('tab-' + name).classList.add('active');
   q('panel-' + name).classList.add('active');
+  if (name === 'devices') renderDevices();
 }
 
 function filterTable(tblId, search, cols) {
@@ -586,10 +608,155 @@ function h(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Geräte-Speicher ───────────────────────────────────────────────────────────
+
+let deviceStore = JSON.parse(localStorage.getItem('lancom_onsite_devices') || '{}');
+
+function saveDeviceStore() {
+  localStorage.setItem('lancom_onsite_devices', JSON.stringify(deviceStore));
+}
+
+function storeDevice(ip, scanData, systemData) {
+  deviceStore[ip] = {
+    ip,
+    os:          scanData.os          || deviceStore[ip]?.os || '',
+    sysName:     systemData?.sysName  || scanData.sysName    || deviceStore[ip]?.sysName || '',
+    sysLocation: systemData?.sysLocation || scanData.sysLocation || deviceStore[ip]?.sysLocation || '',
+    sysContact:  systemData?.sysContact  || deviceStore[ip]?.sysContact || '',
+    sysDescr:    systemData?.sysDescr    || scanData.sysDescr || deviceStore[ip]?.sysDescr || '',
+    sysUpTime:   systemData?.sysUpTime   || '',
+    community:   q('scan-community').value.trim() || 'public',
+    version:     q('scan-version').value || '2c',
+    lastSeen:    new Date().toISOString(),
+  };
+  saveDeviceStore();
+}
+
+function renderDevices() {
+  const devices = Object.values(deviceStore).sort((a, b) => {
+    // Sort by IP numerically
+    const toNum = ip => ip.split('.').reduce((n, o) => n * 256 + parseInt(o), 0);
+    return toNum(a.ip) - toNum(b.ip);
+  });
+
+  const badge = Object.keys(deviceStore).length;
+  setBadge('devices', badge);
+  q('cnt-devices').textContent = badge ? badge + ' Gerät' + (badge !== 1 ? 'e' : '') : '';
+
+  const tbody = q('tbl-devices').querySelector('tbody');
+  if (!devices.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">Noch keine Geräte – Scanner verwenden und „Alle abfragen &amp; speichern" klicken</td></tr>`;
+    return;
+  }
+
+  const osColors = { 'LCOS LX': 'badge-green', 'LCOS FX': 'badge-yellow', 'LCOS SX': 'badge-yellow', 'LCOS': 'badge-gray', 'LANCOM': 'badge-gray' };
+
+  tbody.innerHTML = devices.map(dev => {
+    const osCls  = osColors[dev.os] || 'badge-gray';
+    const uptime = dev.sysUpTime ? fmtUptime(dev.sysUpTime) : '—';
+    const seen   = dev.lastSeen ? new Date(dev.lastSeen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    return `<tr>
+      <td class="mono">${h(dev.ip)}</td>
+      <td style="font-weight:600">${h(dev.sysName || '—')}</td>
+      <td><span class="badge ${osCls}">${h(dev.os || '—')}</span></td>
+      <td style="color:var(--text2)">${h(dev.sysLocation || '—')}</td>
+      <td style="color:var(--text2)">${uptime}</td>
+      <td style="color:var(--text3);font-size:11px">${seen}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="selectDevice('${h(dev.ip)}')">Abfragen</button>
+        <button class="btn btn-sm" style="background:transparent;border:1px solid var(--border);color:var(--text2)" onclick="removeDevice('${h(dev.ip)}')">&#x2715;</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function removeDevice(ip) {
+  delete deviceStore[ip];
+  saveDeviceStore();
+  renderDevices();
+}
+
+function clearDevices() {
+  if (!Object.keys(deviceStore).length) return;
+  if (!confirm('Alle gespeicherten Geräte löschen?')) return;
+  deviceStore = {};
+  saveDeviceStore();
+  renderDevices();
+}
+
+async function snmpQuery(host, community, version, type) {
+  const res = await fetch('/snmp', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ host, community, version, type }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+async function queryAllFound() {
+  if (!scanResults.length) return;
+  const btn = q('btn-query-all');
+  btn.disabled = true;
+  btn.textContent = 'Abfrage läuft…';
+
+  const community = q('scan-community').value.trim() || 'public';
+  const version   = q('scan-version').value || '2c';
+  let done = 0;
+
+  const setDevStatus = (msg) => { const el = q('devices-status'); if (el) el.textContent = msg; };
+
+  for (const dev of scanResults) {
+    setDevStatus(`${done + 1} / ${scanResults.length} – ${dev.sysName || dev.ip}`);
+    try {
+      const sys = await snmpQuery(dev.ip, community, version, 'system');
+      storeDevice(dev.ip, dev, sys);
+    } catch {
+      storeDevice(dev.ip, dev, null);
+    }
+    done++;
+  }
+
+  setDevStatus('');
+  btn.disabled = false;
+  btn.textContent = 'Alle abfragen & speichern';
+  renderDevices();
+  showTab('devices');
+}
+
+async function refreshAllDevices() {
+  const devices = Object.values(deviceStore);
+  if (!devices.length) return;
+  const btn = q('btn-refresh-devices');
+  btn.disabled = true;
+  btn.textContent = 'Abfrage läuft…';
+
+  let done = 0;
+  const setDevStatus = (msg) => { const el = q('devices-status'); if (el) el.textContent = msg; };
+
+  for (const dev of devices) {
+    setDevStatus(`${done + 1} / ${devices.length} – ${dev.sysName || dev.ip}`);
+    try {
+      const sys = await snmpQuery(dev.ip, dev.community || 'public', dev.version || '2c', 'system');
+      storeDevice(dev.ip, dev, sys);
+    } catch {
+      // Gerät nicht erreichbar – lastSeen nicht aktualisieren
+    }
+    done++;
+  }
+
+  setDevStatus('');
+  btn.disabled = false;
+  btn.textContent = 'Alle neu abfragen';
+  renderDevices();
+}
+
 // ── Netzwerk-Scanner ─────────────────────────────────────────────────────────
 
 let scanAbort = null;
 let scanFoundCount = 0;
+let scanResults = [];
 
 function setScanStatus(msg, type = '') {
   const el = q('scan-status');
@@ -606,8 +773,11 @@ async function startScan() {
   if (scanAbort) { scanAbort.abort(); scanAbort = null; }
   scanAbort = new AbortController();
   scanFoundCount = 0;
+  scanResults = [];
 
   q('btn-scan').disabled = true;
+  q('btn-query-all').style.display = 'none';
+  q('sep-query-all').style.display = 'none';
   q('btn-scan-stop').style.display = '';
   q('scan-progress-wrap').style.display = '';
   q('scan-bar').style.width = '0%';
@@ -682,10 +852,16 @@ function handleScanEvent(ev) {
       q('tbl-scan').querySelector('tbody').innerHTML = `<tr><td colspan="6" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
     }
     setBadge('scanner', ev.found || 0);
+    if (ev.found > 0) {
+      q('btn-query-all').style.display = '';
+      q('sep-query-all').style.display = '';
+      q('btn-query-all').textContent = `Alle ${ev.found} abfragen & speichern`;
+    }
   }
 }
 
 function appendScanRow(dev) {
+  scanResults.push(dev);
   const tbody = q('tbl-scan').querySelector('tbody');
   const placeholder = tbody.querySelector('td[colspan]');
   if (placeholder) placeholder.closest('tr').remove();
@@ -794,6 +970,12 @@ const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('host')) q('host').value = urlParams.get('host');
 if (urlParams.get('community')) q('community').value = urlParams.get('community');
 if (urlParams.get('host')) queryAll();
+
+// Geräte-Badge beim Start setzen
+(function() {
+  const n = Object.keys(deviceStore).length;
+  if (n > 0) setBadge('devices', n);
+})();
 </script>
 </body>
 </html>
