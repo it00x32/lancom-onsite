@@ -72,6 +72,8 @@ http://server:3000/?host=192.168.1.1&community=public
 | Verbundene Geräte | MAC-Adresstabelle (FDB) + ARP-Tabelle mit IP-Zuordnung |
 | WLAN-Clients | Verbundene WLAN-Clients (LANCOM LCOS LX Access Points) |
 | LLDP-Nachbarn | Benachbarte Geräte via LLDP |
+| WiFi Mesh | WDS-Links mit Band, Status, Signal, Peer-MAC, Tx/Rx, WPA (nur LCOS LX) |
+| L2TPv3 | L2TP-Endpunkte mit Gegenstelle, Remote-IP, Port, Status, Interface, Verbindungszeit (nur LCOS LX) |
 
 ## Unterstützte Geräte
 
