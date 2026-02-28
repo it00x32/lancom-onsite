@@ -4,165 +4,680 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LANCOM OnSite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg:      #0f1117; --bg2: #181c27; --bg3: #1e2333;
-  --border:  #2a3050;
-  --blue:    #2563eb; --blue2: #1d4ed8;
-  --green:   #22c55e; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;
-  --text:    #e2e8f0; --text2: #94a3b8; --text3: #64748b;
-  --radius:  8px;
+  /* Backgrounds */
+  --bg:      #f0f4f8;
+  --bg2:     #ffffff;
+  --bg3:     #e8eef4;
+  --bg4:     #dce6ef;
+  --border:  rgba(0,40,85,.14);
+  --border2: rgba(0,40,85,.07);
+
+  /* Brand colours */
+  --cyan:    #004c97;
+  --cyan2:   #003875;
+  --green:   #1a8a3e;
+  --green2:  #146b30;
+  --red:     #d32f2f;
+  --red2:    #b71c1c;
+  --yellow:  #d97706;
+  --orange:  #c2410c;
+  --blue:    #004c97;
+  --blue2:   #003875;
+  --accent:  #004c97;
+
+  /* Text */
+  --text:    #1a2b3c;
+  --text2:   #4a6478;
+  --text3:   #8aa0b8;
+  --radius:  4px;
+
+  /* Fonts */
+  --font:    'DM Sans', sans-serif;
+  --mono:    'JetBrains Mono', 'Courier New', monospace;
+  --display: 'DM Sans', sans-serif;
+
+  /* Theme helpers */
+  --btn-text:   #ffffff;
+  --btn-hover:  #0060c0;
+  --glow:       rgba(0,76,151,.22);
+  --glow-hover: rgba(0,76,151,.42);
+  --glow-sm:    rgba(0,76,151,.1);
+  --glow-focus: rgba(0,76,151,.08);
+  --focus-ring: rgba(0,76,151,.4);
+
+  /* Header */
+  --header-bg1:    #002855;
+  --header-bg2:    #001f40;
+  --header-accent: #0060c0;
+  --header-logo:   #ffffff;
+  --header-sub:    rgba(255,255,255,.55);
+  --signal-color:  rgba(255,255,255,.7);
+
+  /* Body gradient */
+  --body-grad1: rgba(0,76,151,.06);
+  --body-grad2: rgba(0,76,151,.03);
+  --tab-bg:     rgba(232,238,244,.98);
 }
-body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; font-size:14px; min-height:100vh; }
 
-/* Header */
-.header { background:var(--bg2); border-bottom:1px solid var(--border); padding:0 20px; display:flex; align-items:center; gap:12px; height:52px; }
-.header-logo { font-size:17px; font-weight:700; color:var(--blue); letter-spacing:-.5px; }
-.header-logo span { color:var(--text2); font-weight:400; }
-#detail-badge { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:12px; color:var(--text2); cursor:pointer; display:none; }
+[data-theme="dark"] {
+  /* Deep navy — darkened from LANCOM brand #002855 */
+  --bg:      #0a1628;
+  --bg2:     #0f1f38;
+  --bg3:     #162844;
+  --bg4:     #1c3152;
+  --border:  rgba(255,255,255,.1);
+  --border2: rgba(255,255,255,.055);
 
-/* Tabs */
-.tabs { display:flex; gap:2px; padding:0 20px; background:var(--bg2); border-bottom:1px solid var(--border); overflow-x:auto; }
-.tab { padding:10px 14px; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; white-space:nowrap; flex-shrink:0; }
-.tab:hover { color:var(--text); }
-.tab.active { color:var(--blue); border-bottom-color:var(--blue); }
-.tab .badge { display:inline-block; background:var(--bg3); color:var(--text3); font-size:11px; padding:1px 6px; border-radius:10px; margin-left:4px; }
-.tab.active .badge { background:var(--blue); color:#fff; }
+  /* LANCOM blue adapted for dark backgrounds */
+  --cyan:    #4da6ff;
+  --cyan2:   #2e8fe8;
+  --green:   #34d97b;
+  --green2:  #28b065;
+  --red:     #f05568;
+  --red2:    #d43350;
+  --yellow:  #fbbf24;
+  --orange:  #fb923c;
+  --blue:    #4da6ff;
+  --blue2:   #2e8fe8;
+  --accent:  #4da6ff;
 
-/* Content */
-.content { padding:20px; }
-.panel { display:none; }
-.panel.active { display:block; }
+  --text:    #e8f0f8;
+  --text2:   #7ea8c8;
+  --text3:   #3d6485;
 
-/* Toolbar */
-.toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border); }
-.toolbar-spacer { flex:1; }
+  /* Same fonts as light mode — consistent brand identity */
+  --font:    'DM Sans', sans-serif;
+  --mono:    'JetBrains Mono', 'Courier New', monospace;
+  --display: 'DM Sans', sans-serif;
 
-/* Buttons */
-.btn { background:var(--blue); color:#fff; border:none; border-radius:6px; padding:7px 16px; font-size:13px; font-weight:500; cursor:pointer; transition:background .15s; white-space:nowrap; }
-.btn:hover { background:var(--blue2); }
-.btn:disabled { opacity:.5; cursor:default; }
-.btn-sm { padding:5px 10px; font-size:12px; }
-.btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text2); }
-.btn-ghost:hover { border-color:var(--blue); color:var(--blue); background:transparent; }
-.btn-danger { background:transparent; border:1px solid var(--border); color:var(--text3); }
-.btn-danger:hover { border-color:var(--red); color:var(--red); background:transparent; }
-.sep { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+  --btn-text:   #ffffff;
+  --btn-hover:  #6db8ff;
+  --glow:       rgba(77,166,255,.25);
+  --glow-hover: rgba(77,166,255,.45);
+  --glow-sm:    rgba(77,166,255,.12);
+  --glow-focus: rgba(77,166,255,.08);
+  --focus-ring: rgba(77,166,255,.45);
 
-/* Filter buttons */
-.filter-group { display:flex; gap:4px; flex-wrap:wrap; }
-.fbtn { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:5px; }
-.fbtn:hover { border-color:var(--text2); color:var(--text); }
-.fbtn.active { border-color:var(--blue); color:var(--blue); background:rgba(37,99,235,.12); }
-.fbtn.f-green.active  { border-color:var(--green);  color:var(--green);  background:rgba(34,197,94,.1); }
-.fbtn.f-yellow.active { border-color:var(--yellow); color:var(--yellow); background:rgba(245,158,11,.1); }
-.fbtn.f-orange.active { border-color:var(--orange); color:var(--orange); background:rgba(249,115,22,.1); }
-.fbtn.f-red.active    { border-color:var(--red);    color:var(--red);    background:rgba(239,68,68,.1); }
-.fbtn.f-up.active     { border-color:var(--green);  color:var(--green);  background:rgba(34,197,94,.1); }
-.fbtn.f-down.active   { border-color:var(--red);    color:var(--red);    background:rgba(239,68,68,.1); }
+  /* Header: deeper navy than bg */
+  --header-bg1:    #071220;
+  --header-bg2:    #04101b;
+  --header-accent: rgba(77,166,255,.25);
+  --header-logo:   #ffffff;
+  --header-sub:    rgba(255,255,255,.5);
+  --signal-color:  rgba(255,255,255,.65);
 
-/* Status dot / badge */
-.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
-.dot-green  { background:var(--green);  box-shadow:0 0 4px var(--green); }
-.dot-yellow { background:var(--yellow); }
-.dot-orange { background:var(--orange); }
-.dot-red    { background:var(--red); }
-.dot-gray   { background:var(--text3); }
-.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
-.badge-green  { background:rgba(34,197,94,.15);  color:var(--green); }
-.badge-red    { background:rgba(239,68,68,.15);   color:var(--red); }
-.badge-yellow { background:rgba(245,158,11,.15);  color:var(--yellow); }
-.badge-orange { background:rgba(249,115,22,.15);  color:var(--orange); }
-.badge-gray   { background:rgba(100,116,139,.15); color:var(--text3); }
-.badge-blue   { background:rgba(37,99,235,.15);   color:#60a5fa; }
+  --body-grad1: rgba(77,166,255,.05);
+  --body-grad2: rgba(77,166,255,.025);
+  --tab-bg:     rgba(15,31,56,.98);
+}
 
-/* Tables */
-.table-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-.table-title { padding:11px 16px; font-size:13px; font-weight:600; color:var(--text2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.table-title .cnt { color:var(--text3); font-weight:400; font-size:12px; }
-table { width:100%; border-collapse:collapse; }
-th { background:var(--bg3); color:var(--text3); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
-th.sortable { cursor:pointer; user-select:none; }
-th.sortable:hover { color:var(--text2); }
-th.sort-asc::after  { content:' ▲'; font-size:9px; color:var(--accent); }
-th.sort-desc::after { content:' ▼'; font-size:9px; color:var(--accent); }
-td { padding:8px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:var(--bg3); }
-td.mono { font-family:monospace; font-size:12px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 0%, var(--body-grad1) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 80% 100%, var(--body-grad2) 0%, transparent 50%);
+  transition: background .25s, color .25s;
+}
 
-/* Status bar */
-.status-bar { padding:7px 0; font-size:12px; color:var(--text3); display:flex; align-items:center; gap:8px; min-height:30px; }
-.status-bar.loading { color:var(--blue); }
-.status-bar.error   { color:var(--red); }
-.status-bar.ok      { color:var(--green); }
-.spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .6s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.header {
+  background: linear-gradient(180deg, var(--header-bg1) 0%, var(--header-bg2) 100%);
+  border-bottom: 1px solid var(--header-accent);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  position: relative;
+  box-shadow: 0 2px 16px rgba(0,0,0,.35);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--header-accent) 30%, var(--header-accent) 70%, transparent 100%);
+  opacity: .5;
+}
+.header-logo {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--header-logo);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.header-logo span {
+  color: var(--header-sub);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin-left: 2px;
+}
+.header-signal {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 18px;
+  margin-left: 4px;
+}
+.header-signal span {
+  display: block;
+  width: 3px;
+  background: var(--signal-color);
+  border-radius: 1px;
+  opacity: .7;
+  animation: signal-bar 1.4s ease-in-out infinite;
+}
+.header-signal span:nth-child(1) { height: 6px;  animation-delay: 0s; }
+.header-signal span:nth-child(2) { height: 10px; animation-delay: .2s; }
+.header-signal span:nth-child(3) { height: 14px; animation-delay: .4s; }
+.header-signal span:nth-child(4) { height: 18px; animation-delay: .6s; }
+@keyframes signal-bar {
+  0%, 100% { opacity: .25; }
+  50% { opacity: .9; }
+}
+#detail-badge {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--radius);
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--header-logo);
+  cursor: pointer;
+  display: none;
+  letter-spacing: .5px;
+  transition: all .15s;
+}
+#detail-badge:hover { background: rgba(255,255,255,.18); }
 
-/* Search input */
-.search-input { background:var(--bg2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:6px 12px; font-size:13px; outline:none; }
-.search-input:focus { border-color:var(--blue); }
+/* ── Theme toggle ────────────────────────────────────────────────────────────── */
+.theme-toggle {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: var(--radius);
+  color: var(--header-logo);
+  width: 34px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background .2s, border-color .2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,.22);
+  border-color: rgba(255,255,255,.38);
+}
 
-/* Settings */
-.settings-section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
-.settings-section h3 { font-size:14px; font-weight:600; margin-bottom:16px; }
-.settings-grid { display:grid; grid-template-columns:220px 1fr; gap:10px 16px; align-items:center; max-width:520px; }
-.settings-grid label { font-size:12px; color:var(--text2); }
-.settings-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:7px 12px; font-size:13px; outline:none; width:200px; }
-.settings-input:focus { border-color:var(--blue); }
-.settings-hint { font-size:11px; color:var(--text3); margin-top:4px; }
+/* ── Tabs ────────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  background: var(--tab-bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tabs::-webkit-scrollbar { height: 0; }
+.tab {
+  padding: 12px 18px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+}
+.tab:hover { color: var(--text2); }
+.tab.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+.tab .badge {
+  display: inline-block;
+  background: var(--bg4);
+  color: var(--text3);
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-left: 6px;
+  border: 1px solid var(--border2);
+}
+.tab.active .badge {
+  background: rgba(0,76,151,.08);
+  color: var(--cyan);
+  border-color: rgba(0,76,151,.25);
+}
+[data-theme="dark"] .tab.active .badge {
+  background: rgba(77,166,255,.12);
+  border-color: rgba(77,166,255,.3);
+}
 
-/* Form card (LMC Import) */
-.form-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
-.form-card h3 { font-size:14px; font-weight:600; margin-bottom:14px; }
-.form-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
-.form-label { font-size:12px; color:var(--text2); width:130px; flex-shrink:0; }
-.form-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:7px 12px; font-size:13px; outline:none; min-width:200px; }
-.form-input:focus { border-color:var(--blue); }
-.checkbox-label { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); cursor:pointer; }
-.checkbox-label input { accent-color:var(--blue); }
+/* ── Content ─────────────────────────────────────────────────────────────────── */
+.content { padding: 20px 24px; }
+.panel { display: none; }
+.panel.active { display: block; animation: panel-in .2s ease-out; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-/* Info cards */
-.info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:20px; }
-.info-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
-.info-card .label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-.info-card .value { font-size:14px; font-weight:600; word-break:break-all; }
-.info-card .value.mono { font-family:monospace; font-size:13px; }
+/* ── Toolbar ─────────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border2);
+}
+.toolbar-spacer { flex: 1; }
 
-/* Sub-tabs (device detail) */
-.sub-tabs { display:flex; gap:2px; margin-bottom:16px; border-bottom:1px solid var(--border); }
-.stab { padding:8px 14px; font-size:12px; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
-.stab:hover { color:var(--text); }
-.stab.active { color:var(--blue); border-bottom-color:var(--blue); }
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.btn {
+  background: var(--cyan);
+  color: var(--btn-text);
+  border: none;
+  border-radius: var(--radius);
+  padding: 7px 16px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  box-shadow: 0 0 16px var(--glow);
+}
+.btn:hover {
+  background: var(--btn-hover);
+  box-shadow: 0 0 24px var(--glow-hover);
+  transform: translateY(-1px);
+}
+.btn:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  box-shadow: none;
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.btn-ghost:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--glow-focus);
+  box-shadow: 0 0 10px var(--glow-sm);
+  transform: none;
+}
+.btn-danger {
+  background: transparent;
+  border: 1px solid rgba(211,47,47,.25);
+  color: var(--text3);
+  box-shadow: none;
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+[data-theme="dark"] .btn-danger { border-color: rgba(240,85,104,.2); }
+.btn-danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(211,47,47,.06);
+  box-shadow: none;
+  transform: none;
+}
+[data-theme="dark"] .btn-danger:hover { background: rgba(240,85,104,.07); }
+.sep { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
 
-/* Progress */
-.progress-track { background:var(--bg3); border-radius:4px; height:6px; overflow:hidden; }
-.progress-fill  { background:var(--blue); height:100%; border-radius:4px; transition:width .25s; }
+/* ── Filter pills ────────────────────────────────────────────────────────────── */
+.filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.fbtn {
+  padding: 4px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fbtn:hover { border-color: var(--text3); color: var(--text2); }
+.fbtn.active { border-color: var(--cyan); color: var(--cyan); background: var(--glow-focus); }
+.fbtn.f-green.active  { border-color: var(--green);  color: var(--green);  background: rgba(26,138,62,.07); }
+.fbtn.f-yellow.active { border-color: var(--yellow); color: var(--yellow); background: rgba(217,119,6,.07); }
+.fbtn.f-orange.active { border-color: var(--orange); color: var(--orange); background: rgba(194,65,12,.07); }
+.fbtn.f-red.active    { border-color: var(--red);    color: var(--red);    background: rgba(211,47,47,.07); }
+.fbtn.f-up.active     { border-color: var(--green);  color: var(--green);  background: rgba(26,138,62,.07); }
+.fbtn.f-down.active   { border-color: var(--red);    color: var(--red);    background: rgba(211,47,47,.07); }
+[data-theme="dark"] .fbtn.f-green.active  { background: rgba(52,217,123,.07); }
+[data-theme="dark"] .fbtn.f-yellow.active { background: rgba(251,191,36,.07); }
+[data-theme="dark"] .fbtn.f-orange.active { background: rgba(251,146,60,.07); }
+[data-theme="dark"] .fbtn.f-red.active    { background: rgba(240,85,104,.07); }
+[data-theme="dark"] .fbtn.f-up.active     { background: rgba(52,217,123,.07); }
+[data-theme="dark"] .fbtn.f-down.active   { background: rgba(240,85,104,.07); }
 
-/* Empty state */
-.empty { color:var(--text3); text-align:center; padding:40px 20px; font-size:13px; }
-.empty .icon { font-size:28px; margin-bottom:8px; opacity:.4; }
+/* ── Status dots & badges ────────────────────────────────────────────────────── */
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-green 2s ease-in-out infinite; }
+.dot-yellow { background: var(--yellow); }
+.dot-orange { background: var(--orange); }
+.dot-red    { background: var(--red); box-shadow: 0 0 4px rgba(211,47,47,.5); }
+[data-theme="dark"] .dot-red { box-shadow: 0 0 4px rgba(240,85,104,.5); }
+.dot-gray   { background: var(--text3); }
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 4px var(--green); opacity: 1; }
+  50%       { box-shadow: 0 0 10px var(--green), 0 0 20px var(--green); opacity: .85; }
+}
+.badge { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 10px; font-family: var(--mono); font-weight: 500; letter-spacing: .3px; }
+.badge-green  { background: rgba(26,138,62,.1);   color: var(--green);  border: 1px solid rgba(26,138,62,.25); }
+.badge-red    { background: rgba(211,47,47,.1);   color: var(--red);    border: 1px solid rgba(211,47,47,.25); }
+.badge-yellow { background: rgba(217,119,6,.1);   color: var(--yellow); border: 1px solid rgba(217,119,6,.25); }
+.badge-orange { background: rgba(194,65,12,.1);   color: var(--orange); border: 1px solid rgba(194,65,12,.25); }
+.badge-gray   { background: var(--bg3);           color: var(--text3);  border: 1px solid var(--border2); }
+.badge-blue   { background: rgba(0,76,151,.08);   color: var(--cyan);   border: 1px solid rgba(0,76,151,.2); }
+[data-theme="dark"] .badge-green  { background: rgba(52,217,123,.1);  border-color: rgba(52,217,123,.25); }
+[data-theme="dark"] .badge-red    { background: rgba(240,85,104,.1);  border-color: rgba(240,85,104,.25); }
+[data-theme="dark"] .badge-yellow { background: rgba(251,191,36,.1);  border-color: rgba(251,191,36,.25); }
+[data-theme="dark"] .badge-orange { background: rgba(251,146,60,.1);  border-color: rgba(251,146,60,.25); }
+[data-theme="dark"] .badge-blue   { background: rgba(77,166,255,.1);  border-color: rgba(77,166,255,.25); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+/* ── Tables ──────────────────────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.table-title {
+  padding: 10px 16px;
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+}
+.table-title .cnt {
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: var(--bg3);
+  color: var(--text3);
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 7px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--text2); }
+th.sort-asc::after  { content: ' ▲'; font-size: 8px; color: var(--accent); }
+th.sort-desc::after { content: ' ▼'; font-size: 8px; color: var(--accent); }
+td {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 13px;
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+[data-theme="dark"] tr:hover td { background: rgba(77,166,255,.04); }
+td.mono { font-family: var(--mono); font-size: 11.5px; }
 
-/* Topology */
-#topo-svg { background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(37,99,235,.04) 0%,transparent 70%); }
-.topo-node:hover .topo-node-rect { stroke-width:2.5px !important; }
-.topo-select { background:var(--bg2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px; outline:none; cursor:pointer; font-family:inherit; transition:border-color .15s; }
-.topo-select:focus { border-color:var(--blue); }
-.topo-select option { background:var(--bg2); }
+/* ── Status bar ──────────────────────────────────────────────────────────────── */
+.status-bar {
+  padding: 6px 0;
+  font-size: 11.5px;
+  font-family: var(--mono);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  letter-spacing: .2px;
+}
+.status-bar.loading { color: var(--cyan); }
+.status-bar.error   { color: var(--red); }
+.status-bar.ok      { color: var(--green); }
+.spinner {
+  display: inline-block;
+  width: 11px; height: 11px;
+  border: 1.5px solid var(--border);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Search input ────────────────────────────────────────────────────────────── */
+.search-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-input:focus {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px var(--glow-focus);
+}
+.search-input::placeholder { color: var(--text3); }
+
+/* ── Settings ────────────────────────────────────────────────────────────────── */
+.settings-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.settings-section h3 {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin-bottom: 16px;
+}
+.settings-grid { display: grid; grid-template-columns: 220px 1fr; gap: 10px 16px; align-items: center; max-width: 520px; }
+.settings-grid label { font-size: 12px; color: var(--text2); }
+.settings-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  width: 200px;
+  transition: border-color .15s;
+}
+.settings-input:focus { border-color: var(--focus-ring); }
+.settings-hint { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+/* ── Form card (LMC Import) ──────────────────────────────────────────────────── */
+.form-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.form-card h3 {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin-bottom: 14px;
+}
+.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-label { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
+.form-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  min-width: 200px;
+  transition: border-color .15s;
+}
+.form-input:focus { border-color: var(--focus-ring); }
+.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); cursor: pointer; }
+.checkbox-label input { accent-color: var(--cyan); }
+
+/* ── Info cards ──────────────────────────────────────────────────────────────── */
+.info-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 10px; margin-bottom: 20px; }
+.info-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 2px; height: 100%;
+  background: var(--cyan);
+  opacity: .3;
+}
+.info-card .label {
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 4px;
+}
+.info-card .value { font-size: 14px; font-weight: 500; word-break: break-all; color: var(--text); }
+.info-card .value.mono { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+
+/* ── Sub-tabs (device detail) ────────────────────────────────────────────────── */
+.sub-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border2); }
+.stab {
+  padding: 8px 16px;
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.stab:hover { color: var(--text2); }
+.stab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+[data-theme="dark"] .stab.active { text-shadow: none; }
+
+/* ── Progress ────────────────────────────────────────────────────────────────── */
+.progress-track { background: var(--bg3); border-radius: 2px; height: 4px; overflow: hidden; }
+.progress-fill { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); height: 100%; border-radius: 2px; transition: width .2s; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────────── */
+.empty { color: var(--text3); text-align: center; padding: 48px 20px; font-size: 13px; font-family: var(--mono); letter-spacing: .2px; }
+.empty .icon { font-size: 28px; margin-bottom: 10px; opacity: .3; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(77,166,255,.18); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(77,166,255,.32); }
+
+/* ── Topology ────────────────────────────────────────────────────────────────── */
+#topo-svg { background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--body-grad1) 0%, transparent 70%); }
+.topo-node:hover .topo-node-rect { stroke-width: 2px !important; filter: drop-shadow(0 0 8px var(--glow-sm)); }
+.topo-select {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 5px 10px;
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.topo-select:focus { border-color: var(--focus-ring); }
+.topo-select option { background: var(--bg3); }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-logo">LANCOM <span>OnSite</span></div>
+  <div class="header-signal"><span></span><span></span><span></span><span></span></div>
   <div style="flex:1"></div>
   <div id="detail-badge" onclick="showTab('detail')"></div>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Tag / Nacht Modus" id="theme-toggle-btn">☀️</button>
 </div>
 
 <div class="tabs" id="main-tabs">
@@ -191,8 +706,9 @@ td.mono { font-family:monospace; font-size:12px; }
       <button class="fbtn f-red"     onclick="setMeshFilter('red')"    id="mf-red"><span class="dot dot-red"></span>Offline</button>
     </div>
     <input class="search-input" id="mesh-search" placeholder="Gerätename suchen…" oninput="renderMesh()" style="width:200px">
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-sm btn-danger" onclick="clearMeshData()">Liste leeren</button>
   </div>
-  <div id="mesh-status" class="status-bar"></div>
   <div class="table-wrap">
     <div class="table-title">WDS-Verbindungen <span class="cnt" id="cnt-mesh"></span></div>
     <div style="overflow-x:auto">
@@ -213,8 +729,9 @@ td.mono { font-family:monospace; font-size:12px; }
       <button class="fbtn f-down"  onclick="setL2tpFilter('down')" id="lf-down"><span class="dot dot-red"></span>DOWN</button>
     </div>
     <input class="search-input" id="l2tp-search" placeholder="Gerätename suchen…" oninput="renderL2tp()" style="width:200px">
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-sm btn-danger" onclick="clearL2tpData()">Liste leeren</button>
   </div>
-  <div id="l2tp-status" class="status-bar"></div>
   <div class="table-wrap">
     <div class="table-title">L2TPv3-Endpunkte <span class="cnt" id="cnt-l2tp"></span></div>
     <div style="overflow-x:auto">
@@ -495,6 +1012,35 @@ td.mono { font-family:monospace; font-size:12px; }
 </div><!-- /content -->
 <script>
 // ═══════════════════════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function initTheme() {
+  const saved = localStorage.getItem('lancom_theme') || 'light';
+  applyTheme(saved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.dataset.theme || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.dataset.theme = 'dark';
+    document.getElementById('theme-toggle-btn').textContent = '🌙';
+  } else {
+    delete document.documentElement.dataset.theme;
+    document.getElementById('theme-toggle-btn').textContent = '☀️';
+  }
+  localStorage.setItem('lancom_theme', theme);
+  // Re-render topology SVG so theme-aware colours take effect immediately
+  if (document.getElementById('panel-topology')?.classList.contains('active')) {
+    renderTopoSvg();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -651,10 +1197,22 @@ async function saveSettings() {
 // DEVICE STORE (server-side)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+function rebuildCachedData() {
+  meshData = [];
+  l2tpData = [];
+  Object.values(deviceStore).forEach(d => {
+    if (d.wdsLinks?.length)      meshData.push(...d.wdsLinks);
+    if (d.l2tpEndpoints?.length) l2tpData.push(...d.l2tpEndpoints);
+  });
+}
+
 async function loadDevices() {
   try { const r = await fetch('/api/devices'); deviceStore = await r.json(); }
   catch { deviceStore = {}; }
+  rebuildCachedData();
   renderDevices();
+  renderMesh();
+  renderL2tp();
   setBadge('devices', Object.keys(deviceStore).length || 0);
 }
 
@@ -682,8 +1240,12 @@ async function deleteDevice(ip) {
 async function clearAllDevices() {
   if (!confirm('Alle Geräte löschen?')) return;
   deviceStore = {};
+  meshData = [];
+  l2tpData = [];
   await fetch('/api/devices',{ method:'DELETE', headers:{'Content-Type':'application/json'}, body:'{}' });
   renderDevices();
+  renderMesh();
+  renderL2tp();
   setBadge('devices', 0);
 }
 
@@ -725,7 +1287,6 @@ function renderDevices() {
   q('cnt-devices').textContent = total ? total+' Gerät'+(total!==1?'e':'') : '';
 
   // Thead
-  const S = col => mkTh.bind(null, col, col, devSort, 'devSortClick');
   q('thead-devices').innerHTML = `<tr>
     ${mkTh('Gerätename','name',devSort,'devSortClick')}
     ${mkTh('IP-Adresse','ip',devSort,'devSortClick')}
@@ -829,10 +1390,10 @@ async function checkAllDeviceStatus() {
       done++;
       bar.style.width = Math.round(done / total * 100) + '%';
       txt.textContent = `${done} / ${total}`;
-      renderDevices();
     }
     for (let i = 0; i < devList.length; i += CONCURRENCY) {
       await Promise.all(devList.slice(i, i + CONCURRENCY).map(checkOne));
+      renderDevices();
     }
     await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
     st.className = 'status-bar ok';
@@ -1003,6 +1564,14 @@ function resolvePeerDev(mac) {
   }) || null;
 }
 
+function clearMeshData() {
+  if (!confirm('WDS-Verbindungsdaten für alle Geräte löschen?')) return;
+  meshData = [];
+  Object.values(deviceStore).forEach(d => { delete d.wdsLinks; });
+  fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+  renderMesh(); renderDevices();
+}
+
 function renderMesh() {
   const srch = (q('mesh-search')?.value||'').toLowerCase();
 
@@ -1138,7 +1707,7 @@ async function syncMeshDevice(ip) {
   const dev = deviceStore[ip];
   if (!dev) return;
   const name = dev.name||dev.sysName||ip;
-  const st = q('mesh-status');
+  const st = q('dev-sync-status');
   st.className = 'status-bar loading';
   st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
   const { community, version } = devCredentials(ip);
@@ -1184,36 +1753,6 @@ function mergeMeshResult(ip, name, result) {
   if (deviceStore[ip]) deviceStore[ip].wdsLinks = stored;
 }
 
-async function syncMesh() {
-  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap' && d.online !== false);
-  if (!lxDevs.length) {
-    q('mesh-status').className='status-bar error';
-    q('mesh-status').textContent='Keine LX Access Points in der Geräteliste. Bitte zuerst Geräte importieren.'; return;
-  }
-  const btn=q('btn-mesh-sync'); if(btn){ btn.disabled=true; btn.textContent='⟳ Läuft…'; }
-  q('mesh-status').className='status-bar loading';
-  q('mesh-status').innerHTML='<span class="spinner"></span> Sync läuft…';
-  meshData = [];
-
-  for (let i=0; i<lxDevs.length; i++) {
-    const dev = lxDevs[i];
-    q('mesh-sync-lbl').textContent = `${i+1}/${lxDevs.length} – ${dev.name||dev.ip}`;
-    const {community,version} = devCredentials(dev.ip);
-    try {
-      const result = await snmpQ(dev.ip, community, version, 'wds');
-      setDeviceOnline(dev.ip, true);
-      if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.sysName||dev.ip, result);
-    } catch { setDeviceOnline(dev.ip, false); }
-  }
-
-  await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-  btn.disabled=false; btn.textContent='⟳ Sync alle';
-  q('mesh-sync-lbl').textContent = `Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
-  q('mesh-status').className='status-bar ok';
-  q('mesh-status').textContent = `${meshData.length} WDS-Link${meshData.length!==1?'s':''} von ${lxDevs.length} AP${lxDevs.length!==1?'s':''}`;
-  renderMesh();
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // L2TPv3
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1222,6 +1761,14 @@ function setL2tpFilter(f) {
   l2tpFilter = f;
   ['all','up','down'].forEach(k => { const el=q('lf-'+k); if(el) el.classList.toggle('active',k===f); });
   renderL2tp();
+}
+
+function clearL2tpData() {
+  if (!confirm('L2TPv3-Endpunktdaten für alle Geräte löschen?')) return;
+  l2tpData = [];
+  Object.values(deviceStore).forEach(d => { delete d.l2tpEndpoints; });
+  fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+  renderL2tp(); renderDevices();
 }
 
 function renderL2tp() {
@@ -1282,7 +1829,7 @@ function renderL2tp() {
 async function syncL2tpDevice(ip) {
   const dev = deviceStore[ip]; if (!dev) return;
   const name = dev.name||dev.ip;
-  const st = q('l2tp-status');
+  const st = q('dev-sync-status');
   st.className = 'status-bar loading';
   st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
   const {community,version} = devCredentials(ip);
@@ -1323,36 +1870,6 @@ function mergeL2tpResult(ip, name, result) {
   if (deviceStore[ip]) deviceStore[ip].l2tpEndpoints = stored;
 }
 
-async function syncL2tp() {
-  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap' && d.online !== false);
-  if (!lxDevs.length) {
-    q('l2tp-status').className='status-bar error';
-    q('l2tp-status').textContent='Keine LX Access Points in der Geräteliste.'; return;
-  }
-  const btn=q('btn-l2tp-sync'); if(btn){ btn.disabled=true; btn.textContent='⟳ Läuft…'; }
-  q('l2tp-status').className='status-bar loading';
-  q('l2tp-status').innerHTML='<span class="spinner"></span> Sync läuft…';
-  l2tpData=[];
-
-  for (let i=0; i<lxDevs.length; i++) {
-    const dev=lxDevs[i];
-    q('l2tp-sync-lbl').textContent=`${i+1}/${lxDevs.length} – ${dev.name||dev.ip}`;
-    const {community,version}=devCredentials(dev.ip);
-    try {
-      const result = await snmpQ(dev.ip, community, version, 'l2tp');
-      setDeviceOnline(dev.ip, true);
-      if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
-    } catch { setDeviceOnline(dev.ip, false); }
-  }
-
-  await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-  btn.disabled=false; btn.textContent='⟳ Sync alle';
-  q('l2tp-sync-lbl').textContent=`Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
-  q('l2tp-status').className='status-bar ok';
-  q('l2tp-status').textContent=`${l2tpData.length} Endpunkt${l2tpData.length!==1?'e':''} von ${lxDevs.length} Gerät${lxDevs.length!==1?'en':''}`;
-  renderL2tp();
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCANNER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1365,10 +1882,9 @@ async function startScan() {
   const version   = q('scan-version').value;
   if (!subnet) { setScanStatus('Bitte Subnetz eingeben.','error'); return; }
 
-  // Save last subnet
-  const s = {...appSettings, lastScanSubnet:subnet};
-  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)});
+  // Save last subnet (fire and forget — not critical for scan start)
   appSettings.lastScanSubnet = subnet;
+  fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...appSettings})}).catch(()=>{});
 
   if (scanAbort) { scanAbort.abort(); scanAbort=null; }
   scanAbort = new AbortController();
@@ -1450,14 +1966,7 @@ async function saveScanDevice(devJson) {
     setScanStatus(`${dev.ip} ist bereits unter Geräte gespeichert – nicht übernommen.`, 'error');
     return;
   }
-  const type = detectDeviceType(dev.os, dev.sysDescr);
-  await saveDevice({
-    ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
-    mac:dev.mac||'', sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
-    community:q('scan-community').value.trim()||'public',
-    version:q('scan-version').value||'2c',
-    source:'scanner', online:true, lastSeen:new Date().toISOString(),
-  });
+  await saveDevice(buildScanDeviceEntry(dev));
   setScanStatus(`${dev.sysName||dev.ip} gespeichert.`, 'ok');
 }
 
@@ -1467,20 +1976,25 @@ async function saveScanResults() {
   const skipped = [];
   scanResults.forEach(dev => {
     if (deviceStore[dev.ip]) { skipped.push(dev.ip); return; }
-    const type = detectDeviceType(dev.os, dev.sysDescr);
-    patch[dev.ip] = {
-      ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
-      mac:dev.mac||'', sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
-      community:q('scan-community').value.trim()||'public',
-      version:q('scan-version').value||'2c',
-      source:'scanner', online:true, lastSeen:new Date().toISOString(),
-    };
+    patch[dev.ip] = buildScanDeviceEntry(dev);
   });
   const n = Object.keys(patch).length;
   if (n) await saveDevices(patch);
   let msg = n ? `${n} Gerät${n!==1?'e':''} gespeichert` : 'Keine neuen Geräte';
   if (skipped.length) msg += ` – ${skipped.length} bereits vorhanden und übersprungen`;
   setScanStatus(msg, skipped.length && !n ? 'error' : 'ok');
+}
+
+function buildScanDeviceEntry(dev) {
+  const type = detectDeviceType(dev.os, dev.sysDescr);
+  return {
+    ip: dev.ip, name: dev.sysName||dev.ip, model: extractModel(dev.sysDescr),
+    os: dev.os, type, mac: dev.mac||'', sysDescr: dev.sysDescr,
+    sysLocation: dev.sysLocation,
+    community: q('scan-community').value.trim()||'public',
+    version:   q('scan-version').value||'2c',
+    source: 'scanner', online: true, lastSeen: new Date().toISOString(),
+  };
 }
 
 document.addEventListener('keydown', e => { if(e.key==='Enter'&&e.target.id==='scan-subnet') startScan(); });
@@ -1865,6 +2379,37 @@ function topoChangeRoot() {
   setTimeout(topoFit, 50);
 }
 
+// ── Theme-aware SVG colours ───────────────────────────────────────────────────
+function topoTheme() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  return {
+    // Node text — matches --text / --text2 from CSS variables
+    nodeText:      dark ? '#e8f0f8'             : 'rgba(15,30,55,.92)',
+    nodeSub:       dark ? '#7ea8c8'             : 'rgba(74,100,120,.75)',
+    nodePort:      dark ? 'rgba(200,225,248,.9)': 'rgba(30,50,80,.88)',
+    portStroke:    dark ? 'rgba(10,22,40,.95)'  : 'rgba(240,244,248,.95)',
+    // Node backgrounds
+    bgOnline:      dark ? 'rgba(52,217,123,.06)': 'rgba(26,138,62,.05)',
+    bgOffline:     dark ? 'rgba(240,85,104,.06)': 'rgba(211,47,47,.05)',
+    bgUnknown:     dark ? 'rgba(77,166,255,.04)': 'rgba(100,116,139,.05)',
+    // Node border + dot colours (new dark palette)
+    borderOnline:  dark ? 'rgba(52,217,123,.6)' : 'rgba(26,138,62,.55)',
+    borderOffline: dark ? 'rgba(240,85,104,.5)' : 'rgba(211,47,47,.4)',
+    borderUnknown: dark ? 'rgba(77,166,255,.3)' : 'rgba(100,116,139,.4)',
+    dotOnline:     dark ? '#2dd4a0'             : '#1a8a3e',
+    dotOffline:    dark ? '#f05568'             : '#d32f2f',
+    dotUnknown:    dark ? 'rgba(126,168,200,.6)': 'rgba(100,116,139,.6)',
+    // Ghost nodes
+    ghostBg:       dark ? 'rgba(22,40,68,.8)'   : 'rgba(220,230,240,.85)',
+    ghostText:     dark ? '#a8c8e8'             : 'rgba(74,100,120,.85)',
+    ghostSub:      dark ? '#5e8aaa'             : 'rgba(120,140,160,.75)',
+    ghostBorder:   dark ? 'rgba(77,166,255,.25)': 'rgba(100,116,139,.35)',
+    // Separator line / label
+    sepStroke:     dark ? 'rgba(77,166,255,.1)' : 'rgba(0,40,85,.1)',
+    sepText:       dark ? 'rgba(126,168,200,.4)': 'rgba(100,116,139,.4)',
+  };
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderTopoSvg() {
   const nodes = Object.values(topoNodes);
@@ -1892,15 +2437,15 @@ function renderTopoSvg() {
   let svg = '';
 
   // Separator for unconnected nodes
-  const hasEdge = id => topoEdges.some(e => e.src===id || e.tgt===id);
-  const unconn = nodes.filter(n => !hasEdge(n.id));
-  const conn   = nodes.filter(n =>  hasEdge(n.id));
+  const connectedIds = new Set(topoEdges.flatMap(e => [e.src, e.tgt]));
+  const unconn = nodes.filter(n => !connectedIds.has(n.id));
+  const conn   = nodes.filter(n =>  connectedIds.has(n.id));
   if (unconn.length && conn.length) {
     const uy = Math.min(...unconn.map(n=>n.y));
     const xs = unconn.map(n=>n.x);
     const x1 = Math.min(...xs)-hw-30, x2 = Math.max(...xs)+hw+30;
-    svg += `<line x1="${x1}" y1="${uy-55}" x2="${x2}" y2="${uy-55}" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="6,5"/>`;
-    svg += `<text x="${(x1+x2)/2}" y="${uy-64}" text-anchor="middle" font-size="9" font-weight="600" fill="rgba(148,163,184,.35)" font-family="system-ui,sans-serif" letter-spacing="0.1em">KEINE VERBINDUNG</text>`;
+    svg += `<line x1="${x1}" y1="${uy-55}" x2="${x2}" y2="${uy-55}" stroke="${tt.sepStroke}" stroke-width="1" stroke-dasharray="6,5"/>`;
+    svg += `<text x="${(x1+x2)/2}" y="${uy-64}" text-anchor="middle" font-size="9" font-weight="600" fill="${tt.sepText}" font-family="system-ui,sans-serif" letter-spacing="0.1em">KEINE VERBINDUNG</text>`;
   }
 
   // Count edges per node pair so we can offset parallel edges
@@ -1910,6 +2455,8 @@ function renderTopoSvg() {
     pairCount[k] = (pairCount[k]||0) + 1;
     pairSeen[k]  = 0;
   });
+
+  const tt = topoTheme();
 
   // Edge type colors
   function edgeColor(e, bothOnline, ghost) {
@@ -1943,7 +2490,7 @@ function renderTopoSvg() {
     const dash = (ghost || disconnected) ? ' stroke-dasharray="5,4"' : '';
     svg += `<path d="M${fs.x.toFixed(1)},${fs.y.toFixed(1)} C${fs.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${te.y.toFixed(1)}" stroke="${color}" stroke-width="${w}" fill="none"${dash}/>`;
 
-    const ts = `font-size="10" font-weight="600" fill="rgba(203,213,225,.9)" font-family="system-ui,sans-serif" paint-order="stroke" stroke="rgba(1,9,30,.95)" stroke-width="4" stroke-linejoin="round" dominant-baseline="middle"`;
+    const ts = `font-size="10" font-weight="600" fill="${tt.nodePort}" font-family="system-ui,sans-serif" paint-order="stroke" stroke="${tt.portStroke}" stroke-width="4" stroke-linejoin="round" dominant-baseline="middle"`;
     if (e.srcPort) { const lp=labelPt(f.x,f.y,fs.x,fs.y); svg+=`<text x="${lp.x.toFixed(1)}" y="${(lp.y+offset*0.3).toFixed(1)}" text-anchor="${lp.anchor}" ${ts} fill="${color}">${h(e.srcPort)}</text>`; }
     if (e.dstPort) { const rp=labelPt(t.x,t.y,te.x,te.y); svg+=`<text x="${rp.x.toFixed(1)}" y="${(rp.y+offset*0.3).toFixed(1)}" text-anchor="${rp.anchor}" ${ts} fill="${color}">${h(e.dstPort)}</text>`; }
   });
@@ -1957,16 +2504,16 @@ function renderTopoSvg() {
     if (node.ghost) {
       const dn = node.name.length>22 ? node.name.slice(0,21)+'…' : node.name;
       svg += `<g opacity="0.65" onclick="topoNodeClick('${node.id.replace(/'/g,'')}')">
-        <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="rgba(15,20,40,.5)" stroke="rgba(100,116,139,.4)" stroke-width="1.5" stroke-dasharray="6,4"/>
-        <text x="${rx+NW/2}" y="${ry+25}" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(148,163,184,.8)" font-family="system-ui,sans-serif">${h(dn)}</text>
-        <text x="${rx+NW/2}" y="${ry+42}" text-anchor="middle" font-size="9" fill="rgba(100,116,139,.7)" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
+        <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${tt.ghostBg}" stroke="${tt.ghostBorder}" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="${rx+NW/2}" y="${ry+25}" text-anchor="middle" font-size="12" font-weight="600" fill="${tt.ghostText}" font-family="system-ui,sans-serif">${h(dn)}</text>
+        <text x="${rx+NW/2}" y="${ry+42}" text-anchor="middle" font-size="9" fill="${tt.ghostSub}" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
       </g>`;
       return;
     }
 
-    const dotColor    = node.online===true ? '#a0ed3a' : node.online===false ? '#ff004d' : 'rgba(100,116,139,.6)';
-    const borderColor = node.online===true ? 'rgba(160,237,58,.55)' : node.online===false ? 'rgba(255,0,77,.4)' : 'rgba(100,116,139,.4)';
-    const bgFill      = node.online===true ? 'rgba(160,237,58,.05)' : node.online===false ? 'rgba(255,0,77,.04)' : 'rgba(100,116,139,.04)';
+    const dotColor    = node.online===true ? tt.dotOnline    : node.online===false ? tt.dotOffline    : tt.dotUnknown;
+    const borderColor = node.online===true ? tt.borderOnline : node.online===false ? tt.borderOffline : tt.borderUnknown;
+    const bgFill      = node.online===true ? tt.bgOnline : node.online===false ? tt.bgOffline : tt.bgUnknown;
     const glow        = isRoot ? ' filter="url(#topo-glow)"' : '';
     const badge       = TOPO_TYPE_BADGE[node.type];
     const badgeLabel  = badge?.label || '?';
@@ -1981,8 +2528,8 @@ function renderTopoSvg() {
       <circle cx="${rx+14}" cy="${y}" r="5" fill="${dotColor}"${node.online===true?' filter="url(#topo-glow)"':''}/>
       <rect x="${rx+NW-34}" y="${ry+6}" width="26" height="14" rx="4" fill="${badgeBg}"/>
       <text x="${rx+NW-21}" y="${ry+16}" text-anchor="middle" font-size="9" font-weight="800" fill="${badgeColor}" font-family="system-ui,sans-serif">${h(badgeLabel)}</text>
-      <text x="${rx+26}" y="${ry+24}" font-size="12" font-weight="700" fill="rgba(226,232,240,.95)" font-family="system-ui,sans-serif">${h(dname)}</text>
-      <text x="${rx+26}" y="${ry+41}" font-size="10" fill="rgba(148,163,184,.6)" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
+      <text x="${rx+26}" y="${ry+24}" font-size="12" font-weight="700" fill="${tt.nodeText}" font-family="system-ui,sans-serif">${h(dname)}</text>
+      <text x="${rx+26}" y="${ry+41}" font-size="10" fill="${tt.nodeSub}" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
     </g>`;
   });
 
@@ -2221,7 +2768,7 @@ async function syncTopologyAll() {
 
   try {
     // ── Phase 1: Online/Offline-Status für alle Geräte prüfen ────────────────
-    st.innerHTML = `<span class="spinner"></span> Phase 1/4: Status prüfen – 0 / ${allDevs.length}`;
+    st.innerHTML = `<span class="spinner"></span> Phase 1/5: Status prüfen – 0 / ${allDevs.length}`;
     let done = 0;
 
     async function checkStatus(dev) {
@@ -2233,7 +2780,7 @@ async function syncTopologyAll() {
         if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
       }
       done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 1/4: Status prüfen – ${done} / ${allDevs.length} – ${h(dev.name||dev.ip)}`;
+      st.innerHTML = `<span class="spinner"></span> Phase 1/5: Status prüfen – ${done} / ${allDevs.length} – ${h(dev.name||dev.ip)}`;
       renderDevices();
     }
     const CONC_STATUS = 5;
@@ -2245,7 +2792,7 @@ async function syncTopologyAll() {
     const lxOnline = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online === true);
     meshData = [];
     done = 0;
-    st.innerHTML = `<span class="spinner"></span> Phase 2/4: WiFi Mesh – 0 / ${lxOnline.length}`;
+    st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – 0 / ${lxOnline.length}`;
 
     async function syncWds(dev) {
       const { community, version } = devCredentials(dev.ip);
@@ -2254,7 +2801,7 @@ async function syncTopologyAll() {
         if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
       } catch {}
       done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 2/4: WiFi Mesh – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
+      st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
     }
     const CONC_WDS = 4;
     for (let i = 0; i < lxOnline.length; i += CONC_WDS) {
@@ -2264,7 +2811,7 @@ async function syncTopologyAll() {
     // ── Phase 3: L2TPv3 (nur lx-ap, nur online) ─────────────────────────────
     l2tpData = [];
     done = 0;
-    st.innerHTML = `<span class="spinner"></span> Phase 3/4: L2TPv3 – 0 / ${lxOnline.length}`;
+    st.innerHTML = `<span class="spinner"></span> Phase 3/5: L2TPv3 – 0 / ${lxOnline.length}`;
 
     async function syncL2tpDev(dev) {
       const { community, version } = devCredentials(dev.ip);
@@ -2273,7 +2820,7 @@ async function syncTopologyAll() {
         if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
       } catch {}
       done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 3/4: L2TPv3 – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
+      st.innerHTML = `<span class="spinner"></span> Phase 3/5: L2TPv3 – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
     }
     const CONC_L2TP = 4;
     for (let i = 0; i < lxOnline.length; i += CONC_L2TP) {
@@ -2282,10 +2829,28 @@ async function syncTopologyAll() {
 
     // ── Phase 4: LLDP – identisch mit "LLDP Sync" unter Geräte ──────────────
     const onlineDevs = Object.values(deviceStore).filter(d => d.online !== false);
-    st.innerHTML = `<span class="spinner"></span> Phase 4/4: LLDP – 0 / ${onlineDevs.length}`;
+    st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – 0 / ${onlineDevs.length}`;
     await lldpSyncCore(onlineDevs, (d, total, dev) => {
-      st.innerHTML = `<span class="spinner"></span> Phase 4/4: LLDP – ${d} / ${total} – ${h(dev.name||dev.ip)}`;
+      st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – ${d} / ${total} – ${h(dev.name||dev.ip)}`;
     });
+
+    // ── Phase 5: MAC-Adressen ─────────────────────────────────────────────────
+    done = 0;
+    st.innerHTML = `<span class="spinner"></span> Phase 5/5: MAC-Adressen – 0 / ${onlineDevs.length}`;
+    const macQueue = [...onlineDevs];
+    async function macWorker() {
+      while (macQueue.length) {
+        const dev = macQueue.shift();
+        const { community, version } = devCredentials(dev.ip);
+        try {
+          const result = await snmpQ(dev.ip, community, version, 'ifmacs');
+          if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
+        } catch {}
+        done++;
+        st.innerHTML = `<span class="spinner"></span> Phase 5/5: MAC-Adressen – ${done} / ${onlineDevs.length} – ${h(dev.name||dev.ip)}`;
+      }
+    }
+    await Promise.all(Array(Math.min(3, onlineDevs.length || 1)).fill(null).map(macWorker));
 
     // ── Speichern ────────────────────────────────────────────────────────────
     st.innerHTML = `<span class="spinner"></span> Daten werden gespeichert…`;
@@ -2298,6 +2863,8 @@ async function syncTopologyAll() {
     st.className = 'status-bar ok';
     st.textContent = 'Sync abgeschlossen.';
     renderDevices();
+    renderMesh();
+    renderL2tp();
     buildTopoFromStore();
 
   } catch (e) {
@@ -2322,16 +2889,24 @@ function buildTopoFromStore() {
   const existingPairs = new Set(topoEdges.map(e => [e.src, e.tgt].sort().join('||')));
 
   // WDS / Mesh edges
+  const edgeIdSet = new Set(topoEdges.map(e => e.id));
   let wdsCnt = 0;
   Object.values(deviceStore).forEach(dev => {
     (dev.wdsLinks||[]).forEach(link => {
       if (!link.mac) return;
       const peerDev = resolvePeerDev(link.mac);
       if (!peerDev || peerDev.ip === dev.ip) return;
-      const pairKey = [dev.ip, peerDev.ip].sort().join('||');
-      // Allow WDS edges even if LLDP edge exists — they'll be rendered offset
-      const edgeId = 'wds:' + pairKey;
-      if (topoEdges.some(e => e.id === edgeId)) return; // deduplicate WDS itself
+      // Ensure peer node exists even when offline (offline devices are excluded from buildTopoGraph)
+      if (!topoNodes[peerDev.ip]) {
+        topoNodes[peerDev.ip] = {
+          id: peerDev.ip, name: peerDev.name||peerDev.ip,
+          type: peerDev.type||'unknown', os: peerDev.os||'', model: peerDev.model||'',
+          online: peerDev.online, ghost: false, x: 0, y: 0, fixed: false,
+        };
+      }
+      const edgeId = 'wds:' + [dev.ip, peerDev.ip].sort().join('||');
+      if (edgeIdSet.has(edgeId)) return;
+      edgeIdSet.add(edgeId);
       topoEdges.push({ id: edgeId, src: dev.ip, tgt: peerDev.ip,
         srcPort: link.linkName||'WDS', dstPort: '',
         type: 'wds', label: link.band||'WDS', connected: link.connected });
@@ -2345,7 +2920,6 @@ function buildTopoFromStore() {
     (dev.l2tpEndpoints||[]).forEach(ep => {
       const remoteIp = ep.remoteIp;
       if (!remoteIp || remoteIp === dev.ip) return;
-      // Offline-Gerät als Knoten eintragen damit die Kante gezeichnet werden kann
       if (!topoNodes[remoteIp]) {
         const rd = deviceStore[remoteIp];
         topoNodes[remoteIp] = {
@@ -2355,7 +2929,8 @@ function buildTopoFromStore() {
         };
       }
       const edgeId = 'l2tp:' + [dev.ip, remoteIp].sort().join('||');
-      if (topoEdges.some(e => e.id === edgeId)) return;
+      if (edgeIdSet.has(edgeId)) return;
+      edgeIdSet.add(edgeId);
       topoEdges.push({ id: edgeId, src: dev.ip, tgt: remoteIp,
         srcPort: ep.endpointName||'L2TP', dstPort: '',
         type: 'l2tp', label: 'L2TP', connected: ep.state==='connected' });
@@ -2404,6 +2979,7 @@ function showTab(name) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 (async function init() {
+  initTheme();
   await loadSettings();
   await loadDevices();
   // Restore LMC token if saved

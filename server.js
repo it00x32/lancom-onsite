@@ -31,18 +31,27 @@ const DEFAULT_SETTINGS = {
   lastScanSubnet: '',
 };
 
+let _settingsCache = null;
+let _deviceCache   = null;
+
 function readSettings() {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) }; }
-  catch { return { ...DEFAULT_SETTINGS }; }
+  if (_settingsCache) return _settingsCache;
+  try { _settingsCache = { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) }; }
+  catch { _settingsCache = { ...DEFAULT_SETTINGS }; }
+  return _settingsCache;
 }
 function writeSettings(data) {
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ ...DEFAULT_SETTINGS, ...data }, null, 2));
+  _settingsCache = { ...DEFAULT_SETTINGS, ...data };
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(_settingsCache, null, 2));
 }
 function readDevices() {
-  try { return JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8')); }
-  catch { return {}; }
+  if (_deviceCache) return _deviceCache;
+  try { _deviceCache = JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8')); }
+  catch { _deviceCache = {}; }
+  return _deviceCache;
 }
 function writeDevices(data) {
+  _deviceCache = data;
   fs.writeFileSync(DEVICES_FILE, JSON.stringify(data, null, 2));
 }
 
@@ -363,15 +372,6 @@ async function snmpLldp(host, community, version) {
 
 // ── WiFi Mesh / WDS (LCOS LX) ────────────────────────────────────────────────
 
-function snmpStr(raw) {
-  const s = raw.trim();
-  let m = s.match(/STRING:\s*"(.*)"/);   if (m) return m[1];
-      m = s.match(/STRING:\s*(.*)/);     if (m) return m[1].trim();
-      m = s.match(/:\s*(\d+)/);          if (m) return m[1];
-      m = s.match(/^"(.*)"$/);           if (m) return m[1];
-  return s;
-}
-
 // lcosLXSetupWLANWDSLinks config (1.3.6.1.4.1.2356.13.2.20.13.1)
 function parseWdsConfig(raw) {
   const links = {};
@@ -440,7 +440,7 @@ function parseL2tpConfig(raw) {
     const [name] = decodeOidStr(m[2].split('.'), 0);
     if (!name) return;
     if (!endpoints[name]) endpoints[name] = { name };
-    const val = snmpStr(m[3]);
+    const val = snmpVal(m[3]);
     if (col === 2) endpoints[name].remoteIp  = val;
     if (col === 3) endpoints[name].port      = parseInt(val, 10) || 0;
     if (col === 4) endpoints[name].hostname  = val;
@@ -461,7 +461,7 @@ function parseL2tpStatus(raw) {
     const [endpointName]    = decodeOidStr(idxParts, off2);
     const key = `${remoteEnd}|${endpointName}`;
     if (!entries[key]) entries[key] = { remoteEnd, endpointName };
-    const val = snmpStr(m[3]);
+    const val = snmpVal(m[3]);
     if (col === 3) entries[key].state         = val;
     if (col === 4) entries[key].iface         = val;
     if (col === 5) entries[key].bridgeAddr    = val;
@@ -706,8 +706,10 @@ const server = http.createServer(async (req, res) => {
       });
 
       // Track client disconnect so workers can stop early
+      // Use res.on('close') – req emits 'close' after body is consumed (before scan finishes)
       let aborted = false;
-      req.on('close', () => { aborted = true; });
+      res.on('close', () => { aborted = true; });
+      if (res.socket) res.socket.setNoDelay(true);
 
       const send = (obj) => {
         if (aborted) return;
