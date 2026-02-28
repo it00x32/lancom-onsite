@@ -2144,7 +2144,7 @@ async function lmcSync() {
       else if(/LANCOM (LX|LW|OX|OW)\b/.test(modelUp)) os='LCOS LX';
       const type=detectDeviceType(os,model);
       const mac = (d.status?.mac||d.status?.ethMac||d.mac||'').toLowerCase();
-      const location = d.location?.name||d.locationName||d.site?.name||d.status?.location?.name||d.status?.locationName||d.status?.location||'';
+      const location = d.siteName||d.location?.name||d.locationName||d.site?.name||d.status?.location?.name||d.status?.locationName||d.status?.location||'';
       patch[ip]={ ip, name, model, os, type, mac, location, source:'lmc', lmcId:d.id||'',
         community:appSettings.snmpReadCommunity||'public', version:appSettings.snmpVersion||'2c',
         lastSeen:new Date().toISOString() };
