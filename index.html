@@ -706,6 +706,9 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
       <button class="fbtn f-red"     onclick="setMeshFilter('red')"    id="mf-red"><span class="dot dot-red"></span>Offline</button>
     </div>
     <input class="search-input" id="mesh-search" placeholder="Gerätename suchen…" oninput="renderMesh()" style="width:200px">
+    <select id="mesh-loc-filter" class="search-input" onchange="setMeshLocFilter(this.value)" style="width:150px" title="Standort filtern">
+      <option value="all">Alle Standorte</option>
+    </select>
     <div class="toolbar-spacer"></div>
     <button class="btn btn-sm btn-danger" onclick="clearMeshData()">Liste leeren</button>
   </div>
@@ -729,6 +732,9 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
       <button class="fbtn f-down"  onclick="setL2tpFilter('down')" id="lf-down"><span class="dot dot-red"></span>DOWN</button>
     </div>
     <input class="search-input" id="l2tp-search" placeholder="Gerätename suchen…" oninput="renderL2tp()" style="width:200px">
+    <select id="l2tp-loc-filter" class="search-input" onchange="setL2tpLocFilter(this.value)" style="width:150px" title="Standort filtern">
+      <option value="all">Alle Standorte</option>
+    </select>
     <div class="toolbar-spacer"></div>
     <button class="btn btn-sm btn-danger" onclick="clearL2tpData()">Liste leeren</button>
   </div>
@@ -752,6 +758,9 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
       <button class="fbtn f-red"     onclick="setDevFilter('offline')" id="df-offline"><span class="dot dot-red"></span>Offline</button>
     </div>
     <input class="search-input" id="dev-search" placeholder="Name / IP suchen…" oninput="renderDevices()" style="width:200px">
+    <select id="dev-loc-filter" class="search-input" onchange="setDevLocFilter(this.value)" style="width:150px" title="Standort filtern">
+      <option value="all">Alle Standorte</option>
+    </select>
     <div class="toolbar-spacer"></div>
     <button class="btn btn-sm" id="btn-topo-sync-all" onclick="syncTopologyAll()">&#x21BB; Daten Abrufen</button>
     <div class="sep"></div>
@@ -790,6 +799,9 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(1.25)" title="Vergrößern">＋</button>
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(0.8)" title="Verkleinern">－</button>
     <button class="btn btn-sm btn-ghost" onclick="topoFit()" title="Ansicht anpassen">⊡</button>
+    <select id="topo-loc-filter" class="search-input" onchange="setTopoLocFilter(this.value)" style="width:150px" title="Standort filtern">
+      <option value="all">Alle Standorte</option>
+    </select>
   </div>
   <div id="topo-status" class="status-bar"></div>
   <div id="topo-container" style="position:relative;width:100%;height:620px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;user-select:none">
@@ -829,6 +841,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
         <div style="flex:1;min-width:0">
           <div id="topo-detail-name" style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
           <div id="topo-detail-sub" style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div id="topo-detail-location" style="font-size:10px;color:var(--cyan);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none">&#128205; </div>
         </div>
         <button id="topo-detail-setroot" onclick="topoSetRootFromDetail()" style="background:rgba(37,99,235,.15);border:1px solid var(--border);border-radius:6px;color:#60a5fa;font-size:10px;font-weight:600;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#x2325; Startpunkt</button>
         <button onclick="topoCloseDetail()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:13px;padding:3px 7px;flex-shrink:0;">✕</button>
@@ -854,6 +867,14 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
     <div class="sep" id="sep-save-all" style="display:none"></div>
     <button class="btn btn-sm" id="btn-save-all" onclick="saveScanResults()" style="display:none;background:var(--green);color:#000">Alle speichern</button>
+  </div>
+  <div class="toolbar" style="border-top:1px solid var(--border2);padding-top:8px;margin-top:0;gap:8px">
+    <label style="font-size:12px;color:var(--text2);white-space:nowrap">Standort zuweisen:</label>
+    <select id="scan-loc-select" class="search-input" style="width:170px" onchange="q('scan-loc-new').value=''" title="Vorhandenen Standort wählen">
+      <option value="">Kein Standort</option>
+    </select>
+    <span style="font-size:12px;color:var(--text3)">oder neu:</span>
+    <input type="text" id="scan-loc-new" class="search-input" placeholder="Neuer Standort…" style="width:170px" oninput="if(this.value) q('scan-loc-select').value=''">
   </div>
   <div id="scan-progress-wrap" style="display:none;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
@@ -905,7 +926,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div class="table-title">Synchronisierte Geräte <span class="cnt" id="cnt-lmc"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-lmc">
-        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Betriebssystem</th><th>Typ</th><th>Status</th><th>Import</th></tr></thead>
+        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Status</th><th>Import</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -1114,6 +1135,10 @@ let l2tpData     = [];   // live L2TP data
 let meshFilter   = 'all';
 let l2tpFilter   = 'all';
 let devFilter    = 'all';
+let devLocFilter  = 'all';
+let meshLocFilter = 'all';
+let l2tpLocFilter = 'all';
+let topoLocFilter = 'all';
 let meshSort     = { col: null, dir: 1 };
 let l2tpSort     = { col: null, dir: 1 };
 let devSort      = { col: 'ip', dir: 1 };
@@ -1159,6 +1184,30 @@ function setDevFilter(f) {
   });
   renderDevices();
 }
+
+function getLocations() {
+  const locs = new Set();
+  Object.values(deviceStore).forEach(d => { if (d.location) locs.add(d.location); });
+  return [...locs].sort();
+}
+
+function refreshLocationSelects() {
+  const locs = getLocations();
+  const filterOpts = `<option value="all">Alle Standorte</option>` + locs.map(l => `<option value="${h(l)}">${h(l)}</option>`).join('');
+  const scanOpts   = `<option value="">Kein Standort</option>` + locs.map(l => `<option value="${h(l)}">${h(l)}</option>`).join('');
+  [['dev-loc-filter', filterOpts], ['mesh-loc-filter', filterOpts],
+   ['l2tp-loc-filter', filterOpts], ['topo-loc-filter', filterOpts],
+   ['scan-loc-select', scanOpts]].forEach(([id, opts]) => {
+    const el = q(id); if (!el) return;
+    const cur = el.value; el.innerHTML = opts;
+    if (cur) el.value = cur;
+  });
+}
+
+function setDevLocFilter(v)  { devLocFilter  = v; renderDevices(); }
+function setMeshLocFilter(v) { meshLocFilter = v; renderMesh(); }
+function setL2tpLocFilter(v) { l2tpLocFilter = v; renderL2tp(); }
+function setTopoLocFilter(v) { topoLocFilter = v; buildTopoFromStore(); }
 
 async function loadSettings() {
   try {
@@ -1210,6 +1259,7 @@ async function loadDevices() {
   try { const r = await fetch('/api/devices'); deviceStore = await r.json(); }
   catch { deviceStore = {}; }
   rebuildCachedData();
+  refreshLocationSelects();
   renderDevices();
   renderMesh();
   renderL2tp();
@@ -1219,6 +1269,7 @@ async function loadDevices() {
 async function saveDevice(dev) {
   deviceStore[dev.ip] = dev;
   await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ [dev.ip]: dev }) });
+  refreshLocationSelects();
   renderDevices();
   setBadge('devices', Object.keys(deviceStore).length);
 }
@@ -1226,6 +1277,7 @@ async function saveDevice(dev) {
 async function saveDevices(devMap) {
   Object.assign(deviceStore, devMap);
   await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(devMap) });
+  refreshLocationSelects();
   renderDevices();
   setBadge('devices', Object.keys(deviceStore).length);
 }
@@ -1257,6 +1309,7 @@ function renderDevices() {
     if (srch && !(d.name||d.ip||'').toLowerCase().includes(srch) && !d.ip.includes(srch)) return false;
     if (devFilter === 'online'  && d.online !== true)  return false;
     if (devFilter === 'offline' && d.online !== false) return false;
+    if (devLocFilter !== 'all'  && (d.location||'') !== devLocFilter) return false;
     return true;
   });
 
@@ -1274,6 +1327,7 @@ function renderDevices() {
       case 'os':       return (d.os||'').toLowerCase();
       case 'type':     return (d.type||'').toLowerCase();
       case 'source':   return (d.source||'').toLowerCase();
+      case 'location': return (d.location||'').toLowerCase();
       case 'lastSeen': return d.lastSeen||'';
       default:         return '';
     }
@@ -1299,13 +1353,14 @@ function renderDevices() {
     ${mkTh('Betriebssystem','os',devSort,'devSortClick')}
     ${mkTh('Typ','type',devSort,'devSortClick')}
     ${mkTh('Quelle','source',devSort,'devSortClick')}
+    ${mkTh('Standort','location',devSort,'devSortClick')}
     ${mkTh('Zuletzt gesehen','lastSeen',devSort,'devSortClick')}
     ${noSortTh('')}
   </tr>`;
 
   const tbody = q('tbl-devices').querySelector('tbody');
   if (!devs.length) {
-    tbody.innerHTML = `<tr><td colspan="13" class="empty">Keine Geräte ${srch||devFilter!=='all'?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14" class="empty">Keine Geräte ${srch||devFilter!=='all'||devLocFilter!=='all'?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
     return;
   }
   tbody.innerHTML = devs.map(dev => {
@@ -1324,6 +1379,7 @@ function renderDevices() {
       <td style="font-size:12px;color:var(--text2)">${h(dev.os||'—')}</td>
       <td><span class="badge ${typCls}">${typLbl}</span></td>
       <td>${srcLbl}</td>
+      <td style="font-size:12px;color:var(--text2)">${h(dev.location||'—')}</td>
       <td style="color:var(--text3);font-size:11px">${fmtDate(dev.lastSeen)}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="openDeviceDetail('${h(dev.ip)}')">Details</button>
@@ -1611,6 +1667,7 @@ function renderMesh() {
   const rows = allRows.filter(r => {
     const st = rssiStatus(r.signal, r.connected);
     if (meshFilter !== 'all' && st !== meshFilter) return false;
+    if (meshLocFilter !== 'all' && (deviceStore[r.deviceIp]?.location||'') !== meshLocFilter) return false;
     if (srch) {
       const peer = r.peerDev?.name || r.peerDev?.ip || '';
       if (!r.deviceName.toLowerCase().includes(srch) &&
@@ -1633,6 +1690,7 @@ function renderMesh() {
       case 'txRate':     return r.txRate??-1;
       case 'rxRate':     return r.rxRate??-1;
       case 'status':     return rssiStatus(r.signal, r.connected);
+      case 'loc':        return (deviceStore[r.deviceIp]?.location||'').toLowerCase();
       default:           return '';
     }
   };
@@ -1652,12 +1710,13 @@ function renderMesh() {
     ${mkTh('Eff.-Tx-Rate','txRate',meshSort,'meshSortClick')}
     ${mkTh('Eff.-Rx-Rate','rxRate',meshSort,'meshSortClick')}
     ${mkTh('Status','status',meshSort,'meshSortClick')}
+    ${mkTh('Standort','loc',meshSort,'meshSortClick')}
     ${noSortTh('')}
   </tr>`;
 
   const tbody = q('tbl-mesh').querySelector('tbody');
   if (!sortedRows.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
     return;
   }
 
@@ -1698,6 +1757,7 @@ function renderMesh() {
       <td style="color:var(--text2)">${r.txRate!=null?r.txRate+' Mbps':'—'}</td>
       <td style="color:var(--text2)">${r.rxRate!=null?r.rxRate+' Mbps':'—'}</td>
       <td><span class="dot ${s.cls}"></span><span class="badge ${s.bcls}">${s.lbl}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${h(deviceStore[r.deviceIp]?.location||'—')}</td>
       <td><div style="display:flex;gap:4px">${syncBtns}</div></td>
     </tr>`;
   }).join('');
@@ -1777,6 +1837,7 @@ function renderL2tp() {
     const up = r.state==='UP';
     if (l2tpFilter==='up' && !up) return false;
     if (l2tpFilter==='down' && up) return false;
+    if (l2tpLocFilter !== 'all' && (deviceStore[r.deviceIp]?.location||'') !== l2tpLocFilter) return false;
     if (srch && !r.deviceName.toLowerCase().includes(srch) && !r.deviceIp.includes(srch)) return false;
     return true;
   });
@@ -1789,6 +1850,7 @@ function renderL2tp() {
       case 'remoteEnd':    return (r.remoteEnd||'').toLowerCase();
       case 'remoteIp':     return (r.remoteIp||'').split('.').reduce((s,o)=>s*256+parseInt(o||'0'),0);
       case 'state':        return r.state||'';
+      case 'loc':          return (deviceStore[r.deviceIp]?.location||'').toLowerCase();
       default:             return '';
     }
   };
@@ -1804,12 +1866,13 @@ function renderL2tp() {
     ${mkTh('Gegenstelle','remoteEnd',l2tpSort,'l2tpSortClick')}
     ${mkTh('Remote-IP','remoteIp',l2tpSort,'l2tpSortClick')}
     ${mkTh('Status','state',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Standort','loc',l2tpSort,'l2tpSortClick')}
     ${noSortTh('')}
   </tr>`;
 
   const tbody = q('tbl-l2tp').querySelector('tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">${l2tpData.length?'Kein Treffer für aktiven Filter':'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">${l2tpData.length?'Kein Treffer für aktiven Filter':'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r => {
@@ -1821,6 +1884,7 @@ function renderL2tp() {
       <td>${h(r.remoteEnd||'—')}</td>
       <td class="mono" style="color:var(--text2)">${h(r.remoteIp||'—')}</td>
       <td><span class="dot ${up?'dot-green':'dot-red'}"></span><span class="badge ${up?'badge-green':'badge-red'}">${h(r.state||'—')}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${h(deviceStore[r.deviceIp]?.location||'—')}</td>
       <td><button class="btn btn-sm btn-ghost" onclick="syncL2tpDevice('${h(r.deviceIp)}')">&#x21BB;</button></td>
     </tr>`;
   }).join('');
@@ -1985,12 +2049,18 @@ async function saveScanResults() {
   setScanStatus(msg, skipped.length && !n ? 'error' : 'ok');
 }
 
+function getScanLocation() {
+  const newLoc = (q('scan-loc-new')?.value||'').trim();
+  if (newLoc) return newLoc;
+  return q('scan-loc-select')?.value || '';
+}
+
 function buildScanDeviceEntry(dev) {
   const type = detectDeviceType(dev.os, dev.sysDescr);
   return {
     ip: dev.ip, name: dev.sysName||dev.ip, model: extractModel(dev.sysDescr),
     os: dev.os, type, mac: dev.mac||'', sysDescr: dev.sysDescr,
-    sysLocation: dev.sysLocation,
+    sysLocation: dev.sysLocation, location: getScanLocation(),
     community: q('scan-community').value.trim()||'public',
     version:   q('scan-version').value||'2c',
     source: 'scanner', online: true, lastSeen: new Date().toISOString(),
@@ -2073,7 +2143,8 @@ async function lmcSync() {
       else if(/LANCOM (LX|LW|OX|OW)\b/.test(modelUp)) os='LCOS LX';
       const type=detectDeviceType(os,model);
       const mac = (d.status?.mac||d.status?.ethMac||d.mac||'').toLowerCase();
-      patch[ip]={ ip, name, model, os, type, mac, source:'lmc', lmcId:d.id||'',
+      const location = d.location?.name||d.locationName||d.site?.name||d.status?.location?.name||d.status?.locationName||d.status?.location||'';
+      patch[ip]={ ip, name, model, os, type, mac, location, source:'lmc', lmcId:d.id||'',
         community:appSettings.snmpReadCommunity||'public', version:appSettings.snmpVersion||'2c',
         lastSeen:new Date().toISOString() };
     });
@@ -2106,6 +2177,7 @@ async function lmcSync() {
         <td style="font-size:12px;color:var(--text2)">${h(dev.model||'—')}</td>
         <td style="font-size:12px">${h(dev.os||'—')}</td>
         <td><span class="badge ${typCls}">${typLbl}</span></td>
+        <td style="font-size:12px;color:var(--text2)">${h(dev.location||'—')}</td>
         <td><span class="dot ${isOn?'dot-green':'dot-red'}"></span>${isOn?'Online':'Offline'}</td>
         <td>${wasSkipped?'<span class="badge badge-yellow">Vorhanden</span>':'<span class="badge badge-green">Neu</span>'}</td>
       </tr>`;
@@ -2235,7 +2307,7 @@ let topoTx = 0, topoTy = 0, topoScale = 1;
 let topoDragNode = null, topoPan = null, topoWasDrag = false;
 let topoRootId = '', topoDetailId = null;
 
-const NW = 190, NH = 60, HG = 230, VG = 130;
+const NW = 190, NH = 72, HG = 230, VG = 140;
 const TOPO_TYPE_BADGE = {
   switch:   {label:'SW', bg:'rgba(170,218,247,.15)', color:'#aadaf7'},
   'lx-ap':  {label:'AP', bg:'rgba(249,115,22,.15)',  color:'#f97316'},
@@ -2268,10 +2340,14 @@ function resolveTopoNeighbor(entry) {
 function buildTopoGraph(lldpMap) {
   topoNodes = {}; topoEdges = [];
 
-  Object.values(deviceStore).filter(d => d.online !== false).forEach(d => {
+  Object.values(deviceStore).filter(d => {
+    if (d.online === false) return false;
+    if (topoLocFilter !== 'all' && (d.location||'') !== topoLocFilter) return false;
+    return true;
+  }).forEach(d => {
     topoNodes[d.ip] = {
       id: d.ip, name: d.name||d.ip, type: d.type||'unknown',
-      os: d.os||'', model: d.model||'', online: d.online, ghost: false,
+      os: d.os||'', model: d.model||'', location: d.location||'', online: d.online, ghost: false,
       x: 0, y: 0, fixed: false,
     };
   });
@@ -2521,6 +2597,7 @@ function renderTopoSvg() {
     const badgeColor  = badge?.color || 'rgba(148,163,184,.9)';
     const dname       = node.name.length>21 ? node.name.slice(0,20)+'…' : node.name;
     const dsub        = (node.model||node.os||'').slice(0,26);
+    const dloc        = (node.location||'').slice(0,28);
 
     svg += `<g class="topo-node" onmousedown="topoNodeDragStart(event,'${node.id.replace(/'/g,'')}',event)" onclick="topoNodeClick('${node.id.replace(/'/g,'')}');"${glow}>
       <rect class="topo-node-rect" x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${bgFill}" stroke="${borderColor}" stroke-width="${isRoot?2.5:1.5}"/>
@@ -2528,8 +2605,9 @@ function renderTopoSvg() {
       <circle cx="${rx+14}" cy="${y}" r="5" fill="${dotColor}"${node.online===true?' filter="url(#topo-glow)"':''}/>
       <rect x="${rx+NW-34}" y="${ry+6}" width="26" height="14" rx="4" fill="${badgeBg}"/>
       <text x="${rx+NW-21}" y="${ry+16}" text-anchor="middle" font-size="9" font-weight="800" fill="${badgeColor}" font-family="system-ui,sans-serif">${h(badgeLabel)}</text>
-      <text x="${rx+26}" y="${ry+24}" font-size="12" font-weight="700" fill="${tt.nodeText}" font-family="system-ui,sans-serif">${h(dname)}</text>
-      <text x="${rx+26}" y="${ry+41}" font-size="10" fill="${tt.nodeSub}" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
+      <text x="${rx+26}" y="${ry+26}" font-size="12" font-weight="700" fill="${tt.nodeText}" font-family="system-ui,sans-serif">${h(dname)}</text>
+      <text x="${rx+26}" y="${ry+43}" font-size="10" fill="${tt.nodeSub}" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
+      ${dloc?`<text x="${rx+26}" y="${ry+59}" font-size="9" fill="${tt.nodeSub}" font-family="system-ui,sans-serif" opacity="0.7">&#128205; ${h(dloc)}</text>`:''}
     </g>`;
   });
 
@@ -2550,6 +2628,8 @@ function topoOpenDetail(id) {
   q('topo-detail-name').textContent = node.name;
   const subParts = [node.model, node.os, node.ghost ? null : node.id].filter(Boolean);
   q('topo-detail-sub').textContent = subParts.join(' · ') || '–';
+  const locEl = q('topo-detail-location');
+  if (locEl) { locEl.textContent = node.location || ''; locEl.style.display = node.location ? '' : 'none'; }
   q('topo-detail-setroot').style.display = node.ghost ? 'none' : '';
 
   const entries = topoLldpMap[id] || [];
@@ -2901,7 +2981,7 @@ function buildTopoFromStore() {
         topoNodes[peerDev.ip] = {
           id: peerDev.ip, name: peerDev.name||peerDev.ip,
           type: peerDev.type||'unknown', os: peerDev.os||'', model: peerDev.model||'',
-          online: peerDev.online, ghost: false, x: 0, y: 0, fixed: false,
+          location: peerDev.location||'', online: peerDev.online, ghost: false, x: 0, y: 0, fixed: false,
         };
       }
       const edgeId = 'wds:' + [dev.ip, peerDev.ip].sort().join('||');
@@ -2925,7 +3005,7 @@ function buildTopoFromStore() {
         topoNodes[remoteIp] = {
           id: remoteIp, name: rd ? (rd.name||remoteIp) : remoteIp,
           type: rd?.type||'unknown', os: rd?.os||'', model: rd?.model||'',
-          online: rd ? rd.online : false, ghost: !rd, x: 0, y: 0, fixed: false,
+          location: rd?.location||'', online: rd ? rd.online : false, ghost: !rd, x: 0, y: 0, fixed: false,
         };
       }
       const edgeId = 'l2tp:' + [dev.ip, remoteIp].sort().join('||');
