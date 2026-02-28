@@ -10,14 +10,32 @@ Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
 | Tool | Zweck | Paket |
 |------|-------|-------|
-| **Node.js** >= 18 | Web-Server (kein npm nötig) | siehe unten |
+| **Node.js** >= 18 | Web-Server (kein npm nötig) | NodeSource (siehe unten) |
 | **snmpget / snmpwalk / snmpbulkwalk** | SNMP-Abfragen | `snmp` (apt) |
+| **curl** | NodeSource-Setup-Skript herunterladen | `curl` (apt) |
+| **git** | Repository klonen | `git` (apt) |
 
 ---
 
 ## Installation (Ubuntu / Debian)
 
-### 1. Node.js installieren
+### 1. System aktualisieren
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 2. Hilfspakete installieren
+
+`curl` wird für das NodeSource-Installationsskript benötigt, `git` zum Klonen des Repositories.
+
+```bash
+sudo apt install -y curl git
+```
+
+### 3. Node.js installieren
+
+Node.js ist in den Standard-Ubuntu-Paketquellen oft veraltet. Über NodeSource wird die aktuelle LTS-Version installiert:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo bash -
@@ -27,20 +45,29 @@ sudo apt install -y nodejs
 node -v
 ```
 
-### 2. SNMP-Tools installieren
+### 4. SNMP-Tools installieren
+
+Das Paket `snmp` enthält `snmpget`, `snmpwalk` und `snmpbulkwalk`, die der Server intern für alle Abfragen nutzt. `snmp-mibs-downloader` lädt die Standard-MIB-Dateien nach (empfohlen, aber optional).
 
 ```bash
 sudo apt install -y snmp snmp-mibs-downloader
 ```
 
-### 3. Projekt klonen
+Nach der Installation die MIB-Nutzung in der SNMP-Konfiguration aktivieren:
+
+```bash
+# Zeile "mibs :" auskommentieren, damit alle MIBs geladen werden
+sudo sed -i 's/^mibs :$/# mibs :/' /etc/snmp/snmp.conf
+```
+
+### 5. Projekt klonen
 
 ```bash
 git clone https://github.com/it00x32/lancom-onsite.git
 cd lancom-onsite
 ```
 
-### 4. Starten
+### 6. Starten
 
 ```bash
 node server.js          # Port 3002 (Standard)
@@ -48,6 +75,17 @@ node server.js 8080     # Alternativer Port
 ```
 
 Die Web-Oberfläche ist dann erreichbar unter `http://<server-ip>:<port>`
+
+### 7. Firewall-Freigabe (falls ufw aktiv)
+
+```bash
+# Prüfen ob ufw aktiv ist
+sudo ufw status
+
+# Port 3002 freigeben (oder den gewählten Port)
+sudo ufw allow 3002/tcp
+sudo ufw reload
+```
 
 ---
 
