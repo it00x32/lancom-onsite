@@ -112,7 +112,13 @@ function macFromDecOid(suffix) {
 }
 
 function macFromHexStr(str) {
-  const hex = str.replace(/[:\s]/g, '').toLowerCase();
+  // Colon-separated, possibly unpadded: "0:a0:57:36:f1:96" or "00:a0:57:36:f1:96"
+  const parts = str.trim().split(':');
+  if (parts.length === 6 && parts.every(p => /^[0-9a-fA-F]{1,2}$/.test(p))) {
+    return parts.map(p => p.padStart(2, '0').toLowerCase()).join(':');
+  }
+  // Space-separated: "00 a0 57 36 f1 96"
+  const hex = str.replace(/\s/g, '').toLowerCase();
   if (hex.length !== 12) return null;
   return hex.match(/.{2}/g).join(':');
 }
@@ -601,8 +607,8 @@ async function scanHost(host, community, version) {
     if (/\.2\.1\.1\.5\.0\s*=/.test(line))  sysName     = snmpVal(line.split('=').slice(1).join('='));
     if (/\.2\.1\.1\.6\.0\s*=/.test(line))  sysLocation = snmpVal(line.split('=').slice(1).join('='));
     if (/\.2\.2\.1\.6\.1\s*=/.test(line)) {
-      const hx = line.match(/Hex-STRING:\s*([\da-fA-F ]+)/i);
-      if (hx) mac = hx[1].trim().replace(/\s+/g, ':').toLowerCase();
+      const hx = line.match(/(?:Hex-STRING|STRING):\s*([\da-fA-F: ]+)/i);
+      if (hx) mac = macFromHexStr(hx[1].trim()) || '';
     }
   });
 
@@ -788,7 +794,7 @@ const server = http.createServer(async (req, res) => {
             const macs = [];
             ifPhysOut.split('\n').forEach(line => {
               // Nur Hex-STRING Einträge sind echte MAC-Adressen
-              const m = line.match(/2\.2\.1\.6\.(\d+)\s*=\s*Hex-STRING:\s*([\da-fA-F ]+)/i);
+              const m = line.match(/2\.2\.1\.6\.(\d+)\s*=\s*(?:Hex-STRING|STRING):\s*([\da-fA-F: ]+)/i);
               if (!m) return;
               const idx = m[1], name = ifNames[idx] || '';
               // Tunnel, Loopback und reine Bridge-Interfaces ausschließen
