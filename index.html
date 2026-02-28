@@ -293,7 +293,7 @@ td.mono { font-family:monospace; font-size:12px; }
       <label class="checkbox-label"><input type="checkbox" id="lmc-save-token" onchange="lmcToggleSave()"> Temporär speichern (nur dieser Browser)</label>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="btn btn-sm" onclick="lmcTest()">Verbindungstest</button>
+      <button class="btn btn-sm" onclick="lmcTest()">Verbinden</button>
     </div>
   </div>
 
@@ -973,7 +973,8 @@ function lmcToggleSave() {
 async function lmcCall(service, apiPath, method='GET', body=null) {
   const token = lmcGetToken(); if (!token) throw new Error('Kein API Token eingegeben');
   const r = await fetch('/api/lmc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,path:apiPath,method,token,body})});
-  const d = await r.json();
+  let d;
+  try { d = await r.json(); } catch { throw new Error(`Server-Antwort ist kein gültiges JSON (HTTP ${r.status}) – prüfe API Token`); }
   if (!r.ok || d.error) throw new Error(d.message||d.error||`HTTP ${r.status}`);
   return d;
 }
