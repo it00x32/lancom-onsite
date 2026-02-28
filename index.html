@@ -1204,6 +1204,7 @@ function refreshLocationSelects() {
   });
 }
 
+function matchesLocFilter(d) { return devLocFilter === 'all' || (d.location||'') === devLocFilter; }
 function setDevLocFilter(v)  { devLocFilter  = v; renderDevices(); }
 function setMeshLocFilter(v) { meshLocFilter = v; renderMesh(); }
 function setL2tpLocFilter(v) { l2tpLocFilter = v; renderL2tp(); }
@@ -1418,10 +1419,10 @@ async function checkAllDeviceStatus() {
   const wrap = q('dev-progress-wrap');
   const bar  = q('dev-progress-bar');
   const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore);
+  const devList = Object.values(deviceStore).filter(matchesLocFilter);
   if (!devList.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine Geräte vorhanden.'; return;
+    st.textContent = devLocFilter !== 'all' ? `Keine Geräte im Standort „${devLocFilter}".` : 'Keine Geräte vorhanden.'; return;
   }
 
   btn.disabled = true; btn.textContent = '…';
@@ -1470,10 +1471,10 @@ async function syncDeviceMacs() {
   const wrap = q('dev-progress-wrap');
   const bar  = q('dev-progress-bar');
   const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore).filter(d => d.online !== false);
+  const devList = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
   if (!devList.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
+    st.textContent = devLocFilter !== 'all' ? `Keine Online-Geräte im Standort „${devLocFilter}".` : 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
   }
 
   btn.disabled = true; btn.textContent = '…';
@@ -1552,10 +1553,10 @@ async function syncDeviceLldp() {
   const wrap = q('dev-progress-wrap');
   const bar  = q('dev-progress-bar');
   const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore).filter(d => d.online !== false);
+  const devList = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
   if (!devList.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
+    st.textContent = devLocFilter !== 'all' ? `Keine Online-Geräte im Standort „${devLocFilter}".` : 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
   }
 
   btn.disabled = true; btn.textContent = '…';
@@ -2763,10 +2764,10 @@ function topoFit() {
 async function syncWdsAll() {
   const btn = q('btn-wds-sync');
   const st  = q('dev-sync-status');
-  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false);
+  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false && matchesLocFilter(d));
   if (!lxDevs.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
+    st.textContent = devLocFilter !== 'all' ? `Keine online LX APs im Standort „${devLocFilter}".` : 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
   }
   btn.disabled = true;
   st.className = 'status-bar loading';
@@ -2800,10 +2801,10 @@ async function syncWdsAll() {
 async function syncL2tpAll() {
   const btn = q('btn-l2tp-sync2');
   const st  = q('dev-sync-status');
-  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false);
+  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false && matchesLocFilter(d));
   if (!lxDevs.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
+    st.textContent = devLocFilter !== 'all' ? `Keine online LX APs im Standort „${devLocFilter}".` : 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
   }
   btn.disabled = true;
   st.className = 'status-bar loading';
@@ -2837,10 +2838,10 @@ async function syncL2tpAll() {
 async function syncTopologyAll() {
   const btn = q('btn-topo-sync-all');
   const st  = q('dev-sync-status');
-  const allDevs = Object.values(deviceStore);
+  const allDevs = Object.values(deviceStore).filter(matchesLocFilter);
   if (!allDevs.length) {
     st.className = 'status-bar error';
-    st.textContent = 'Keine Geräte gespeichert – bitte zuerst Geräte importieren.';
+    st.textContent = devLocFilter !== 'all' ? `Keine Geräte im Standort „${devLocFilter}".` : 'Keine Geräte gespeichert – bitte zuerst Geräte importieren.';
     return;
   }
 
@@ -2870,7 +2871,7 @@ async function syncTopologyAll() {
     }
 
     // ── Phase 2: WiFi Mesh (nur lx-ap, nur online) ───────────────────────────
-    const lxOnline = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online === true);
+    const lxOnline = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online === true && matchesLocFilter(d));
     meshData = [];
     done = 0;
     st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – 0 / ${lxOnline.length}`;
@@ -2909,7 +2910,7 @@ async function syncTopologyAll() {
     }
 
     // ── Phase 4: LLDP – identisch mit "LLDP Sync" unter Geräte ──────────────
-    const onlineDevs = Object.values(deviceStore).filter(d => d.online !== false);
+    const onlineDevs = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
     st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – 0 / ${onlineDevs.length}`;
     await lldpSyncCore(onlineDevs, (d, total, dev) => {
       st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – ${d} / ${total} – ${h(dev.name||dev.ip)}`;
