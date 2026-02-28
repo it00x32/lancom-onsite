@@ -1,11 +1,11 @@
 # LANCOM OnSite
 
-Lokales SNMP-Dashboard für LANCOM-Geräte. Kein Cloud-Zugang erforderlich – alle Abfragen laufen direkt per SNMP gegen das Gerät.
+Lokales SNMP-Dashboard für LANCOM-Geräte. Kein Cloud-Zugang erforderlich – alle Abfragen laufen direkt per SNMP gegen das Gerät. Optional: LMC-Import zum Befüllen der Geräteliste aus der LANCOM Management Cloud.
 
 ## Voraussetzungen
 
 - **Node.js** >= 16
-- **snmp-utils** (snmpwalk / snmpbulkwalk)
+- **snmp-utils** (snmpwalk / snmpbulkwalk / snmpget)
 
 ```bash
 # Ubuntu / Debian
@@ -51,37 +51,30 @@ systemctl daemon-reload
 systemctl enable --now lancom-onsite
 ```
 
-## Nutzung
-
-1. IP-Adresse oder Hostname des Geräts eingeben
-2. SNMP-Community eingeben (Standard: `public`)
-3. SNMP-Version wählen (Standard: SNMPv2c)
-4. Auf **Abfragen** klicken (oder Enter drücken)
-
-**URL-Parameter** für direkte Verlinkung:
-```
-http://server:3000/?host=192.168.1.1&community=public
-```
+Persistente Daten (Geräteliste, Einstellungen) werden unter `data/` im Arbeitsverzeichnis gespeichert.
 
 ## Features
 
 | Tab | Inhalt |
 |-----|--------|
-| Gerät | Gerätename, Beschreibung, Uptime, Standort, Kontakt |
-| Interfaces | Status (UP/DOWN), Geschwindigkeit, RX/TX-Traffic |
-| Verbundene Geräte | MAC-Adresstabelle (FDB) + ARP-Tabelle mit IP-Zuordnung |
-| WLAN-Clients | Verbundene WLAN-Clients (LANCOM LCOS LX Access Points) |
-| LLDP-Nachbarn | Benachbarte Geräte via LLDP |
-| WiFi Mesh | WDS-Links mit Band, Status, Signal, Peer-MAC, Tx/Rx, WPA (nur LCOS LX) |
-| L2TPv3 | L2TP-Endpunkte mit Gegenstelle, Remote-IP, Port, Status, Interface, Verbindungszeit (nur LCOS LX) |
-| Scanner | Subnetz/IP-Bereich nach LANCOM-Geräten durchsuchen, direkt auswählen und abfragen |
-| Geräte | Gespeicherte Geräteliste (localStorage), „Alle neu abfragen", einzeln öffnen oder entfernen |
+| **WiFi Mesh** | Flat-Liste aller WDS-Links über alle LX APs, RSSI-Farbkodierung (konfigurierbar), Filter (Status/Suche), Sync-alle + Einzel-Sync (nur LCOS LX) |
+| **L2TPv3** | Flat-Liste aller L2TP-Endpunkte über alle LX APs, UP/DOWN-Status, Filter (Status/Suche), Sync-alle + Einzel-Sync (nur LCOS LX) |
+| **Geräte** | Serverseitige Geräteliste (multi-browser), Filter nach Typ (LX AP, LCOS AP, Switch, Router, Firewall), Quellen: Scanner + LMC Import |
+| **Scanner** | Subnetz/IP-Bereich nach LANCOM-Geräten durchsuchen, Ergebnisse in Geräteliste speichern, Community/Version aus Einstellungen |
+| **LMC Import** | LANCOM Management Cloud API, Account-/Projekt-Auswahl, Geräte-Sync in lokale Geräteliste (API-Token nur im Browser) |
+| **Einstellungen** | SNMP Read/Write Community, SNMP-Version, RSSI-Schwellwerte (grün/gelb/orange) – serverseitig persistent |
+| **Gerät (Detail)** | System, Interfaces, Verbundene Geräte (MAC+ARP), WLAN-Clients, LLDP-Nachbarn – Sub-Tabs pro Gerät |
 
 ## Unterstützte Geräte
 
-- LANCOM Router und Switches (LCOS)
-- LANCOM Access Points (LCOS LX) – inkl. WLAN-Client-Tabelle
-- Alle anderen SNMP-fähigen Geräte (MIB-II Standard)
+| Typ | Erkannt als | SNMP-Features |
+|-----|-------------|---------------|
+| LANCOM Router (LCOS) | Router | System, Interfaces, MAC/ARP, LLDP |
+| LANCOM Switches (LCOS SX) | Switch | System, Interfaces, MAC/ARP, LLDP |
+| LANCOM Access Points (LCOS LX) | LX AP | System, Interfaces, MAC/ARP, LLDP, **WLAN-Clients, WiFi Mesh, L2TPv3** |
+| LANCOM Access Points (LCOS) | LCOS AP | System, Interfaces, MAC/ARP, LLDP |
+| LANCOM Firewalls (LCOS FX) | Firewall | System, Interfaces, MAC/ARP, LLDP |
+| Andere SNMP-Geräte | Unknown | System, Interfaces, MAC/ARP, LLDP (MIB-II) |
 
 ## SNMP-Voraussetzungen am Gerät
 
@@ -89,3 +82,12 @@ Am abzufragenden LANCOM-Gerät muss SNMP aktiviert und die verwendete Community 
 
 - **LCOS**: Gerätekonfiguration → Management → SNMP → SNMPv2 aktivieren, Community eintragen
 - **LCOS LX**: Gerätekonfiguration → Management → SNMP → SNMPv2 aktivieren, Read-Community eintragen
+
+## Datenpersistenz
+
+Alle serverseitigen Daten liegen unter `data/` im Projektverzeichnis:
+
+| Datei | Inhalt |
+|-------|--------|
+| `data/settings.json` | SNMP-Einstellungen, RSSI-Schwellwerte, letztes Scan-Subnetz |
+| `data/devices.json` | Geräteliste (IP, Name, Typ, OS, Community, Quelle) |
