@@ -6,11 +6,79 @@
  */
 
 const http   = require('http');
+const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
+const urlMod = require('url');
 const { spawn } = require('child_process');
 
-const PORT = parseInt(process.argv[2] || process.env.PORT || '3000', 10);
+const PORT = parseInt(process.argv[2] || process.env.PORT || '3002', 10);
+
+// ── Datenpersistenz ───────────────────────────────────────────────────────────
+
+const DATA_DIR      = path.join(__dirname, 'data');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+const DEVICES_FILE  = path.join(DATA_DIR, 'devices.json');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const DEFAULT_SETTINGS = {
+  snmpReadCommunity:  'public',
+  snmpWriteCommunity: 'private',
+  snmpVersion:        '2c',
+  rssiGreen:  200,
+  rssiYellow: 150,
+  rssiOrange:  80,
+  lastScanSubnet: '',
+};
+
+function readSettings() {
+  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) }; }
+  catch { return { ...DEFAULT_SETTINGS }; }
+}
+function writeSettings(data) {
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify({ ...DEFAULT_SETTINGS, ...data }, null, 2));
+}
+function readDevices() {
+  try { return JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8')); }
+  catch { return {}; }
+}
+function writeDevices(data) {
+  fs.writeFileSync(DEVICES_FILE, JSON.stringify(data, null, 2));
+}
+
+// ── LMC-Proxy ─────────────────────────────────────────────────────────────────
+
+const LMC_SERVICES = {
+  auth:    'https://cloud.lancom.de/cloud-service-auth',
+  devices: 'https://cloud.lancom.de/cloud-service-devices',
+};
+
+function lmcProxy(service, apiPath, method, token, body) {
+  return new Promise((resolve, reject) => {
+    const base = LMC_SERVICES[service];
+    if (!base) { resolve({ status: 400, body: JSON.stringify({ error: 'Unknown service' }) }); return; }
+    const parsed  = new urlMod.URL(base + apiPath);
+    const bodyStr = body ? JSON.stringify(body) : '';
+    const opts = {
+      hostname: parsed.hostname,
+      path:     parsed.pathname + parsed.search,
+      method:   (method || 'GET').toUpperCase(),
+      headers: {
+        'Authorization': `LMC-API-KEY ${token}`,
+        'Accept':        'application/json',
+        ...(bodyStr ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) } : {}),
+      },
+    };
+    const req = https.request(opts, res => {
+      let data = '';
+      res.on('data', d => (data += d));
+      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    if (bodyStr) req.write(bodyStr);
+    req.end();
+  });
+}
 
 // ── SNMP helpers ──────────────────────────────────────────────────────────────
 
@@ -523,6 +591,66 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  // ── REST-API: Settings & Devices & LMC ────────────────────────────────────
+
+  if (req.url === '/api/settings') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(readSettings())); return;
+    }
+    if (req.method === 'POST') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try { writeSettings(JSON.parse(b)); res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
+        catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+      }); return;
+    }
+  }
+
+  if (req.url === '/api/devices') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(readDevices())); return;
+    }
+    if (req.method === 'POST') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try {
+          const patch = JSON.parse(b);
+          const merged = { ...readDevices(), ...patch };
+          writeDevices(merged);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, count: Object.keys(merged).length }));
+        } catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+      }); return;
+    }
+    if (req.method === 'DELETE') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try {
+          const { ip } = JSON.parse(b || '{}');
+          const devs = readDevices();
+          if (ip) delete devs[ip]; else Object.keys(devs).forEach(k => delete devs[k]);
+          writeDevices(devs);
+          res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}');
+        } catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+      }); return;
+    }
+  }
+
+  if (req.method === 'POST' && req.url === '/api/lmc') {
+    let b = ''; req.on('data', d => (b += d));
+    req.on('end', async () => {
+      try {
+        const { service, path: apiPath, method = 'GET', token, body: reqBody } = JSON.parse(b);
+        if (!token) throw new Error('token fehlt');
+        const result = await lmcProxy(service, apiPath, method, token, reqBody || null);
+        res.writeHead(result.status, { 'Content-Type': 'application/json' });
+        res.end(result.body);
+      } catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+    }); return;
+  }
 
   // Netzwerk-Scanner (SSE-Stream)
   if (req.method === 'POST' && req.url === '/scan') {

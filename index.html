@@ -6,139 +6,144 @@
 <title>LANCOM OnSite</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg:       #0f1117;
-  --bg2:      #181c27;
-  --bg3:      #1e2333;
-  --border:   #2a3050;
-  --blue:     #2563eb;
-  --blue2:    #1d4ed8;
-  --green:    #22c55e;
-  --red:      #ef4444;
-  --yellow:   #f59e0b;
-  --text:     #e2e8f0;
-  --text2:    #94a3b8;
-  --text3:    #64748b;
-  --radius:   8px;
+  --bg:      #0f1117; --bg2: #181c27; --bg3: #1e2333;
+  --border:  #2a3050;
+  --blue:    #2563eb; --blue2: #1d4ed8;
+  --green:   #22c55e; --red: #ef4444; --yellow: #f59e0b; --orange: #f97316;
+  --text:    #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+  --radius:  8px;
 }
-
-body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 14px; min-height: 100vh; }
+body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; font-size:14px; min-height:100vh; }
 
 /* Header */
-.header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px; }
-.header-logo { font-size: 18px; font-weight: 700; color: var(--blue); letter-spacing: -0.5px; white-space: nowrap; }
-.header-logo span { color: var(--text2); font-weight: 400; }
-
-/* Settings bar */
-.settings-bar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.settings-bar label { color: var(--text2); font-size: 12px; white-space: nowrap; }
-.settings-bar input, .settings-bar select {
-  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
-  color: var(--text); padding: 6px 10px; font-size: 13px; outline: none; transition: border-color .15s;
-}
-.settings-bar input:focus, .settings-bar select:focus { border-color: var(--blue); }
-.settings-bar input[type=text] { width: 160px; }
-.settings-bar input[name=community] { width: 120px; }
-.btn { background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .15s; white-space: nowrap; }
-.btn:hover { background: var(--blue2); }
-.btn:disabled { opacity: .5; cursor: default; }
-.btn-sm { padding: 5px 12px; font-size: 12px; }
-.sep { width: 1px; height: 24px; background: var(--border); }
-.refresh-label { display: flex; align-items: center; gap: 6px; color: var(--text2); font-size: 12px; cursor: pointer; }
-.refresh-label input { accent-color: var(--blue); }
-#refresh-countdown { color: var(--text3); font-size: 11px; }
-
-/* Status */
-.status-bar { padding: 8px 20px; font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; min-height: 34px; }
-.status-bar.loading { color: var(--blue); }
-.status-bar.error   { color: var(--red); }
-.status-bar.ok      { color: var(--green); }
-.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.header { background:var(--bg2); border-bottom:1px solid var(--border); padding:0 20px; display:flex; align-items:center; gap:12px; height:52px; }
+.header-logo { font-size:17px; font-weight:700; color:var(--blue); letter-spacing:-.5px; }
+.header-logo span { color:var(--text2); font-weight:400; }
+#detail-badge { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:12px; color:var(--text2); cursor:pointer; display:none; }
 
 /* Tabs */
-.tabs { display: flex; gap: 2px; padding: 0 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
-.tab { padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; white-space: nowrap; }
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-.tab .badge { display: inline-block; background: var(--bg3); color: var(--text3); font-size: 11px; padding: 1px 6px; border-radius: 10px; margin-left: 5px; }
-.tab.active .badge { background: var(--blue); color: #fff; }
+.tabs { display:flex; gap:2px; padding:0 20px; background:var(--bg2); border-bottom:1px solid var(--border); overflow-x:auto; }
+.tab { padding:10px 14px; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; white-space:nowrap; flex-shrink:0; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--blue); border-bottom-color:var(--blue); }
+.tab .badge { display:inline-block; background:var(--bg3); color:var(--text3); font-size:11px; padding:1px 6px; border-radius:10px; margin-left:4px; }
+.tab.active .badge { background:var(--blue); color:#fff; }
 
 /* Content */
-.content { padding: 20px; }
-.panel { display: none; }
-.panel.active { display: block; }
+.content { padding:20px; }
+.panel { display:none; }
+.panel.active { display:block; }
 
-/* Info cards (system) */
-.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-.info-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-.info-card .value { font-size: 15px; font-weight: 600; color: var(--text); word-break: break-all; }
-.info-card .value.mono { font-family: monospace; font-size: 13px; }
+/* Toolbar */
+.toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.toolbar-spacer { flex:1; }
+
+/* Buttons */
+.btn { background:var(--blue); color:#fff; border:none; border-radius:6px; padding:7px 16px; font-size:13px; font-weight:500; cursor:pointer; transition:background .15s; white-space:nowrap; }
+.btn:hover { background:var(--blue2); }
+.btn:disabled { opacity:.5; cursor:default; }
+.btn-sm { padding:5px 10px; font-size:12px; }
+.btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text2); }
+.btn-ghost:hover { border-color:var(--blue); color:var(--blue); background:transparent; }
+.btn-danger { background:transparent; border:1px solid var(--border); color:var(--text3); }
+.btn-danger:hover { border-color:var(--red); color:var(--red); background:transparent; }
+.sep { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+
+/* Filter buttons */
+.filter-group { display:flex; gap:4px; flex-wrap:wrap; }
+.fbtn { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:5px; }
+.fbtn:hover { border-color:var(--text2); color:var(--text); }
+.fbtn.active { border-color:var(--blue); color:var(--blue); background:rgba(37,99,235,.12); }
+.fbtn.f-green.active  { border-color:var(--green);  color:var(--green);  background:rgba(34,197,94,.1); }
+.fbtn.f-yellow.active { border-color:var(--yellow); color:var(--yellow); background:rgba(245,158,11,.1); }
+.fbtn.f-orange.active { border-color:var(--orange); color:var(--orange); background:rgba(249,115,22,.1); }
+.fbtn.f-red.active    { border-color:var(--red);    color:var(--red);    background:rgba(239,68,68,.1); }
+.fbtn.f-up.active     { border-color:var(--green);  color:var(--green);  background:rgba(34,197,94,.1); }
+.fbtn.f-down.active   { border-color:var(--red);    color:var(--red);    background:rgba(239,68,68,.1); }
+
+/* Status dot / badge */
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+.dot-green  { background:var(--green);  box-shadow:0 0 4px var(--green); }
+.dot-yellow { background:var(--yellow); }
+.dot-orange { background:var(--orange); }
+.dot-red    { background:var(--red); }
+.dot-gray   { background:var(--text3); }
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+.badge-green  { background:rgba(34,197,94,.15);  color:var(--green); }
+.badge-red    { background:rgba(239,68,68,.15);   color:var(--red); }
+.badge-yellow { background:rgba(245,158,11,.15);  color:var(--yellow); }
+.badge-orange { background:rgba(249,115,22,.15);  color:var(--orange); }
+.badge-gray   { background:rgba(100,116,139,.15); color:var(--text3); }
+.badge-blue   { background:rgba(37,99,235,.15);   color:#60a5fa; }
 
 /* Tables */
-.table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.table-title { padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.table-title .cnt { color: var(--text3); font-weight: 400; font-size: 12px; }
-table { width: 100%; border-collapse: collapse; }
-th { background: var(--bg3); color: var(--text3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--border); }
-td { padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--bg3); }
-td.mono { font-family: monospace; font-size: 12px; }
+.table-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.table-title { padding:11px 16px; font-size:13px; font-weight:600; color:var(--text2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.table-title .cnt { color:var(--text3); font-weight:400; font-size:12px; }
+table { width:100%; border-collapse:collapse; }
+th { background:var(--bg3); color:var(--text3); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:8px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--bg3); }
+td.mono { font-family:monospace; font-size:12px; }
 
-/* Status dot */
-.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
-.dot-green  { background: var(--green); box-shadow: 0 0 4px var(--green); }
-.dot-red    { background: var(--red); }
-.dot-yellow { background: var(--yellow); }
-.dot-gray   { background: var(--text3); }
+/* Status bar */
+.status-bar { padding:7px 0; font-size:12px; color:var(--text3); display:flex; align-items:center; gap:8px; min-height:30px; }
+.status-bar.loading { color:var(--blue); }
+.status-bar.error   { color:var(--red); }
+.status-bar.ok      { color:var(--green); }
+.spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-/* Badges */
-.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-.badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
-.badge-red    { background: rgba(239,68,68,.15);   color: var(--red); }
-.badge-yellow { background: rgba(245,158,11,.15);  color: var(--yellow); }
-.badge-gray   { background: rgba(100,116,139,.15); color: var(--text3); }
+/* Search input */
+.search-input { background:var(--bg2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:6px 12px; font-size:13px; outline:none; }
+.search-input:focus { border-color:var(--blue); }
 
-/* Placeholder */
-.empty { color: var(--text3); text-align: center; padding: 48px 20px; font-size: 13px; }
-.empty .icon { font-size: 32px; margin-bottom: 8px; opacity: .4; }
+/* Settings */
+.settings-section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.settings-section h3 { font-size:14px; font-weight:600; margin-bottom:16px; }
+.settings-grid { display:grid; grid-template-columns:220px 1fr; gap:10px 16px; align-items:center; max-width:520px; }
+.settings-grid label { font-size:12px; color:var(--text2); }
+.settings-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:7px 12px; font-size:13px; outline:none; width:200px; }
+.settings-input:focus { border-color:var(--blue); }
+.settings-hint { font-size:11px; color:var(--text3); margin-top:4px; }
 
-/* Search */
-.search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.search-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 12px; font-size: 13px; outline: none; width: 260px; }
-.search-input:focus { border-color: var(--blue); }
+/* Form card (LMC Import) */
+.form-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.form-card h3 { font-size:14px; font-weight:600; margin-bottom:14px; }
+.form-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.form-label { font-size:12px; color:var(--text2); width:130px; flex-shrink:0; }
+.form-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:7px 12px; font-size:13px; outline:none; min-width:200px; }
+.form-input:focus { border-color:var(--blue); }
+.checkbox-label { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); cursor:pointer; }
+.checkbox-label input { accent-color:var(--blue); }
+
+/* Info cards */
+.info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:20px; }
+.info-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+.info-card .label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.info-card .value { font-size:14px; font-weight:600; word-break:break-all; }
+.info-card .value.mono { font-family:monospace; font-size:13px; }
+
+/* Sub-tabs (device detail) */
+.sub-tabs { display:flex; gap:2px; margin-bottom:16px; border-bottom:1px solid var(--border); }
+.stab { padding:8px 14px; font-size:12px; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+.stab:hover { color:var(--text); }
+.stab.active { color:var(--blue); border-bottom-color:var(--blue); }
+
+/* Progress */
+.progress-track { background:var(--bg3); border-radius:4px; height:6px; overflow:hidden; }
+.progress-fill  { background:var(--blue); height:100%; border-radius:4px; transition:width .25s; }
+
+/* Empty state */
+.empty { color:var(--text3); text-align:center; padding:40px 20px; font-size:13px; }
+.empty .icon { font-size:28px; margin-bottom:8px; opacity:.4; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-/* Progress bar */
-.progress-track { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
-.progress-fill  { background: var(--blue); height: 100%; border-radius: 4px; transition: width .25s; }
-
-/* Scanner */
-.scan-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-.scan-toolbar label { color: var(--text2); font-size: 12px; white-space: nowrap; }
-
-/* Mesh / L2TP cards */
-.mesh-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
-.mesh-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--bg3); border-bottom: 1px solid var(--border); }
-.mesh-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: rgba(37,99,235,.2); color: #60a5fa; border: 1px solid rgba(37,99,235,.35); }
-.mesh-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.mesh-table th { padding: 8px 14px; text-align: left; color: var(--text3); font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(0,0,0,.2); }
-.mesh-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
-.mesh-table tr:last-child td { border-bottom: none; }
-.mesh-table tr:hover td { background: var(--bg3); }
-.mesh-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-.mesh-dot-on  { background: var(--green); box-shadow: 0 0 4px var(--green); }
-.mesh-dot-off { background: var(--text3); }
-.mesh-summary { display: flex; gap: 24px; padding: 0 4px 16px; }
-.mesh-stat .ms-num { font-size: 24px; font-weight: 800; color: #60a5fa; }
-.mesh-stat .ms-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 </style>
 </head>
 <body>
@@ -146,835 +151,1042 @@ td.mono { font-family: monospace; font-size: 12px; }
 <div class="header">
   <div class="header-logo">LANCOM <span>OnSite</span></div>
   <div style="flex:1"></div>
-  <div id="device-name" style="color:var(--text2);font-size:13px;"></div>
+  <div id="detail-badge" onclick="showTab('detail')"></div>
 </div>
 
-<div class="settings-bar">
-  <label>IP / Hostname</label>
-  <input type="text" id="host" placeholder="192.168.1.1" value="">
-  <label>Community</label>
-  <input type="text" name="community" id="community" placeholder="public" value="public">
-  <label>Version</label>
-  <select id="version">
-    <option value="2c" selected>SNMPv2c</option>
-    <option value="1">SNMPv1</option>
-  </select>
-  <button class="btn" id="btn-query" onclick="queryAll()">Abfragen</button>
-  <div class="sep"></div>
-  <label class="refresh-label">
-    <input type="checkbox" id="auto-refresh"> Auto-Refresh
-  </label>
-  <span id="refresh-countdown"></span>
-</div>
-
-<div id="status-bar" class="status-bar">Gerät eingeben und auf „Abfragen" klicken.</div>
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('system')"    id="tab-system">    Gerät</div>
-  <div class="tab"        onclick="showTab('interfaces')"id="tab-interfaces">Interfaces <span class="badge" id="badge-interfaces"></span></div>
-  <div class="tab"        onclick="showTab('mac')"       id="tab-mac">       Verbundene Geräte <span class="badge" id="badge-mac"></span></div>
-  <div class="tab"        onclick="showTab('wlan')"      id="tab-wlan">      WLAN-Clients <span class="badge" id="badge-wlan"></span></div>
-  <div class="tab"        onclick="showTab('lldp')"      id="tab-lldp">      LLDP-Nachbarn <span class="badge" id="badge-lldp"></span></div>
-  <div class="tab"        onclick="showTab('wds')"       id="tab-wds">       WiFi Mesh <span class="badge" id="badge-wds"></span></div>
-  <div class="tab"        onclick="showTab('l2tp')"      id="tab-l2tp">      L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
-  <div class="tab"        onclick="showTab('scanner')"   id="tab-scanner">   Scanner <span class="badge" id="badge-scanner"></span></div>
-  <div class="tab"        onclick="showTab('devices')"   id="tab-devices">   Geräte <span class="badge" id="badge-devices"></span></div>
+<div class="tabs" id="main-tabs">
+  <div class="tab active" onclick="showTab('mesh')"    id="tab-mesh">    WiFi Mesh <span class="badge" id="badge-mesh"></span></div>
+  <div class="tab"        onclick="showTab('l2tp')"    id="tab-l2tp">    L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
+  <div class="tab"        onclick="showTab('devices')" id="tab-devices"> Geräte <span class="badge" id="badge-devices"></span></div>
+  <div class="tab"        onclick="showTab('scanner')" id="tab-scanner"> Scanner</div>
+  <div class="tab"        onclick="showTab('lmc')"     id="tab-lmc">     LMC Import</div>
+  <div class="tab"        onclick="showTab('settings')"id="tab-settings">Einstellungen</div>
+  <div class="tab" style="display:none" onclick="showTab('detail')" id="tab-detail">
+    <span id="tab-detail-label">Gerät</span>
+  </div>
 </div>
 
 <div class="content">
 
-  <!-- SYSTEM -->
-  <div class="panel active" id="panel-system">
-    <div class="info-grid" id="sys-cards">
-      <div class="empty"><div class="icon">🔌</div>Noch keine Daten</div>
+<!-- ═══ WIFI MESH ═══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-mesh">
+  <div class="toolbar">
+    <div class="filter-group" id="mesh-filters">
+      <button class="fbtn active"    onclick="setMeshFilter('all')"    id="mf-all">Alle</button>
+      <button class="fbtn f-green"   onclick="setMeshFilter('green')"  id="mf-green"><span class="dot dot-green"></span>Gut</button>
+      <button class="fbtn f-yellow"  onclick="setMeshFilter('yellow')" id="mf-yellow"><span class="dot dot-yellow"></span>Mittel</button>
+      <button class="fbtn f-orange"  onclick="setMeshFilter('orange')" id="mf-orange"><span class="dot dot-orange"></span>Schwach</button>
+      <button class="fbtn f-red"     onclick="setMeshFilter('red')"    id="mf-red"><span class="dot dot-red"></span>Offline</button>
+    </div>
+    <input class="search-input" id="mesh-search" placeholder="Gerätename suchen…" oninput="renderMesh()" style="width:200px">
+    <div class="toolbar-spacer"></div>
+    <span id="mesh-sync-lbl" style="font-size:11px;color:var(--text3)"></span>
+    <button class="btn btn-sm btn-ghost" id="btn-mesh-sync" onclick="syncMesh()">&#x21BB; Sync alle</button>
+  </div>
+  <div id="mesh-status" class="status-bar"></div>
+  <div class="table-wrap">
+    <div class="table-title">WDS-Verbindungen <span class="cnt" id="cnt-mesh"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-mesh">
+        <thead><tr><th>Gerätename</th><th>Gerät-IP</th><th>WDS-Link</th><th>Band</th><th>RSSI</th><th>Status</th><th></th></tr></thead>
+        <tbody><tr><td colspan="7" class="empty">Sync starten um WDS-Verbindungen zu laden</td></tr></tbody>
+      </table>
     </div>
   </div>
-
-  <!-- INTERFACES -->
-  <div class="panel" id="panel-interfaces">
-    <div class="search-row">
-      <input class="search-input" id="search-iface" placeholder="Interface suchen…" oninput="filterTable('tbl-ifaces', this.value, [0,1])">
-    </div>
-    <div class="table-wrap">
-      <div class="table-title">Interfaces <span class="cnt" id="cnt-ifaces"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-ifaces">
-          <thead><tr><th>Name</th><th>Beschreibung</th><th>Status</th><th>Speed</th><th>RX</th><th>TX</th></tr></thead>
-          <tbody><tr><td colspan="6" class="empty">Noch keine Daten</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAC / VERBUNDENE GERÄTE -->
-  <div class="panel" id="panel-mac">
-    <div class="search-row">
-      <input class="search-input" id="search-mac" placeholder="MAC / IP / Port suchen…" oninput="filterTable('tbl-mac', this.value, [0,1,2])">
-    </div>
-    <div class="table-wrap">
-      <div class="table-title">Verbundene Geräte <span class="cnt" id="cnt-mac"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-mac">
-          <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>Port / Interface</th></tr></thead>
-          <tbody><tr><td colspan="3" class="empty">Noch keine Daten</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- WLAN -->
-  <div class="panel" id="panel-wlan">
-    <div class="search-row">
-      <input class="search-input" id="search-wlan" placeholder="MAC / IP / SSID suchen…" oninput="filterTable('tbl-wlan', this.value, [0,1,2])">
-    </div>
-    <div class="table-wrap">
-      <div class="table-title">WLAN-Clients <span class="cnt" id="cnt-wlan"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-wlan">
-          <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th></tr></thead>
-          <tbody><tr><td colspan="5" class="empty">Noch keine Daten</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- LLDP -->
-  <div class="panel" id="panel-lldp">
-    <div class="table-wrap">
-      <div class="table-title">LLDP-Nachbarn <span class="cnt" id="cnt-lldp"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-lldp">
-          <thead><tr><th>Lokaler Port</th><th>Gerätename</th><th>Remote Port</th><th>Systembeschreibung</th></tr></thead>
-          <tbody><tr><td colspan="4" class="empty">Noch keine Daten</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- WIFI MESH (WDS) -->
-  <div class="panel" id="panel-wds">
-    <div id="wds-wrap">
-      <div class="empty"><div class="icon">&#x1F4F6;</div>Noch keine Daten – Abfragen klicken</div>
-    </div>
-  </div>
-
-  <!-- SCANNER -->
-  <div class="panel" id="panel-scanner">
-
-    <div class="scan-toolbar">
-      <label>Subnetz</label>
-      <input type="text" id="scan-subnet" class="search-input" placeholder="z.B. 192.168.1.0/24 oder 192.168.1.1-254" style="width:280px">
-      <label>Community</label>
-      <input type="text" id="scan-community" class="search-input" placeholder="public" value="public" style="width:110px">
-      <label>Version</label>
-      <select id="scan-version" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 10px;font-size:13px;outline:none">
-        <option value="2c" selected>SNMPv2c</option>
-        <option value="1">SNMPv1</option>
-      </select>
-      <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
-      <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
-      <div class="sep" id="sep-query-all" style="display:none"></div>
-      <button class="btn" id="btn-query-all" onclick="queryAllFound()" style="display:none;background:var(--green);color:#000">Alle abfragen &amp; speichern</button>
-    </div>
-
-    <div id="scan-progress-wrap" style="display:none;margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px">
-        <span><span id="scan-scanned">0</span> / <span id="scan-total">0</span> Adressen geprüft</span>
-        <span id="scan-found-lbl" style="color:var(--green)"></span>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="scan-bar" style="width:0%"></div></div>
-    </div>
-
-    <div id="scan-status" class="status-bar"></div>
-
-    <div class="table-wrap">
-      <div class="table-title">Gefundene LANCOM-Geräte <span class="cnt" id="cnt-scan-tbl"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-scan">
-          <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Standort</th><th>Beschreibung</th><th></th></tr></thead>
-          <tbody><tr><td colspan="6" class="empty">Noch kein Scan gestartet</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- L2TPv3 -->
-  <div class="panel" id="panel-l2tp">
-    <div id="l2tp-wrap">
-      <div class="empty"><div class="icon">&#x1F517;</div>Noch keine Daten – Abfragen klicken</div>
-    </div>
-  </div>
-
-  <!-- GERÄTE-LISTE -->
-  <div class="panel" id="panel-devices">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="refreshAllDevices()" id="btn-refresh-devices">Alle neu abfragen</button>
-      <button class="btn btn-sm" onclick="clearDevices()" style="background:transparent;border:1px solid var(--border);color:var(--text2)">Liste leeren</button>
-      <span id="devices-status" style="font-size:12px;color:var(--text3)"></span>
-    </div>
-    <div class="table-wrap">
-      <div class="table-title">Gespeicherte Geräte <span class="cnt" id="cnt-devices"></span></div>
-      <div style="overflow-x:auto">
-        <table id="tbl-devices">
-          <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Standort</th><th>Uptime</th><th>Zuletzt gesehen</th><th></th></tr></thead>
-          <tbody><tr><td colspan="7" class="empty">Noch keine Geräte – Scanner verwenden und „Alle abfragen &amp; speichern" klicken</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
 </div>
 
+<!-- ═══ L2TPv3 ═══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-l2tp">
+  <div class="toolbar">
+    <div class="filter-group">
+      <button class="fbtn active"  onclick="setL2tpFilter('all')"  id="lf-all">Alle</button>
+      <button class="fbtn f-up"    onclick="setL2tpFilter('up')"   id="lf-up"><span class="dot dot-green"></span>UP</button>
+      <button class="fbtn f-down"  onclick="setL2tpFilter('down')" id="lf-down"><span class="dot dot-red"></span>DOWN</button>
+    </div>
+    <input class="search-input" id="l2tp-search" placeholder="Gerätename suchen…" oninput="renderL2tp()" style="width:200px">
+    <div class="toolbar-spacer"></div>
+    <span id="l2tp-sync-lbl" style="font-size:11px;color:var(--text3)"></span>
+    <button class="btn btn-sm btn-ghost" id="btn-l2tp-sync" onclick="syncL2tp()">&#x21BB; Sync alle</button>
+  </div>
+  <div id="l2tp-status" class="status-bar"></div>
+  <div class="table-wrap">
+    <div class="table-title">L2TPv3-Endpunkte <span class="cnt" id="cnt-l2tp"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-l2tp">
+        <thead><tr><th>Gerätename</th><th>Gerät-IP</th><th>Endpoint</th><th>Gegenstelle</th><th>Remote-IP</th><th>Status</th><th></th></tr></thead>
+        <tbody><tr><td colspan="7" class="empty">Sync starten um L2TPv3-Endpunkte zu laden</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GERÄTE ═══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-devices">
+  <div class="toolbar">
+    <select id="dev-type-filter" class="search-input" onchange="renderDevices()" style="width:180px">
+      <option value="all">Alle Typen</option>
+      <option value="lx-ap">LX Access Point</option>
+      <option value="lcos-ap">LCOS Access Point</option>
+      <option value="switch">Switch</option>
+      <option value="router">Router</option>
+      <option value="firewall">Firewall</option>
+      <option value="unknown">Unbekannt</option>
+    </select>
+    <input class="search-input" id="dev-search" placeholder="Name / IP suchen…" oninput="renderDevices()" style="width:200px">
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-sm btn-danger" onclick="clearAllDevices()">Liste leeren</button>
+  </div>
+  <div class="table-wrap">
+    <div class="table-title">Geräte <span class="cnt" id="cnt-devices"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-devices">
+        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Typ</th><th>Quelle</th><th>Zuletzt gesehen</th><th></th></tr></thead>
+        <tbody><tr><td colspan="7" class="empty">Noch keine Geräte – Scanner oder LMC Import verwenden</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCANNER ══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-scanner">
+  <div class="toolbar">
+    <label style="font-size:12px;color:var(--text2)">Subnetz</label>
+    <input type="text" id="scan-subnet" class="search-input" placeholder="z.B. 192.168.1.0/24 oder 192.168.1.1-254" style="width:280px">
+    <label style="font-size:12px;color:var(--text2)">Community</label>
+    <input type="text" id="scan-community" class="search-input" style="width:110px">
+    <label style="font-size:12px;color:var(--text2)">Version</label>
+    <select id="scan-version" class="search-input" style="width:110px">
+      <option value="2c">SNMPv2c</option>
+      <option value="1">SNMPv1</option>
+    </select>
+    <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
+    <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
+    <div class="sep" id="sep-save-all" style="display:none"></div>
+    <button class="btn btn-sm" id="btn-save-all" onclick="saveScanResults()" style="display:none;background:var(--green);color:#000">Alle speichern</button>
+  </div>
+  <div id="scan-progress-wrap" style="display:none;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+      <span><span id="scan-scanned">0</span> / <span id="scan-total">0</span> geprüft</span>
+      <span id="scan-found-lbl" style="color:var(--green)"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="scan-bar" style="width:0%"></div></div>
+  </div>
+  <div id="scan-status" class="status-bar"></div>
+  <div class="table-wrap">
+    <div class="table-title">Gefundene LANCOM-Geräte <span class="cnt" id="cnt-scan"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-scan">
+        <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Standort</th><th>Beschreibung</th><th></th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Noch kein Scan gestartet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LMC IMPORT ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-lmc">
+  <div class="form-card">
+    <h3>LMC API Verbindung</h3>
+    <div class="form-row">
+      <span class="form-label">API Token</span>
+      <input type="password" id="lmc-token" class="form-input" placeholder="LMC API Token" style="min-width:300px">
+      <label class="checkbox-label"><input type="checkbox" id="lmc-save-token" onchange="lmcToggleSave()"> Temporär speichern (nur dieser Browser)</label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-sm" onclick="lmcTest()">Verbindungstest</button>
+    </div>
+  </div>
+
+  <div class="form-card" id="lmc-project-card" style="display:none">
+    <h3>Projekt auswählen</h3>
+    <div class="form-row">
+      <span class="form-label">Projekt / Account</span>
+      <select id="lmc-account-select" class="form-input" style="min-width:280px">
+        <option value="">– bitte wählen –</option>
+      </select>
+    </div>
+    <button class="btn btn-sm" id="btn-lmc-sync" onclick="lmcSync()" disabled>Geräte synchronisieren</button>
+  </div>
+
+  <div id="lmc-status" class="status-bar"></div>
+
+  <div class="table-wrap" id="lmc-result-wrap" style="display:none">
+    <div class="table-title">Synchronisierte Geräte <span class="cnt" id="cnt-lmc"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-lmc">
+        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Typ</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EINSTELLUNGEN ════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-settings">
+  <div class="settings-section">
+    <h3>SNMP</h3>
+    <div class="settings-grid">
+      <label>Read Community</label>
+      <input class="settings-input" id="cfg-snmp-read" type="text">
+      <label>Write Community</label>
+      <input class="settings-input" id="cfg-snmp-write" type="text">
+      <label>Version</label>
+      <select class="settings-input" id="cfg-snmp-version">
+        <option value="2c">SNMPv2c</option>
+        <option value="1">SNMPv1</option>
+      </select>
+    </div>
+  </div>
+  <div class="settings-section">
+    <h3>RSSI-Schwellwerte (WiFi Mesh)</h3>
+    <div class="settings-grid">
+      <label><span class="dot dot-green"></span>Grün ab (≥)</label>
+      <input class="settings-input" id="cfg-rssi-green" type="number" min="0" max="255">
+      <label><span class="dot dot-yellow"></span>Gelb ab (≥)</label>
+      <input class="settings-input" id="cfg-rssi-yellow" type="number" min="0" max="255">
+      <label><span class="dot dot-orange"></span>Orange ab (≥)</label>
+      <input class="settings-input" id="cfg-rssi-orange" type="number" min="0" max="255">
+    </div>
+    <p class="settings-hint" style="margin-top:10px">Verbindungen unter dem Orange-Schwellwert (aber verbunden) werden als Orange angezeigt. Offline-Verbindungen immer Rot.</p>
+  </div>
+  <button class="btn" onclick="saveSettings()">Einstellungen speichern</button>
+  <span id="settings-save-lbl" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Gespeichert</span>
+</div>
+
+<!-- ═══ GERÄT DETAIL ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-detail">
+  <div class="toolbar" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+    <button class="btn btn-sm btn-ghost" onclick="showTab('devices')">← Zurück</button>
+    <span id="detail-ip" style="font-family:monospace;font-size:13px;color:var(--text2)"></span>
+    <div class="toolbar-spacer"></div>
+    <label style="font-size:12px;color:var(--text2)">Community</label>
+    <input type="text" id="detail-community" class="search-input" style="width:120px">
+    <label style="font-size:12px;color:var(--text2)">Version</label>
+    <select id="detail-version" class="search-input" style="width:110px">
+      <option value="2c">SNMPv2c</option>
+      <option value="1">SNMPv1</option>
+    </select>
+    <button class="btn btn-sm" onclick="queryDetail()">&#x21BB; Abfragen</button>
+  </div>
+  <div id="detail-main-status" class="status-bar"></div>
+  <div class="sub-tabs">
+    <div class="stab active" onclick="showStab('system')"    id="stab-system">    Gerät</div>
+    <div class="stab"        onclick="showStab('interfaces')"id="stab-interfaces">Interfaces</div>
+    <div class="stab"        onclick="showStab('mac')"       id="stab-mac">       Verbundene Geräte</div>
+    <div class="stab"        onclick="showStab('wlan')"      id="stab-wlan">      WLAN-Clients</div>
+    <div class="stab"        onclick="showStab('lldp')"      id="stab-lldp">      LLDP-Nachbarn</div>
+  </div>
+  <!-- System -->
+  <div class="sub-panel active" id="sub-system">
+    <div class="info-grid" id="sys-cards"><div class="empty"><div class="icon">🔌</div>Abfragen klicken</div></div>
+  </div>
+  <!-- Interfaces -->
+  <div class="sub-panel" id="sub-interfaces">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-ifaces">
+        <thead><tr><th>Name</th><th>Beschreibung</th><th>Status</th><th>Speed</th><th>RX</th><th>TX</th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- MAC -->
+  <div class="sub-panel" id="sub-mac">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-mac">
+        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>Port / Interface</th></tr></thead>
+        <tbody><tr><td colspan="3" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- WLAN -->
+  <div class="sub-panel" id="sub-wlan">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-wlan">
+        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th></tr></thead>
+        <tbody><tr><td colspan="5" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- LLDP -->
+  <div class="sub-panel" id="sub-lldp">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-lldp">
+        <thead><tr><th>Lokaler Port</th><th>Gerätename</th><th>Remote Port</th><th>Systembeschreibung</th></tr></thead>
+        <tbody><tr><td colspan="4" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+
+</div><!-- /content -->
 <script>
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function q(id) { return document.getElementById(id); }
-
-function setStatus(msg, type = '') {
-  const el = q('status-bar');
-  el.className = 'status-bar' + (type ? ' ' + type : '');
-  el.innerHTML = type === 'loading'
-    ? `<span class="spinner"></span> ${msg}`
-    : msg;
-}
+function h(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n < 1024)       return n + ' B';
-  if (n < 1048576)    return (n/1024).toFixed(1) + ' KB';
+  n = Number(n)||0;
+  if (n < 1024)    return n + ' B';
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
   if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
   return (n/1073741824).toFixed(2) + ' GB';
 }
-
-function fmtSpeed(mbps, fallbackBps) {
-  if (mbps && mbps > 0) return mbps >= 1000 ? (mbps/1000) + ' Gbit/s' : mbps + ' Mbit/s';
-  const bps = Number(fallbackBps) || 0;
-  if (bps <= 0) return '—';
-  if (bps >= 1e9) return (bps/1e9) + ' Gbit/s';
-  if (bps >= 1e6) return (bps/1e6) + ' Mbit/s';
-  return (bps/1e3) + ' kbit/s';
+function fmtSpeed(mbps, bps) {
+  if (mbps > 0) return mbps >= 1000 ? (mbps/1000)+'Gbit/s' : mbps+'Mbit/s';
+  const b = Number(bps)||0; if (!b) return '—';
+  return b >= 1e9 ? (b/1e9)+'Gbit/s' : b >= 1e6 ? (b/1e6)+'Mbit/s' : (b/1e3)+'kbit/s';
 }
-
 function fmtUptime(raw) {
   if (!raw) return '—';
-  // "(123456) 0:14:15.06" oder "Timeticks: (123456) 1:23:45.60"
-  const m = raw.match(/\((\d+)\)/);
-  if (!m) return raw;
-  let s = Math.floor(parseInt(m[1]) / 100);
-  const d = Math.floor(s / 86400); s %= 86400;
-  const h = Math.floor(s / 3600);  s %= 3600;
-  const mi = Math.floor(s / 60);   s %= 60;
-  let out = '';
-  if (d > 0) out += d + 'd ';
-  out += String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-  return out;
+  const m = raw.match(/\((\d+)\)/); if (!m) return raw;
+  let s = Math.floor(parseInt(m[1])/100);
+  const d=Math.floor(s/86400); s%=86400; const hh=Math.floor(s/3600); s%=3600; const mm=Math.floor(s/60); s%=60;
+  return (d?d+'d ':'')+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
-
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'});
+}
 function statusBadge(val) {
-  const up = val === '1' || val === 'up(1)' || String(val).startsWith('up');
-  return up
-    ? `<span class="dot dot-green"></span><span class="badge badge-green">UP</span>`
-    : `<span class="dot dot-red"></span><span class="badge badge-red">DOWN</span>`;
+  const up = val==='1'||String(val).startsWith('up');
+  return up ? `<span class="dot dot-green"></span><span class="badge badge-green">UP</span>`
+             : `<span class="dot dot-red"></span><span class="badge badge-red">DOWN</span>`;
 }
+function setBadge(id, n) { const el=q('badge-'+id); if(el) el.textContent = n>0?n:''; }
 
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  q('tab-' + name).classList.add('active');
-  q('panel-' + name).classList.add('active');
-  if (name === 'devices') renderDevices();
-}
+const TYPE_LABELS = {
+  'lx-ap':'LX Access Point','lcos-ap':'LCOS Access Point',
+  'switch':'Switch','router':'Router','firewall':'Firewall','unknown':'Unbekannt'
+};
+const TYPE_BADGE = {
+  'lx-ap':'badge-green','lcos-ap':'badge-blue','switch':'badge-yellow',
+  'router':'badge-gray','firewall':'badge-orange','unknown':'badge-gray'
+};
 
-function filterTable(tblId, search, cols) {
-  const s = search.toLowerCase();
-  const rows = q(tblId).querySelectorAll('tbody tr');
-  rows.forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    const match = cols.some(c => tds[c] && tds[c].textContent.toLowerCase().includes(s));
-    tr.style.display = (!s || match) ? '' : 'none';
-  });
-}
-
-function setBadge(id, n) {
-  const el = q('badge-' + id);
-  if (el) { el.textContent = n > 0 ? n : ''; }
-}
-
-// ── SNMP request ─────────────────────────────────────────────────────────────
-
-async function snmp(type) {
-  const host      = q('host').value.trim();
-  const community = q('community').value.trim() || 'public';
-  const version   = q('version').value;
-  const res = await fetch('/snmp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ host, community, version, type }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
-}
-
-// ── Render functions ──────────────────────────────────────────────────────────
-
-function renderSystem(data) {
-  const cards = [
-    { label: 'Gerätename',    value: data.sysName     || '—' },
-    { label: 'Beschreibung',  value: data.sysDescr    || '—', mono: true },
-    { label: 'Standort',      value: data.sysLocation || '—' },
-    { label: 'Kontakt',       value: data.sysContact  || '—' },
-    { label: 'Uptime',        value: fmtUptime(data.sysUpTime) },
-  ];
-  q('sys-cards').innerHTML = cards.map(c =>
-    `<div class="info-card"><div class="label">${c.label}</div><div class="value${c.mono?' mono':''}">${h(c.value)}</div></div>`
-  ).join('');
-  q('device-name').textContent = data.sysName || '';
-}
-
-function renderInterfaces(data) {
-  const tbody = q('tbl-ifaces').querySelector('tbody');
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Interfaces gefunden</td></tr>`; return; }
-  tbody.innerHTML = data.map(i => {
-    const name  = h(i.name || i.descr || `If ${i.idx}`);
-    const descr = i.name && i.descr !== i.name ? h(i.descr) : '';
-    const speed = fmtSpeed(i.highSpeed, i.speed);
-    return `<tr>
-      <td><strong>${name}</strong></td>
-      <td class="mono" style="color:var(--text2)">${descr}</td>
-      <td>${statusBadge(i.operStatus)}</td>
-      <td style="color:var(--text2)">${speed}</td>
-      <td class="mono">${fmtBytes(i.inOctets)}</td>
-      <td class="mono">${fmtBytes(i.outOctets)}</td>
-    </tr>`;
-  }).join('');
-  const up = data.filter(i => i.operStatus === '1' || String(i.operStatus).startsWith('up')).length;
-  q('cnt-ifaces').textContent = `${up} up / ${data.length} gesamt`;
-  setBadge('interfaces', data.length);
-}
-
-function renderMac(data) {
-  const tbody = q('tbl-mac').querySelector('tbody');
-  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="3" class="empty">Keine Einträge gefunden</td></tr>`; return; }
-  tbody.innerHTML = data.entries.map(e => `<tr>
-    <td class="mono">${h(e.mac)}</td>
-    <td class="mono" style="color:var(--text2)">${e.ip ? h(e.ip) : '<span style="color:var(--text3)">—</span>'}</td>
-    <td>${h(e.port)}</td>
-  </tr>`).join('');
-  q('cnt-mac').textContent = `${data.count} Gerät${data.count !== 1 ? 'e' : ''}`;
-  setBadge('mac', data.count);
-}
-
-function renderWlan(data) {
-  const tbody = q('tbl-wlan').querySelector('tbody');
-  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">Keine WLAN-Clients gefunden<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Access Points werden unterstützt</small></td></tr>`; return; }
-  tbody.innerHTML = data.entries.map(e => `<tr>
-    <td class="mono">${h(e.mac)}</td>
-    <td class="mono" style="color:var(--text2)">${e.ip ? h(e.ip) : '<span style="color:var(--text3)">—</span>'}</td>
-    <td>${h(e.ssid) || '<span style="color:var(--text3)">—</span>'}</td>
-    <td>${e.band ? `<span class="badge badge-gray">${h(e.band)}</span>` : '—'}</td>
-    <td style="color:var(--text2)">${e.channel ? `CH ${e.channel}` : '—'}</td>
-  </tr>`).join('');
-  q('cnt-wlan').textContent = `${data.count} Client${data.count !== 1 ? 's' : ''}`;
-  setBadge('wlan', data.count);
-}
-
-function renderWds(data) {
-  const wrap = q('wds-wrap');
-  if (!data.configured) {
-    wrap.innerHTML = `<div class="empty"><div class="icon">&#x1F4F6;</div>Kein WiFi Mesh (WDS) konfiguriert<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Access Points werden unterstützt</small></div>`;
-    setBadge('wds', 0);
-    return;
+function detectDeviceType(os, sysDescr) {
+  const desc = ((sysDescr||'') + ' ' + (os||'')).toUpperCase();
+  if (os==='LCOS LX') return 'lx-ap';
+  if (os==='LCOS FX') return 'firewall';
+  if (os==='LCOS SX') return 'switch';
+  if (os==='LCOS') {
+    if (/\b(OAP|IAP|WAP|L-\d\d\d|\d{3}VAP)\b/.test(desc)) return 'lcos-ap';
+    if (/GS\d|SWITCH/.test(desc)) return 'switch';
+    return 'router';
   }
-
-  // Config + Status zusammenführen
-  const linkMap = {};
-  (data.configLinks || []).forEach(cl => { linkMap[cl.linkName] = { ...cl }; });
-  (data.statusEntries || []).forEach(se => {
-    if (!linkMap[se.linkName]) linkMap[se.linkName] = {};
-    Object.assign(linkMap[se.linkName], se);
-  });
-
-  const links = Object.values(linkMap);
-  const connected = links.filter(l => l.connected).length;
-
-  let html = `<div class="mesh-summary">
-    <div class="mesh-stat"><div class="ms-num">${links.length}</div><div class="ms-lbl">WDS-Links</div></div>
-    <div class="mesh-stat"><div class="ms-num" style="color:var(--green)">${connected}</div><div class="ms-lbl">Verbunden</div></div>
-    ${links.length - connected > 0 ? `<div class="mesh-stat"><div class="ms-num" style="color:var(--text3)">${links.length - connected}</div><div class="ms-lbl">Getrennt</div></div>` : ''}
-  </div>
-  <div class="mesh-card">
-    <div class="mesh-header">
-      <span style="font-weight:600;font-size:13px">WDS-Verbindungen</span>
-      <span class="mesh-badge">WDS aktiv</span>
-    </div>
-    <div style="overflow-x:auto">
-    <table class="mesh-table">
-      <thead><tr><th>Link</th><th>Band</th><th>Status</th><th>Signal</th><th>Peer MAC</th><th>Tx / Rx</th><th>WPA</th></tr></thead>
-      <tbody>`;
-
-  for (const l of links) {
-    const band     = l.radio === 1 ? '2.4 GHz' : l.radio === 2 ? '5 GHz' : '–';
-    const conn     = !!l.connected;
-    const sig      = l.signal != null ? l.signal : null;
-    const sigColor = sig >= 200 ? 'var(--green)' : sig >= 100 ? 'var(--yellow)' : 'var(--red)';
-    const txRx     = (l.txRate != null && l.rxRate != null) ? `${l.txRate} / ${l.rxRate} Mbps` : '–';
-    const wpa      = l.wpaVersion === 3 ? 'WPA3' : l.wpaVersion === 2 ? 'WPA2' : l.wpaVersion === 1 ? 'WPA1' : l.wpaVersion === 0 ? 'Offen' : '–';
-    html += `<tr>
-      <td style="font-weight:600">${h(l.linkName || '–')}</td>
-      <td style="color:var(--text2)">${band}</td>
-      <td><span class="mesh-dot ${conn ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${conn ? 'Verbunden' : 'Getrennt'}</td>
-      <td style="color:${conn && sig != null ? sigColor : 'var(--text3)'};font-weight:600">${conn && sig != null ? sig : '–'}</td>
-      <td class="mono" style="color:var(--text2)">${h(l.mac || '–')}</td>
-      <td style="color:var(--text2)">${conn ? txRx : '–'}</td>
-      <td>${conn ? wpa : '–'}</td>
-    </tr>`;
-  }
-
-  html += `</tbody></table></div></div>`;
-  wrap.innerHTML = html;
-  setBadge('wds', links.length);
+  return 'unknown';
+}
+function extractModel(sysDescr) {
+  if (!sysDescr) return '';
+  return sysDescr.split(/[\r\n]/)[0].replace(/LCOS\s+\S+/,'').trim().substring(0,50);
 }
 
-function renderL2tp(data) {
-  const wrap = q('l2tp-wrap');
-  if (!data.configured) {
-    wrap.innerHTML = `<div class="empty"><div class="icon">&#x1F517;</div>Kein L2TPv3 konfiguriert<br><small style="color:var(--text3)">Nur LANCOM LCOS LX Geräte werden unterstützt</small></div>`;
-    setBadge('l2tp', 0);
-    return;
-  }
+// ═══════════════════════════════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════════════════════════════
 
-  // Config + Status zusammenführen
-  const epMap = {};
-  (data.configEndpoints || []).forEach(ep => { epMap[ep.name] = { ...ep }; });
-  (data.statusEntries   || []).forEach(se => {
-    const key = se.endpointName || se.remoteEnd;
-    if (!epMap[key]) epMap[key] = {};
-    Object.assign(epMap[key], se);
-  });
+let appSettings = {};
+let deviceStore  = {};   // keyed by IP, server-side
+let meshData     = [];   // live WDS data
+let l2tpData     = [];   // live L2TP data
+let meshFilter   = 'all';
+let l2tpFilter   = 'all';
+let scanResults  = [];
+let scanAbort    = null;
+let scanFoundCnt = 0;
 
-  const eps = Object.values(epMap);
-  const upCount = eps.filter(e => e.state === 'UP').length;
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETTINGS (server-side)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-  let html = `<div class="mesh-summary">
-    <div class="mesh-stat"><div class="ms-num">${eps.length}</div><div class="ms-lbl">Endpunkte</div></div>
-    <div class="mesh-stat"><div class="ms-num" style="color:var(--green)">${upCount}</div><div class="ms-lbl">UP</div></div>
-    ${eps.length - upCount > 0 ? `<div class="mesh-stat"><div class="ms-num" style="color:var(--text3)">${eps.length - upCount}</div><div class="ms-lbl">DOWN</div></div>` : ''}
-  </div>
-  <div class="mesh-card">
-    <div class="mesh-header">
-      <span style="font-weight:600;font-size:13px">L2TPv3-Endpunkte</span>
-      <span class="mesh-badge">L2TPv3 aktiv</span>
-    </div>
-    <div style="overflow-x:auto">
-    <table class="mesh-table">
-      <thead><tr><th>Endpoint</th><th>Gegenstelle</th><th>Remote-IP</th><th>Port</th><th>Status</th><th>Interface</th><th>Verbunden seit</th></tr></thead>
-      <tbody>`;
-
-  for (const ep of eps) {
-    const up      = ep.state === 'UP';
-    const opBadge = ep.operating === 0 ? ` <span style="color:var(--text3);font-size:10px">(inaktiv)</span>` : '';
-    html += `<tr>
-      <td style="font-weight:600">${h(ep.name || '–')}${opBadge}</td>
-      <td>${h(ep.remoteEnd || '–')}</td>
-      <td class="mono" style="color:var(--text2)">${h(ep.remoteIp || '–')}</td>
-      <td style="color:var(--text2)">${ep.port || '–'}</td>
-      <td><span class="mesh-dot ${up ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${h(ep.state || '–')}</td>
-      <td class="mono" style="color:var(--text2)">${h(ep.iface || '–')}</td>
-      <td style="font-size:11px;color:var(--text2)">${h(ep.connStartTime || '–')}</td>
-    </tr>`;
-  }
-
-  html += `</tbody></table></div></div>`;
-  wrap.innerHTML = html;
-  setBadge('l2tp', eps.length);
+async function loadSettings() {
+  try {
+    const r = await fetch('/api/settings'); appSettings = await r.json();
+  } catch { appSettings = { snmpReadCommunity:'public', snmpWriteCommunity:'private', snmpVersion:'2c', rssiGreen:200, rssiYellow:150, rssiOrange:80 }; }
+  q('cfg-snmp-read').value    = appSettings.snmpReadCommunity  || 'public';
+  q('cfg-snmp-write').value   = appSettings.snmpWriteCommunity || 'private';
+  q('cfg-snmp-version').value = appSettings.snmpVersion        || '2c';
+  q('cfg-rssi-green').value   = appSettings.rssiGreen  ?? 200;
+  q('cfg-rssi-yellow').value  = appSettings.rssiYellow ?? 150;
+  q('cfg-rssi-orange').value  = appSettings.rssiOrange ?? 80;
+  // Pre-fill scanner community from settings
+  q('scan-community').value = appSettings.snmpReadCommunity || 'public';
+  q('scan-version').value   = appSettings.snmpVersion       || '2c';
+  if (appSettings.lastScanSubnet) q('scan-subnet').value = appSettings.lastScanSubnet;
 }
 
-function renderLldp(data) {
-  const tbody = q('tbl-lldp').querySelector('tbody');
-  if (!data.entries.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">Keine LLDP-Nachbarn gefunden</td></tr>`; return; }
-  tbody.innerHTML = data.entries.map(e => `<tr>
-    <td><strong>${h(e.localPortName)}</strong></td>
-    <td>${h(e.remSysName || '—')}</td>
-    <td class="mono" style="color:var(--text2)">${h(e.remPortDesc || e.remPortId || '—')}</td>
-    <td style="color:var(--text2);font-size:12px;">${h((e.remSysDesc || '').split('\n')[0] || '—')}</td>
-  </tr>`).join('');
-  q('cnt-lldp').textContent = `${data.count} Nachbar${data.count !== 1 ? 'n' : ''}`;
-  setBadge('lldp', data.count);
-}
-
-function h(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Geräte-Speicher ───────────────────────────────────────────────────────────
-
-let deviceStore = JSON.parse(localStorage.getItem('lancom_onsite_devices') || '{}');
-
-function saveDeviceStore() {
-  localStorage.setItem('lancom_onsite_devices', JSON.stringify(deviceStore));
-}
-
-function storeDevice(ip, scanData, systemData) {
-  deviceStore[ip] = {
-    ip,
-    os:          scanData.os          || deviceStore[ip]?.os || '',
-    sysName:     systemData?.sysName  || scanData.sysName    || deviceStore[ip]?.sysName || '',
-    sysLocation: systemData?.sysLocation || scanData.sysLocation || deviceStore[ip]?.sysLocation || '',
-    sysContact:  systemData?.sysContact  || deviceStore[ip]?.sysContact || '',
-    sysDescr:    systemData?.sysDescr    || scanData.sysDescr || deviceStore[ip]?.sysDescr || '',
-    sysUpTime:   systemData?.sysUpTime   || '',
-    community:   q('scan-community').value.trim() || 'public',
-    version:     q('scan-version').value || '2c',
-    lastSeen:    new Date().toISOString(),
+async function saveSettings() {
+  appSettings = {
+    ...appSettings,
+    snmpReadCommunity:  q('cfg-snmp-read').value.trim(),
+    snmpWriteCommunity: q('cfg-snmp-write').value.trim(),
+    snmpVersion:        q('cfg-snmp-version').value,
+    rssiGreen:  parseInt(q('cfg-rssi-green').value)  || 200,
+    rssiYellow: parseInt(q('cfg-rssi-yellow').value) || 150,
+    rssiOrange: parseInt(q('cfg-rssi-orange').value) || 80,
   };
-  saveDeviceStore();
+  await fetch('/api/settings',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(appSettings) });
+  const lbl = q('settings-save-lbl');
+  lbl.style.display=''; setTimeout(()=>{ lbl.style.display='none'; }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEVICE STORE (server-side)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function loadDevices() {
+  try { const r = await fetch('/api/devices'); deviceStore = await r.json(); }
+  catch { deviceStore = {}; }
+  renderDevices();
+  setBadge('devices', Object.keys(deviceStore).length || 0);
+}
+
+async function saveDevice(dev) {
+  deviceStore[dev.ip] = dev;
+  await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ [dev.ip]: dev }) });
+  renderDevices();
+  setBadge('devices', Object.keys(deviceStore).length);
+}
+
+async function saveDevices(devMap) {
+  Object.assign(deviceStore, devMap);
+  await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(devMap) });
+  renderDevices();
+  setBadge('devices', Object.keys(deviceStore).length);
+}
+
+async function deleteDevice(ip) {
+  delete deviceStore[ip];
+  await fetch('/api/devices',{ method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ ip }) });
+  renderDevices();
+  setBadge('devices', Object.keys(deviceStore).length);
+}
+
+async function clearAllDevices() {
+  if (!confirm('Alle Geräte löschen?')) return;
+  deviceStore = {};
+  await fetch('/api/devices',{ method:'DELETE', headers:{'Content-Type':'application/json'}, body:'{}' });
+  renderDevices();
+  setBadge('devices', 0);
 }
 
 function renderDevices() {
-  const devices = Object.values(deviceStore).sort((a, b) => {
-    // Sort by IP numerically
-    const toNum = ip => ip.split('.').reduce((n, o) => n * 256 + parseInt(o), 0);
-    return toNum(a.ip) - toNum(b.ip);
-  });
+  const typeF = q('dev-type-filter')?.value || 'all';
+  const srch  = (q('dev-search')?.value||'').toLowerCase();
+  const devs  = Object.values(deviceStore)
+    .filter(d => (typeF==='all' || d.type===typeF) && (!srch || (d.name||d.ip||'').toLowerCase().includes(srch) || (d.ip||'').includes(srch)))
+    .sort((a,b) => { const n=ip=>ip.split('.').reduce((s,o)=>s*256+parseInt(o),0); return n(a.ip)-n(b.ip); });
 
-  const badge = Object.keys(deviceStore).length;
-  setBadge('devices', badge);
-  q('cnt-devices').textContent = badge ? badge + ' Gerät' + (badge !== 1 ? 'e' : '') : '';
+  const total = Object.keys(deviceStore).length;
+  setBadge('devices', total);
+  q('cnt-devices').textContent = total ? total+' Gerät'+(total!==1?'e':'') : '';
 
   const tbody = q('tbl-devices').querySelector('tbody');
-  if (!devices.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">Noch keine Geräte – Scanner verwenden und „Alle abfragen &amp; speichern" klicken</td></tr>`;
+  if (!devs.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">Keine Geräte ${typeF!=='all'||srch?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
     return;
   }
-
-  const osColors = { 'LCOS LX': 'badge-green', 'LCOS FX': 'badge-yellow', 'LCOS SX': 'badge-yellow', 'LCOS': 'badge-gray', 'LANCOM': 'badge-gray' };
-
-  tbody.innerHTML = devices.map(dev => {
-    const osCls  = osColors[dev.os] || 'badge-gray';
-    const uptime = dev.sysUpTime ? fmtUptime(dev.sysUpTime) : '—';
-    const seen   = dev.lastSeen ? new Date(dev.lastSeen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  tbody.innerHTML = devs.map(dev => {
+    const typLbl = TYPE_LABELS[dev.type]||'Unbekannt';
+    const typCls = TYPE_BADGE[dev.type]||'badge-gray';
+    const srcLbl = dev.source==='lmc' ? '<span class="badge badge-blue">LMC</span>' : '<span class="badge badge-gray">Scanner</span>';
     return `<tr>
+      <td style="font-weight:600">${h(dev.name||'—')}</td>
       <td class="mono">${h(dev.ip)}</td>
-      <td style="font-weight:600">${h(dev.sysName || '—')}</td>
-      <td><span class="badge ${osCls}">${h(dev.os || '—')}</span></td>
-      <td style="color:var(--text2)">${h(dev.sysLocation || '—')}</td>
-      <td style="color:var(--text2)">${uptime}</td>
-      <td style="color:var(--text3);font-size:11px">${seen}</td>
+      <td style="color:var(--text2);font-size:12px">${h(dev.model||dev.os||'—')}</td>
+      <td><span class="badge ${typCls}">${typLbl}</span></td>
+      <td>${srcLbl}</td>
+      <td style="color:var(--text3);font-size:11px">${fmtDate(dev.lastSeen)}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="selectDevice('${h(dev.ip)}')">Abfragen</button>
-        <button class="btn btn-sm" style="background:transparent;border:1px solid var(--border);color:var(--text2)" onclick="removeDevice('${h(dev.ip)}')">&#x2715;</button>
+        <button class="btn btn-sm" onclick="openDeviceDetail('${h(dev.ip)}')">Details</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteDevice('${h(dev.ip)}')">&#x2715;</button>
       </td>
     </tr>`;
   }).join('');
 }
 
-function removeDevice(ip) {
-  delete deviceStore[ip];
-  saveDeviceStore();
-  renderDevices();
+// ═══════════════════════════════════════════════════════════════════════════════
+// SNMP QUERY HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function snmpQ(host, community, version, type) {
+  const r = await fetch('/snmp',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host,community,version,type}) });
+  const d = await r.json(); if (d.error) throw new Error(d.error); return d;
 }
 
-function clearDevices() {
-  if (!Object.keys(deviceStore).length) return;
-  if (!confirm('Alle gespeicherten Geräte löschen?')) return;
-  deviceStore = {};
-  saveDeviceStore();
-  renderDevices();
+function devCredentials(ip) {
+  const d = deviceStore[ip];
+  return {
+    community: d?.community || appSettings.snmpReadCommunity || 'public',
+    version:   d?.version   || appSettings.snmpVersion       || '2c',
+  };
 }
 
-async function snmpQuery(host, community, version, type) {
-  const res = await fetch('/snmp', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ host, community, version, type }),
+// ═══════════════════════════════════════════════════════════════════════════════
+// WIFI MESH
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function rssiStatus(signal, connected) {
+  if (!connected) return 'red';
+  if (signal == null) return 'orange';
+  if (signal >= (appSettings.rssiGreen  || 200)) return 'green';
+  if (signal >= (appSettings.rssiYellow || 150)) return 'yellow';
+  return 'orange';
+}
+const RS = {
+  green:  { cls:'dot-green',  bcls:'badge-green',  lbl:'Gut'    },
+  yellow: { cls:'dot-yellow', bcls:'badge-yellow', lbl:'Mittel' },
+  orange: { cls:'dot-orange', bcls:'badge-orange', lbl:'Schwach'},
+  red:    { cls:'dot-red',    bcls:'badge-red',    lbl:'Offline'},
+};
+
+function setMeshFilter(f) {
+  meshFilter = f;
+  ['all','green','yellow','orange','red'].forEach(k => {
+    const el = q('mf-'+k); if (el) el.classList.toggle('active', k===f);
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
+  renderMesh();
 }
 
-async function queryAllFound() {
-  if (!scanResults.length) return;
-  const btn = q('btn-query-all');
-  btn.disabled = true;
-  btn.textContent = 'Abfrage läuft…';
+function renderMesh() {
+  const srch = (q('mesh-search')?.value||'').toLowerCase();
+  const rows = meshData.filter(r => {
+    const st = rssiStatus(r.signal, r.connected);
+    if (meshFilter!=='all' && st!==meshFilter) return false;
+    if (srch && !r.deviceName.toLowerCase().includes(srch) && !r.deviceIp.includes(srch)) return false;
+    return true;
+  });
 
-  const community = q('scan-community').value.trim() || 'public';
-  const version   = q('scan-version').value || '2c';
-  let done = 0;
+  setBadge('mesh', meshData.length);
+  q('cnt-mesh').textContent = meshData.length ? meshData.length+' Link'+(meshData.length!==1?'s':'') : '';
 
-  const setDevStatus = (msg) => { const el = q('devices-status'); if (el) el.textContent = msg; };
+  const tbody = q('tbl-mesh').querySelector('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const st  = rssiStatus(r.signal, r.connected);
+    const s   = RS[st];
+    const wpa = r.wpaVersion===3?'WPA3':r.wpaVersion===2?'WPA2':r.wpaVersion===1?'WPA1':r.wpaVersion===0?'Open':'—';
+    const txrx = (r.txRate!=null&&r.rxRate!=null) ? `${r.txRate}/${r.rxRate} Mbps` : '—';
+    return `<tr>
+      <td style="font-weight:600">${h(r.deviceName)}</td>
+      <td class="mono">${h(r.deviceIp)}</td>
+      <td style="font-weight:500">${h(r.linkName)}</td>
+      <td style="color:var(--text2)">${r.band||'—'}</td>
+      <td style="font-weight:700;color:var(--text2)">${r.connected&&r.signal!=null?r.signal:'—'}</td>
+      <td><span class="dot ${s.cls}"></span><span class="badge ${s.bcls}">${s.lbl}</span></td>
+      <td><button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')">&#x21BB;</button></td>
+    </tr>`;
+  }).join('');
+}
 
-  for (const dev of scanResults) {
-    setDevStatus(`${done + 1} / ${scanResults.length} – ${dev.sysName || dev.ip}`);
+async function syncMeshDevice(ip) {
+  const dev = deviceStore[ip];
+  if (!dev) return;
+  const { community, version } = devCredentials(ip);
+  try {
+    const result = await snmpQ(ip, community, version, 'wds');
+    meshData = meshData.filter(r => r.deviceIp !== ip);
+    if (result.configured) mergeMeshResult(ip, dev.name||dev.sysName||ip, result);
+    renderMesh();
+  } catch {}
+}
+
+function mergeMeshResult(ip, name, result) {
+  const linkMap = {};
+  (result.configLinks||[]).forEach(cl => { linkMap[cl.linkName] = {...cl}; });
+  (result.statusEntries||[]).forEach(se => {
+    if (!linkMap[se.linkName]) linkMap[se.linkName]={};
+    Object.assign(linkMap[se.linkName], se);
+  });
+  Object.values(linkMap).forEach(l => meshData.push({
+    deviceName: name, deviceIp: ip,
+    linkName:   l.linkName||'—',
+    band:       l.radio===1?'2.4 GHz':l.radio===2?'5 GHz':'—',
+    signal:     l.signal??null,
+    connected:  !!l.connected,
+    mac:        l.mac||'',
+    txRate:     l.txRate, rxRate: l.rxRate, wpaVersion: l.wpaVersion,
+  }));
+}
+
+async function syncMesh() {
+  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap');
+  if (!lxDevs.length) {
+    q('mesh-status').className='status-bar error';
+    q('mesh-status').textContent='Keine LX Access Points in der Geräteliste. Bitte zuerst Geräte importieren.'; return;
+  }
+  const btn=q('btn-mesh-sync'); btn.disabled=true; btn.textContent='⟳ Läuft…';
+  q('mesh-status').className='status-bar loading';
+  q('mesh-status').innerHTML='<span class="spinner"></span> Sync läuft…';
+  meshData = [];
+
+  for (let i=0; i<lxDevs.length; i++) {
+    const dev = lxDevs[i];
+    q('mesh-sync-lbl').textContent = `${i+1}/${lxDevs.length} – ${dev.name||dev.ip}`;
+    const {community,version} = devCredentials(dev.ip);
     try {
-      const sys = await snmpQuery(dev.ip, community, version, 'system');
-      storeDevice(dev.ip, dev, sys);
-    } catch {
-      storeDevice(dev.ip, dev, null);
-    }
-    done++;
+      const result = await snmpQ(dev.ip, community, version, 'wds');
+      if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.sysName||dev.ip, result);
+    } catch {}
   }
 
-  setDevStatus('');
-  btn.disabled = false;
-  btn.textContent = 'Alle abfragen & speichern';
-  renderDevices();
-  showTab('devices');
+  btn.disabled=false; btn.textContent='⟳ Sync alle';
+  q('mesh-sync-lbl').textContent = `Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
+  q('mesh-status').className='status-bar ok';
+  q('mesh-status').textContent = `${meshData.length} WDS-Link${meshData.length!==1?'s':''} von ${lxDevs.length} AP${lxDevs.length!==1?'s':''}`;
+  renderMesh();
 }
 
-async function refreshAllDevices() {
-  const devices = Object.values(deviceStore);
-  if (!devices.length) return;
-  const btn = q('btn-refresh-devices');
-  btn.disabled = true;
-  btn.textContent = 'Abfrage läuft…';
+// ═══════════════════════════════════════════════════════════════════════════════
+// L2TPv3
+// ═══════════════════════════════════════════════════════════════════════════════
 
-  let done = 0;
-  const setDevStatus = (msg) => { const el = q('devices-status'); if (el) el.textContent = msg; };
+function setL2tpFilter(f) {
+  l2tpFilter = f;
+  ['all','up','down'].forEach(k => { const el=q('lf-'+k); if(el) el.classList.toggle('active',k===f); });
+  renderL2tp();
+}
 
-  for (const dev of devices) {
-    setDevStatus(`${done + 1} / ${devices.length} – ${dev.sysName || dev.ip}`);
+function renderL2tp() {
+  const srch = (q('l2tp-search')?.value||'').toLowerCase();
+  const rows = l2tpData.filter(r => {
+    const up = r.state==='UP';
+    if (l2tpFilter==='up' && !up) return false;
+    if (l2tpFilter==='down' && up) return false;
+    if (srch && !r.deviceName.toLowerCase().includes(srch) && !r.deviceIp.includes(srch)) return false;
+    return true;
+  });
+
+  setBadge('l2tp', l2tpData.length);
+  q('cnt-l2tp').textContent = l2tpData.length ? l2tpData.length+' Endpunkt'+(l2tpData.length!==1?'e':'') : '';
+
+  const tbody = q('tbl-l2tp').querySelector('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">${l2tpData.length?'Kein Treffer für aktiven Filter':'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const up = r.state==='UP';
+    return `<tr>
+      <td style="font-weight:600">${h(r.deviceName)}</td>
+      <td class="mono">${h(r.deviceIp)}</td>
+      <td style="font-weight:500">${h(r.endpointName||'—')}</td>
+      <td>${h(r.remoteEnd||'—')}</td>
+      <td class="mono" style="color:var(--text2)">${h(r.remoteIp||'—')}</td>
+      <td><span class="dot ${up?'dot-green':'dot-red'}"></span><span class="badge ${up?'badge-green':'badge-red'}">${h(r.state||'—')}</span></td>
+      <td><button class="btn btn-sm btn-ghost" onclick="syncL2tpDevice('${h(r.deviceIp)}')">&#x21BB;</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function syncL2tpDevice(ip) {
+  const dev = deviceStore[ip]; if (!dev) return;
+  const {community,version} = devCredentials(ip);
+  try {
+    const result = await snmpQ(ip, community, version, 'l2tp');
+    l2tpData = l2tpData.filter(r => r.deviceIp!==ip);
+    if (result.configured) mergeL2tpResult(ip, dev.name||dev.ip, result);
+    renderL2tp();
+  } catch {}
+}
+
+function mergeL2tpResult(ip, name, result) {
+  const epMap = {};
+  (result.configEndpoints||[]).forEach(ep => { epMap[ep.name]={...ep}; });
+  (result.statusEntries||[]).forEach(se => {
+    const k=se.endpointName||se.remoteEnd; if(!epMap[k])epMap[k]={};
+    Object.assign(epMap[k],se);
+  });
+  Object.values(epMap).forEach(ep => l2tpData.push({
+    deviceName:ep.remoteEnd||'—', deviceIp:ip, endpointName:ep.name||ep.endpointName||'—',
+    remoteEnd:ep.remoteEnd||'—', remoteIp:ep.remoteIp||'—', port:ep.port,
+    state:ep.state||'—', iface:ep.iface||'—', connStartTime:ep.connStartTime||'',
+  }));
+}
+
+async function syncL2tp() {
+  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap');
+  if (!lxDevs.length) {
+    q('l2tp-status').className='status-bar error';
+    q('l2tp-status').textContent='Keine LX Access Points in der Geräteliste.'; return;
+  }
+  const btn=q('btn-l2tp-sync'); btn.disabled=true; btn.textContent='⟳ Läuft…';
+  q('l2tp-status').className='status-bar loading';
+  q('l2tp-status').innerHTML='<span class="spinner"></span> Sync läuft…';
+  l2tpData=[];
+
+  for (let i=0; i<lxDevs.length; i++) {
+    const dev=lxDevs[i];
+    q('l2tp-sync-lbl').textContent=`${i+1}/${lxDevs.length} – ${dev.name||dev.ip}`;
+    const {community,version}=devCredentials(dev.ip);
     try {
-      const sys = await snmpQuery(dev.ip, dev.community || 'public', dev.version || '2c', 'system');
-      storeDevice(dev.ip, dev, sys);
-    } catch {
-      // Gerät nicht erreichbar – lastSeen nicht aktualisieren
-    }
-    done++;
+      const result = await snmpQ(dev.ip, community, version, 'l2tp');
+      if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
+    } catch {}
   }
 
-  setDevStatus('');
-  btn.disabled = false;
-  btn.textContent = 'Alle neu abfragen';
-  renderDevices();
+  btn.disabled=false; btn.textContent='⟳ Sync alle';
+  q('l2tp-sync-lbl').textContent=`Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
+  q('l2tp-status').className='status-bar ok';
+  q('l2tp-status').textContent=`${l2tpData.length} Endpunkt${l2tpData.length!==1?'e':''} von ${lxDevs.length} Gerät${lxDevs.length!==1?'en':''}`;
+  renderL2tp();
 }
 
-// ── Netzwerk-Scanner ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCANNER
+// ═══════════════════════════════════════════════════════════════════════════════
 
-let scanAbort = null;
-let scanFoundCount = 0;
-let scanResults = [];
-
-function setScanStatus(msg, type = '') {
-  const el = q('scan-status');
-  el.className = 'status-bar' + (type ? ' ' + type : '');
-  el.innerHTML = type === 'loading' ? `<span class="spinner"></span> ${msg}` : msg;
-}
+function setScanStatus(msg,type='') { const el=q('scan-status'); el.className='status-bar'+(type?' '+type:''); el.innerHTML=type==='loading'?`<span class="spinner"></span> ${msg}`:msg; }
 
 async function startScan() {
   const subnet    = q('scan-subnet').value.trim();
-  const community = q('scan-community').value.trim() || 'public';
+  const community = q('scan-community').value.trim()||'public';
   const version   = q('scan-version').value;
-  if (!subnet) { setScanStatus('Bitte Subnetz eingeben.', 'error'); return; }
+  if (!subnet) { setScanStatus('Bitte Subnetz eingeben.','error'); return; }
 
-  if (scanAbort) { scanAbort.abort(); scanAbort = null; }
+  // Save last subnet
+  const s = {...appSettings, lastScanSubnet:subnet};
+  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)});
+  appSettings.lastScanSubnet = subnet;
+
+  if (scanAbort) { scanAbort.abort(); scanAbort=null; }
   scanAbort = new AbortController();
-  scanFoundCount = 0;
-  scanResults = [];
+  scanFoundCnt=0; scanResults=[];
 
-  q('btn-scan').disabled = true;
-  q('btn-query-all').style.display = 'none';
-  q('sep-query-all').style.display = 'none';
-  q('btn-scan-stop').style.display = '';
-  q('scan-progress-wrap').style.display = '';
-  q('scan-bar').style.width = '0%';
-  q('scan-scanned').textContent = '0';
-  q('scan-total').textContent   = '?';
-  q('scan-found-lbl').textContent = '';
-  q('tbl-scan').querySelector('tbody').innerHTML = '';
-  q('cnt-scan-tbl').textContent = '';
-  setBadge('scanner', 0);
-  setScanStatus('Scan läuft…', 'loading');
+  q('btn-scan').disabled=true;
+  q('btn-scan-stop').style.display='';
+  q('btn-save-all').style.display='none';
+  q('sep-save-all').style.display='none';
+  q('scan-progress-wrap').style.display='';
+  q('scan-bar').style.width='0%';
+  q('scan-scanned').textContent='0'; q('scan-total').textContent='?'; q('scan-found-lbl').textContent='';
+  q('tbl-scan').querySelector('tbody').innerHTML=''; q('cnt-scan').textContent='';
+  setScanStatus('Scan läuft…','loading');
 
   try {
-    const resp = await fetch('/scan', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ subnet, community, version }),
-      signal:  scanAbort.signal,
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({ error: resp.statusText }));
-      throw new Error(err.error || 'Serverfehler');
-    }
-
-    const reader  = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-
+    const resp = await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subnet,community,version}),signal:scanAbort.signal});
+    if (!resp.ok) { const e=await resp.json().catch(()=>({error:resp.statusText})); throw new Error(e.error||'Serverfehler'); }
+    const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try { handleScanEvent(JSON.parse(line.slice(6))); } catch {}
-      }
+      const {done,value}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true}); const lines=buf.split('\n'); buf=lines.pop();
+      for (const line of lines) { if(!line.startsWith('data: ')) continue; try{handleScanEvent(JSON.parse(line.slice(6)));}catch{} }
     }
-  } catch (err) {
-    if (err.name !== 'AbortError') setScanStatus('Fehler: ' + err.message, 'error');
-    else setScanStatus('Scan abgebrochen.', '');
+  } catch(err) {
+    if(err.name!=='AbortError') setScanStatus('Fehler: '+err.message,'error');
+    else setScanStatus('Scan abgebrochen.','');
   }
-
-  q('btn-scan').disabled = false;
-  q('btn-scan-stop').style.display = 'none';
-  scanAbort = null;
+  q('btn-scan').disabled=false; q('btn-scan-stop').style.display='none'; scanAbort=null;
 }
 
-function stopScan() {
-  if (scanAbort) { scanAbort.abort(); scanAbort = null; }
-}
+function stopScan() { if(scanAbort){scanAbort.abort();scanAbort=null;} }
 
 function handleScanEvent(ev) {
-  if (ev.type === 'start') {
-    q('scan-total').textContent = ev.total;
-  } else if (ev.type === 'progress' || ev.type === 'found') {
-    const pct = ev.total > 0 ? Math.round(ev.scanned / ev.total * 100) : 0;
-    q('scan-bar').style.width    = pct + '%';
-    q('scan-scanned').textContent = ev.scanned;
-    q('scan-total').textContent   = ev.total;
-    if (ev.found > 0) q('scan-found-lbl').textContent = `${ev.found} Gerät${ev.found !== 1 ? 'e' : ''} gefunden`;
-    if (ev.type === 'found') appendScanRow(ev.device);
-    setScanStatus(`Scanne ${ev.scanned} / ${ev.total}…`, 'loading');
-  } else if (ev.type === 'done') {
-    q('scan-bar').style.width = '100%';
-    const msg = ev.found > 0
-      ? `Scan abgeschlossen — ${ev.found} LANCOM-Gerät${ev.found !== 1 ? 'e' : ''} in ${ev.total} Adressen gefunden`
-      : `Scan abgeschlossen — keine LANCOM-Geräte in ${ev.total} Adressen gefunden`;
-    setScanStatus(msg, ev.found > 0 ? 'ok' : '');
-    if (ev.found === 0) {
-      q('tbl-scan').querySelector('tbody').innerHTML = `<tr><td colspan="6" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
-    }
-    setBadge('scanner', ev.found || 0);
-    if (ev.found > 0) {
-      q('btn-query-all').style.display = '';
-      q('sep-query-all').style.display = '';
-      q('btn-query-all').textContent = `Alle ${ev.found} abfragen & speichern`;
-    }
+  if (ev.type==='start') {
+    q('scan-total').textContent=ev.total;
+  } else if (ev.type==='progress'||ev.type==='found') {
+    const pct=ev.total>0?Math.round(ev.scanned/ev.total*100):0;
+    q('scan-bar').style.width=pct+'%';
+    q('scan-scanned').textContent=ev.scanned; q('scan-total').textContent=ev.total;
+    if(ev.found>0) q('scan-found-lbl').textContent=`${ev.found} Gerät${ev.found!==1?'e':''} gefunden`;
+    if(ev.type==='found') appendScanRow(ev.device);
+    setScanStatus(`Scanne ${ev.scanned} / ${ev.total}…`,'loading');
+  } else if (ev.type==='done') {
+    q('scan-bar').style.width='100%';
+    setScanStatus(ev.found>0?`Scan abgeschlossen — ${ev.found} Gerät${ev.found!==1?'e':''} gefunden`:`Scan abgeschlossen — keine LANCOM-Geräte gefunden`, ev.found>0?'ok':'');
+    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="6" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
+    setBadge('scanner',ev.found||0);
+    if(ev.found>0){ q('btn-save-all').style.display=''; q('sep-save-all').style.display=''; q('btn-save-all').textContent=`Alle ${ev.found} speichern`; }
   }
 }
 
 function appendScanRow(dev) {
   scanResults.push(dev);
-  const tbody = q('tbl-scan').querySelector('tbody');
-  const placeholder = tbody.querySelector('td[colspan]');
-  if (placeholder) placeholder.closest('tr').remove();
-
-  scanFoundCount++;
-  q('cnt-scan-tbl').textContent = scanFoundCount + ' Gerät' + (scanFoundCount !== 1 ? 'e' : '');
-
-  const osColors = {
-    'LCOS LX': 'badge-green', 'LCOS FX': 'badge-yellow',
-    'LCOS SX': 'badge-yellow', 'LCOS': 'badge-gray', 'LANCOM': 'badge-gray',
-  };
-  const osCls = osColors[dev.os] || 'badge-gray';
-  const descShort = (dev.sysDescr || '').split(/[\r\n]/)[0].substring(0, 60);
-
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
+  const tbody=q('tbl-scan').querySelector('tbody');
+  const ph=tbody.querySelector('td[colspan]'); if(ph) ph.closest('tr').remove();
+  scanFoundCnt++;
+  q('cnt-scan').textContent=scanFoundCnt+' Gerät'+(scanFoundCnt!==1?'e':'');
+  const osC={'LCOS LX':'badge-green','LCOS FX':'badge-yellow','LCOS SX':'badge-yellow','LCOS':'badge-gray','LANCOM':'badge-gray'};
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
     <td class="mono">${h(dev.ip)}</td>
-    <td style="font-weight:600">${h(dev.sysName || '—')}</td>
-    <td><span class="badge ${osCls}">${h(dev.os)}</span></td>
-    <td style="color:var(--text2)">${h(dev.sysLocation || '—')}</td>
-    <td class="mono" style="color:var(--text3);font-size:11px">${h(descShort)}</td>
-    <td><button class="btn btn-sm" onclick="selectDevice('${dev.ip}')">Abfragen</button></td>`;
+    <td style="font-weight:600">${h(dev.sysName||'—')}</td>
+    <td><span class="badge ${osC[dev.os]||'badge-gray'}">${h(dev.os)}</span></td>
+    <td style="color:var(--text2)">${h(dev.sysLocation||'—')}</td>
+    <td class="mono" style="color:var(--text3);font-size:11px">${h((dev.sysDescr||'').split(/[\r\n]/)[0].substring(0,55))}</td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-sm" onclick="openDeviceDetail('${dev.ip}')">Details</button>
+      <button class="btn btn-sm btn-ghost" onclick="saveScanDevice(${JSON.stringify(JSON.stringify(dev))})">Speichern</button>
+    </td>`;
   tbody.appendChild(tr);
 }
 
-function selectDevice(ip) {
-  q('host').value = ip;
-  showTab('system');
-  queryAll();
+async function saveScanDevice(devJson) {
+  const dev = JSON.parse(devJson);
+  const type = detectDeviceType(dev.os, dev.sysDescr);
+  await saveDevice({
+    ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
+    sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
+    community:q('scan-community').value.trim()||'public',
+    version:q('scan-version').value||'2c',
+    source:'scanner', lastSeen:new Date().toISOString(),
+  });
 }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.id === 'scan-subnet') startScan();
-});
+async function saveScanResults() {
+  if (!scanResults.length) return;
+  const patch = {};
+  scanResults.forEach(dev => {
+    const type = detectDeviceType(dev.os, dev.sysDescr);
+    patch[dev.ip] = {
+      ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
+      sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
+      community:q('scan-community').value.trim()||'public',
+      version:q('scan-version').value||'2c',
+      source:'scanner', lastSeen:new Date().toISOString(),
+    };
+  });
+  await saveDevices(patch);
+  setScanStatus(`${Object.keys(patch).length} Gerät${Object.keys(patch).length!==1?'e':''} gespeichert`,'ok');
+}
 
-// ── Main query ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if(e.key==='Enter'&&e.target.id==='scan-subnet') startScan(); });
 
-let _refreshTimer = null;
-let _refreshInterval = 30;
-let _countdown = 0;
+// ═══════════════════════════════════════════════════════════════════════════════
+// LMC IMPORT
+// ═══════════════════════════════════════════════════════════════════════════════
 
-async function queryAll() {
-  const host = q('host').value.trim();
-  if (!host) { setStatus('Bitte IP-Adresse eingeben.', 'error'); return; }
+function setLmcStatus(msg,type='') { const el=q('lmc-status'); el.className='status-bar'+(type?' '+type:''); el.innerHTML=type==='loading'?`<span class="spinner"></span> ${msg}`:msg; }
 
-  q('btn-query').disabled = true;
-  setStatus(`Abfrage von ${host} …`, 'loading');
+function lmcGetToken() { return q('lmc-token').value.trim(); }
 
-  const t0 = Date.now();
-  let errors = 0;
+function lmcToggleSave() {
+  if (q('lmc-save-token').checked) localStorage.setItem('lmc_token', lmcGetToken());
+  else localStorage.removeItem('lmc_token');
+}
 
+async function lmcCall(service, apiPath, method='GET', body=null) {
+  const token = lmcGetToken(); if (!token) throw new Error('Kein API Token eingegeben');
+  const r = await fetch('/api/lmc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,path:apiPath,method,token,body})});
+  const d = await r.json();
+  if (!r.ok || d.error) throw new Error(d.message||d.error||`HTTP ${r.status}`);
+  return d;
+}
+
+async function lmcTest() {
+  if (!lmcGetToken()) { setLmcStatus('Bitte API Token eingeben.','error'); return; }
+  setLmcStatus('Verbindung wird getestet…','loading');
   try {
-    // Parallel: alle Abfragen gleichzeitig
-    const [sys, ifaces, mac, wlan, lldp, wds, l2tp] = await Promise.allSettled([
-      snmp('system'),
-      snmp('interfaces'),
-      snmp('mac'),
-      snmp('wlan'),
-      snmp('lldp'),
-      snmp('wds'),
-      snmp('l2tp'),
-    ]);
+    const accounts = await lmcCall('auth','/accounts');
+    const list = Array.isArray(accounts)?accounts:(accounts?.accounts||accounts?.content||[]);
+    if (!list.length) throw new Error('Keine Accounts gefunden');
 
-    if (sys.status === 'fulfilled')    renderSystem(sys.value);       else { q('sys-cards').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(sys.reason?.message || 'Fehler')}</div>`; errors++; }
-    if (ifaces.status === 'fulfilled') renderInterfaces(ifaces.value); else { q('tbl-ifaces').querySelector('tbody').innerHTML = `<tr><td colspan="6" class="empty">${h(ifaces.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (mac.status === 'fulfilled')    renderMac(mac.value);          else { q('tbl-mac').querySelector('tbody').innerHTML    = `<tr><td colspan="3" class="empty">${h(mac.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (wlan.status === 'fulfilled')   renderWlan(wlan.value);        else { q('tbl-wlan').querySelector('tbody').innerHTML   = `<tr><td colspan="5" class="empty">${h(wlan.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (lldp.status === 'fulfilled')   renderLldp(lldp.value);        else { q('tbl-lldp').querySelector('tbody').innerHTML   = `<tr><td colspan="4" class="empty">${h(lldp.reason?.message || 'Fehler')}</td></tr>`; errors++; }
-    if (wds.status === 'fulfilled')    renderWds(wds.value);          else { q('wds-wrap').innerHTML  = `<div class="empty"><div class="icon">⚠️</div>${h(wds.reason?.message  || 'Fehler')}</div>`; errors++; }
-    if (l2tp.status === 'fulfilled')   renderL2tp(l2tp.value);        else { q('l2tp-wrap').innerHTML = `<div class="empty"><div class="icon">⚠️</div>${h(l2tp.reason?.message || 'Fehler')}</div>`; errors++; }
-
-    const ms = Date.now() - t0;
-    if (errors === 0) setStatus(`Abfrage erfolgreich (${(ms/1000).toFixed(1)}s) — ${new Date().toLocaleTimeString('de-DE')}`, 'ok');
-    else              setStatus(`Abfrage abgeschlossen mit ${errors} Fehlern (${(ms/1000).toFixed(1)}s) — ${new Date().toLocaleTimeString('de-DE')}`, 'error');
-  } catch(err) {
-    setStatus('Fehler: ' + err.message, 'error');
-  }
-
-  q('btn-query').disabled = false;
-  scheduleRefresh();
+    const sel = q('lmc-account-select');
+    sel.innerHTML='<option value="">– bitte wählen –</option>';
+    list.forEach(a => {
+      const name = a.name||a.identifier||a.id;
+      const opt  = document.createElement('option'); opt.value=a.id||a.identifier; opt.textContent=name;
+      sel.appendChild(opt);
+    });
+    if (list.length===1) { sel.value=list[0].id||list[0].identifier; q('btn-lmc-sync').disabled=false; }
+    q('lmc-project-card').style.display='';
+    setLmcStatus(`Verbindung erfolgreich – ${list.length} Account${list.length!==1?'s':''} gefunden`,'ok');
+    if (q('lmc-save-token').checked) localStorage.setItem('lmc_token', lmcGetToken());
+  } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }
 }
 
-function scheduleRefresh() {
-  if (_refreshTimer) clearInterval(_refreshTimer);
-  if (!q('auto-refresh').checked) { q('refresh-countdown').textContent = ''; return; }
-  _countdown = _refreshInterval;
-  _refreshTimer = setInterval(() => {
-    _countdown--;
-    q('refresh-countdown').textContent = `(${_countdown}s)`;
-    if (_countdown <= 0) { clearInterval(_refreshTimer); queryAll(); }
-  }, 1000);
+q('lmc-account-select').addEventListener('change', e => { q('btn-lmc-sync').disabled = !e.target.value; });
+
+async function lmcSync() {
+  const accountId = q('lmc-account-select').value;
+  if (!accountId) { setLmcStatus('Bitte Projekt auswählen.','error'); return; }
+  setLmcStatus('Geräte werden synchronisiert…','loading');
+  try {
+    const resp = await lmcCall('devices', `/accounts/${accountId}/devices`);
+    const devs = Array.isArray(resp)?resp:(resp?.devices||resp?.content||[]);
+
+    const patch = {};
+    devs.forEach(d => {
+      const ip   = d.status?.ip||d.status?.ipAddress||d.ipAddress||'';
+      if (!ip) return;
+      const name = d.name||d.label||d.status?.deviceLabel||d.status?.name||ip;
+      const model= d.status?.model||d.model||'';
+      const osRaw= (d.firmwareInfo?.currentOsType||d.osType||model||'').toUpperCase();
+      let os='LANCOM';
+      if(osRaw.includes('LCOS LX')||osRaw==='LCOSLX') os='LCOS LX';
+      else if(osRaw.includes('LCOS FX')||osRaw==='LCOSFX') os='LCOS FX';
+      else if(osRaw.includes('LCOS SX')||osRaw==='LCOSSX') os='LCOS SX';
+      else if(osRaw.includes('LCOS')) os='LCOS';
+      const type=detectDeviceType(os,model);
+      patch[ip]={ ip, name, model, os, type, source:'lmc', lmcId:d.id||'',
+        community:appSettings.snmpReadCommunity||'public', version:appSettings.snmpVersion||'2c',
+        lastSeen:new Date().toISOString() };
+    });
+
+    await saveDevices(patch);
+    const n=Object.keys(patch).length;
+    setLmcStatus(`${n} Gerät${n!==1?'e':''} synchronisiert und gespeichert`,'ok');
+
+    // Show result table
+    q('lmc-result-wrap').style.display='';
+    q('cnt-lmc').textContent=n+' Gerät'+(n!==1?'e':'');
+    const tbody=q('tbl-lmc').querySelector('tbody');
+    tbody.innerHTML=Object.values(patch).map(dev => {
+      const online = devs.find(d=>(d.status?.ip||d.status?.ipAddress)===dev.ip);
+      const isOn = online?.heartbeatState?.toUpperCase()==='ACTIVE'||online?.status?.heartbeatState?.toUpperCase()==='ACTIVE';
+      const typCls=TYPE_BADGE[dev.type]||'badge-gray'; const typLbl=TYPE_LABELS[dev.type]||'—';
+      return `<tr>
+        <td style="font-weight:600">${h(dev.name)}</td>
+        <td class="mono">${h(dev.ip)}</td>
+        <td style="font-size:12px;color:var(--text2)">${h(dev.model||'—')}</td>
+        <td><span class="badge ${typCls}">${typLbl}</span></td>
+        <td><span class="dot ${isOn?'dot-green':'dot-red'}"></span>${isOn?'Online':'Offline'}</td>
+      </tr>`;
+    }).join('');
+  } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }
 }
 
-q('auto-refresh').addEventListener('change', () => {
-  if (q('auto-refresh').checked) scheduleRefresh();
-  else { clearInterval(_refreshTimer); q('refresh-countdown').textContent = ''; }
-});
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEVICE DETAIL VIEW
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// Enter = Abfragen
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.target.id === 'host' || e.target.id === 'community')) queryAll();
-});
+let selectedDevice = null;
 
-// URL-Parameter vorbelegen
-const urlParams = new URLSearchParams(location.search);
-if (urlParams.get('host')) q('host').value = urlParams.get('host');
-if (urlParams.get('community')) q('community').value = urlParams.get('community');
-if (urlParams.get('host')) queryAll();
+function openDeviceDetail(ip) {
+  const dev = deviceStore[ip] || { ip, community: appSettings.snmpReadCommunity||'public', version: appSettings.snmpVersion||'2c' };
+  selectedDevice = dev;
+  q('detail-ip').textContent = ip;
+  q('detail-community').value = dev.community || appSettings.snmpReadCommunity || 'public';
+  q('detail-version').value   = dev.version   || appSettings.snmpVersion       || '2c';
+  q('tab-detail-label').textContent = dev.name || ip;
+  q('tab-detail').style.display = '';
+  q('detail-badge').textContent = '↩ ' + (dev.name||ip);
+  q('detail-badge').style.display = '';
+  showTab('detail');
+  queryDetail();
+}
 
-// Geräte-Badge beim Start setzen
-(function() {
-  const n = Object.keys(deviceStore).length;
-  if (n > 0) setBadge('devices', n);
+function showStab(name) {
+  document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  q('sub-'+name).classList.add('active');
+  q('stab-'+name).classList.add('active');
+}
+
+async function queryDetail() {
+  const ip        = q('detail-ip').textContent.trim();
+  const community = q('detail-community').value.trim()||'public';
+  const version   = q('detail-version').value;
+  if (!ip) return;
+
+  q('detail-main-status').className='status-bar loading';
+  q('detail-main-status').innerHTML='<span class="spinner"></span> Abfrage läuft…';
+
+  const t0=Date.now();
+  const [sys,ifaces,mac,wlan,lldp] = await Promise.allSettled([
+    snmpQ(ip,community,version,'system'),
+    snmpQ(ip,community,version,'interfaces'),
+    snmpQ(ip,community,version,'mac'),
+    snmpQ(ip,community,version,'wlan'),
+    snmpQ(ip,community,version,'lldp'),
+  ]);
+
+  if(sys.status==='fulfilled') renderDetailSystem(sys.value);
+  if(ifaces.status==='fulfilled') renderDetailIfaces(ifaces.value);
+  if(mac.status==='fulfilled') renderDetailMac(mac.value);
+  if(wlan.status==='fulfilled') renderDetailWlan(wlan.value);
+  if(lldp.status==='fulfilled') renderDetailLldp(lldp.value);
+
+  q('detail-main-status').className='status-bar ok';
+  q('detail-main-status').textContent=`Abfrage erfolgreich (${((Date.now()-t0)/1000).toFixed(1)}s)`;
+}
+
+function renderDetailSystem(d) {
+  q('sys-cards').innerHTML=[
+    {label:'Gerätename',value:d.sysName||'—'},
+    {label:'Beschreibung',value:d.sysDescr||'—',mono:true},
+    {label:'Standort',value:d.sysLocation||'—'},
+    {label:'Kontakt',value:d.sysContact||'—'},
+    {label:'Uptime',value:fmtUptime(d.sysUpTime)},
+  ].map(c=>`<div class="info-card"><div class="label">${c.label}</div><div class="value${c.mono?' mono':''}">${h(c.value)}</div></div>`).join('');
+}
+
+function renderDetailIfaces(data) {
+  const tbody=q('tbl-ifaces').querySelector('tbody');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">Keine Interfaces</td></tr>`;return;}
+  tbody.innerHTML=data.map(i=>`<tr>
+    <td style="font-weight:600">${h(i.name||i.descr||'If'+i.idx)}</td>
+    <td class="mono" style="color:var(--text2)">${i.name&&i.descr!==i.name?h(i.descr):''}</td>
+    <td>${statusBadge(i.operStatus)}</td>
+    <td style="color:var(--text2)">${fmtSpeed(i.highSpeed,i.speed)}</td>
+    <td class="mono">${fmtBytes(i.inOctets)}</td>
+    <td class="mono">${fmtBytes(i.outOctets)}</td>
+  </tr>`).join('');
+}
+
+function renderDetailMac(data) {
+  const tbody=q('tbl-mac').querySelector('tbody');
+  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="3" class="empty">Keine Einträge</td></tr>`;return;}
+  tbody.innerHTML=data.entries.map(e=>`<tr>
+    <td class="mono">${h(e.mac)}</td>
+    <td class="mono" style="color:var(--text2)">${e.ip?h(e.ip):'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${h(e.port)}</td>
+  </tr>`).join('');
+}
+
+function renderDetailWlan(data) {
+  const tbody=q('tbl-wlan').querySelector('tbody');
+  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">Keine WLAN-Clients</td></tr>`;return;}
+  tbody.innerHTML=data.entries.map(e=>`<tr>
+    <td class="mono">${h(e.mac)}</td>
+    <td class="mono" style="color:var(--text2)">${e.ip?h(e.ip):'—'}</td>
+    <td>${h(e.ssid)||'—'}</td>
+    <td>${e.band?`<span class="badge badge-gray">${h(e.band)}</span>`:'—'}</td>
+    <td style="color:var(--text2)">${e.channel?'CH '+e.channel:'—'}</td>
+  </tr>`).join('');
+}
+
+function renderDetailLldp(data) {
+  const tbody=q('tbl-lldp').querySelector('tbody');
+  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">Keine LLDP-Nachbarn</td></tr>`;return;}
+  tbody.innerHTML=data.entries.map(e=>`<tr>
+    <td style="font-weight:600">${h(e.localPortName)}</td>
+    <td>${h(e.remSysName||'—')}</td>
+    <td class="mono" style="color:var(--text2)">${h(e.remPortDesc||e.remPortId||'—')}</td>
+    <td style="color:var(--text2);font-size:12px">${h((e.remSysDesc||'').split('\n')[0]||'—')}</td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const tab=q('tab-'+name); if(tab) tab.classList.add('active');
+  const panel=q('panel-'+name); if(panel) panel.classList.add('active');
+  if(name==='devices') renderDevices();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+(async function init() {
+  await loadSettings();
+  await loadDevices();
+  // Restore LMC token if saved
+  const savedToken = localStorage.getItem('lmc_token');
+  if (savedToken) { q('lmc-token').value=savedToken; q('lmc-save-token').checked=true; }
+  // URL params
+  const p = new URLSearchParams(location.search);
+  if (p.get('host')) openDeviceDetail(p.get('host'));
 })();
 </script>
 </body>
