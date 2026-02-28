@@ -95,12 +95,12 @@ sudo systemctl status lancom-onsite
 
 | Tab | Beschreibung |
 |-----|-------------|
-| **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Alle Sync-Aktionen über Buttons steuerbar. |
-| **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung (konfigurierbar), Filter nach Status/Suche. |
-| **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Filter nach Status/Suche. |
-| **Netzwerkplan** | Automatischer Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Baum-Layout mit Zoom/Pan/Drag. Detail-Panel pro Gerät. |
-| **Scanner** | Subnetz oder IP-Bereich (z. B. `192.168.1.0/24` oder `192.168.1.1-254`) nach LANCOM-Geräten scannen und direkt importieren. |
-| **LMC Import** | Geräteliste aus der LANCOM Management Cloud per API importieren (API-Key + Account-ID). |
+| **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, Standort, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Filter nach Status und Standort. |
+| **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung, Standort-Spalte, Filter nach Status und Standort. |
+| **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Standort-Spalte, Filter nach Status und Standort. |
+| **Netzwerkplan** | Automatischer Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Baum-Layout mit Zoom/Pan/Drag. Standort-Filter und Standort-Anzeige auf jedem Node. |
+| **Scanner** | Subnetz oder IP-Bereich scannen und direkt importieren. Standort kann beim Import zugewiesen werden (vorhandener Standort wählen oder neuen eingeben). |
+| **LMC Import** | Geräteliste aus der LANCOM Management Cloud importieren – liest automatisch den Standort (`siteName`) aus. |
 | **Einstellungen** | SNMP Read/Write Community, SNMP-Version (v1/v2c), RSSI-Schwellwerte – serverseitig persistent. |
 | **Gerät (Detail)** | System-Info, Interfaces, MAC/ARP-Tabelle, WLAN-Clients, LLDP-Nachbarn. |
 
@@ -108,19 +108,27 @@ sudo systemctl status lancom-onsite
 
 | Button | Funktion |
 |--------|---------|
-| **Alle Daten abrufen** | Führt Status → WDS → L2TPv3 → LLDP nacheinander aus und aktualisiert den Netzwerkplan. |
-| **Status** | Online/Offline-Prüfung aller Geräte per SNMP-Ping. |
-| **LLDP** | LLDP-Nachbartabelle aller online Geräte abfragen. |
-| **WDS** | WDS-Verbindungen aller online LX Access Points abfragen. |
-| **L2TPv3** | L2TPv3-Endpunkte aller online LX Access Points abfragen. |
-| **MAC** | Interface-MAC-Adressen aller online Geräte abfragen. |
+| **Alle Daten abrufen** | Führt Status → WDS → L2TPv3 → LLDP → MAC nacheinander aus und aktualisiert den Netzwerkplan. |
+| **Status** | Online/Offline-Prüfung per SNMP-Ping. |
+| **LLDP** | LLDP-Nachbartabelle abfragen. |
+| **WDS** | WDS-Verbindungen der LX Access Points abfragen. |
+| **L2TPv3** | L2TPv3-Endpunkte der LX Access Points abfragen. |
+| **MAC** | Interface-MAC-Adressen abfragen. |
+
+> **Standort-Filter:** Wenn unter „Geräte" ein Standort ausgewählt ist, werden alle Sync-Aktionen nur auf Geräte dieses Standorts angewendet.
+
+### Standort-Verwaltung
+
+- **LMC Import:** Standort (`siteName`) wird automatisch aus der LMC API übernommen.
+- **Scanner:** Standort kann beim Scan frei eingegeben oder aus vorhandenen Standorten gewählt werden.
+- **Filter:** Jeder Tab (Geräte, WiFi Mesh, L2TPv3, Netzwerkplan) hat einen Standort-Dropdown.
+- **Netzwerkplan:** Standort wird auf jedem Node-Karte angezeigt (📍). Filter blendet alle Geräte anderer Standorte aus.
 
 ### Design & Bedienung
 
 - **Tag/Nacht-Modus:** Umschalter (☀️ / 🌙) in der Kopfzeile – Einstellung wird lokal gespeichert.
-  - **Hell:** LANCOM Corporate Design (Navy, DM Sans, LANCOM-Blau)
-  - **Dunkel:** LANCOM Corporate Dark (Deep Navy, helle Texte, gleiche Schriften)
-- **Responsive:** Optimiert für Desktop-Browser.
+  - **Hell:** LANCOM Corporate Design (Navy, DM Sans)
+  - **Dunkel:** LANCOM Corporate Dark (Deep Navy, helle Texte)
 
 ---
 
@@ -165,7 +173,7 @@ Alle Daten liegen unter `data/` im Projektverzeichnis (nicht im Git-Repository):
 | Datei | Inhalt |
 |-------|--------|
 | `data/settings.json` | SNMP-Einstellungen, RSSI-Schwellwerte, letztes Scan-Subnetz |
-| `data/devices.json` | Geräteliste mit Status, LLDP-, WDS- und L2TP-Daten |
+| `data/devices.json` | Geräteliste mit Status, LLDP-, WDS-, L2TP-Daten und Standorten |
 
 ### Architektur
 

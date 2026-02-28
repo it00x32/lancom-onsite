@@ -719,7 +719,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div style="overflow-x:auto">
       <table id="tbl-mesh">
         <thead id="thead-mesh"></thead>
-        <tbody><tr><td colspan="10" class="empty">Sync starten um WDS-Verbindungen zu laden</td></tr></tbody>
+        <tbody><tr><td colspan="11" class="empty">Sync starten um WDS-Verbindungen zu laden</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -745,7 +745,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div style="overflow-x:auto">
       <table id="tbl-l2tp">
         <thead id="thead-l2tp"></thead>
-        <tbody><tr><td colspan="7" class="empty">Sync starten um L2TPv3-Endpunkte zu laden</td></tr></tbody>
+        <tbody><tr><td colspan="8" class="empty">Sync starten um L2TPv3-Endpunkte zu laden</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -787,7 +787,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div style="overflow-x:auto">
       <table id="tbl-devices">
         <thead id="thead-devices"></thead>
-        <tbody><tr><td colspan="13" class="empty">Noch keine Geräte – Scanner oder LMC Import verwenden</td></tr></tbody>
+        <tbody><tr><td colspan="14" class="empty">Noch keine Geräte – Scanner oder LMC Import verwenden</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -2583,7 +2583,7 @@ function renderTopoSvg() {
 
     if (node.ghost) {
       const dn = node.name.length>22 ? node.name.slice(0,21)+'…' : node.name;
-      svg += `<g opacity="0.65" onclick="topoNodeClick('${node.id.replace(/'/g,'')}')">
+      svg += `<g opacity="0.65" onclick="topoNodeClick('${h(node.id)}')">
         <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${tt.ghostBg}" stroke="${tt.ghostBorder}" stroke-width="1.5" stroke-dasharray="6,4"/>
         <text x="${rx+NW/2}" y="${ry+25}" text-anchor="middle" font-size="12" font-weight="600" fill="${tt.ghostText}" font-family="system-ui,sans-serif">${h(dn)}</text>
         <text x="${rx+NW/2}" y="${ry+42}" text-anchor="middle" font-size="9" fill="${tt.ghostSub}" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
@@ -2603,7 +2603,7 @@ function renderTopoSvg() {
     const dsub        = (node.model||node.os||'').slice(0,26);
     const dloc        = (node.location||'').slice(0,28);
 
-    svg += `<g class="topo-node" onmousedown="topoNodeDragStart(event,'${node.id.replace(/'/g,'')}',event)" onclick="topoNodeClick('${node.id.replace(/'/g,'')}');"${glow}>
+    svg += `<g class="topo-node" onmousedown="topoNodeDragStart(event,'${h(node.id)}',event)" onclick="topoNodeClick('${h(node.id)}');"${glow}>
       <rect class="topo-node-rect" x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${bgFill}" stroke="${borderColor}" stroke-width="${isRoot?2.5:1.5}"/>
       ${isRoot?`<rect x="${rx-2}" y="${ry-2}" width="${NW+4}" height="${NH+4}" rx="10" fill="none" stroke="${borderColor}" stroke-width="0.5" opacity="0.4"/>`:''}
       <circle cx="${rx+14}" cy="${y}" r="5" fill="${dotColor}"${node.online===true?' filter="url(#topo-glow)"':''}/>
