@@ -2019,19 +2019,20 @@ function appendScanRow(dev) {
     <td class="mono" style="color:var(--text3);font-size:11px">${h((dev.sysDescr||'').split(/[\r\n]/)[0].substring(0,55))}</td>
     <td style="display:flex;gap:6px">
       <button class="btn btn-sm" onclick="openDeviceDetail('${dev.ip}')">Details</button>
-      <button class="btn btn-sm btn-ghost" onclick="saveScanDevice(${JSON.stringify(JSON.stringify(dev))})">Speichern</button>
+      <button class="btn btn-sm btn-ghost" onclick="saveScanDevice('${h(dev.ip)}')">Speichern</button>
     </td>`;
   tbody.appendChild(tr);
 }
 
-async function saveScanDevice(devJson) {
-  const dev = JSON.parse(devJson);
-  if (deviceStore[dev.ip]) {
-    setScanStatus(`${dev.ip} ist bereits unter Geräte gespeichert – nicht übernommen.`, 'error');
+async function saveScanDevice(ip) {
+  const dev = scanResults.find(d => d.ip === ip);
+  if (!dev) return;
+  if (deviceStore[ip]) {
+    setScanStatus(`${ip} ist bereits unter Geräte gespeichert – nicht übernommen.`, 'error');
     return;
   }
   await saveDevice(buildScanDeviceEntry(dev));
-  setScanStatus(`${dev.sysName||dev.ip} gespeichert.`, 'ok');
+  setScanStatus(`${dev.sysName||ip} gespeichert.`, 'ok');
 }
 
 async function saveScanResults() {
