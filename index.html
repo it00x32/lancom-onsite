@@ -1019,9 +1019,9 @@ async function lmcSync() {
       const model= d.status?.model||d.model||'';
       const osRaw= (d.firmwareInfo?.currentOsType||d.osType||model||'').toUpperCase();
       let os='LANCOM';
-      if(osRaw.includes('LCOS LX')||osRaw==='LCOSLX') os='LCOS LX';
-      else if(osRaw.includes('LCOS FX')||osRaw==='LCOSFX') os='LCOS FX';
-      else if(osRaw.includes('LCOS SX')||osRaw==='LCOSSX') os='LCOS SX';
+      if(osRaw.includes('LCOS-LX')||osRaw.includes('LCOS LX')||osRaw==='LCOSLX') os='LCOS LX';
+      else if(osRaw.includes('LCOS-FX')||osRaw.includes('LCOS FX')||osRaw==='LCOSFX') os='LCOS FX';
+      else if(osRaw.includes('LCOS-SX')||osRaw.includes('LCOS SX')||osRaw==='LCOSSX') os='LCOS SX';
       else if(osRaw.includes('LCOS')) os='LCOS';
       const type=detectDeviceType(os,model);
       patch[ip]={ ip, name, model, os, type, source:'lmc', lmcId:d.id||'',

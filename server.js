@@ -552,9 +552,9 @@ function runSnmpGet(host, community, version, oids, timeout = 2000) {
 
 function detectLancomOs(sysDescr, sysObjectId) {
   const desc = (sysDescr || '').toUpperCase();
-  if (desc.includes('LCOS LX')) return 'LCOS LX';
-  if (desc.includes('LCOS SX')) return 'LCOS SX';
-  if (desc.includes('LCOS FX')) return 'LCOS FX';
+  if (desc.includes('LCOS-LX') || desc.includes('LCOS LX')) return 'LCOS LX';
+  if (desc.includes('LCOS-SX') || desc.includes('LCOS SX')) return 'LCOS SX';
+  if (desc.includes('LCOS-FX') || desc.includes('LCOS FX')) return 'LCOS FX';
   if (desc.includes('LCOS'))    return 'LCOS';
   if ((sysObjectId || '').includes('.2356.')) return 'LANCOM';
   return null;
