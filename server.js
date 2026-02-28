@@ -25,9 +25,9 @@ const DEFAULT_SETTINGS = {
   snmpReadCommunity:  'public',
   snmpWriteCommunity: 'private',
   snmpVersion:        '2c',
-  rssiGreen:  200,
-  rssiYellow: 150,
-  rssiOrange:  80,
+  rssiGreen:  80,
+  rssiYellow: 50,
+  rssiOrange:  0,
   lastScanSubnet: '',
 };
 
@@ -296,18 +296,29 @@ async function snmpMac(host, community, version) {
 // ── LLDP Nachbarn ─────────────────────────────────────────────────────────────
 
 async function snmpLldp(host, community, version) {
-  const out = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.111.1.4.1.1');
+  // LANCOM LCOS verwendet den IEEE-Pfad (1.0.8802.1.1.2), nicht den IANA-Pfad (1.3.6.1.2.1.111).
+  // Beide OIDs werden parallel abgefragt; der erste mit Daten gewinnt.
+  const [outIeee, outIana] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.0.8802.1.1.2.1.4.1.1'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.111.1.4.1.1'),
+  ]);
+  const out = outIeee.trim() ? outIeee : outIana;
+  const useIeee = !!outIeee.trim();
+
   const neighbors = {};
 
   out.split('\n').forEach(line => {
-    // OID: .1.3.6.1.2.1.111.1.4.1.1.{col}.{timeMark}.{localPortNum}.{remIndex}
-    const m = line.match(/111\.1\.4\.1\.1\.(\d+)\.(\d+)\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    // IEEE OID: .1.0.8802.1.1.2.1.4.1.1.{col}.{timeMark}.{localPortNum}.{remIndex}
+    // IANA OID: .1.3.6.1.2.1.111.1.4.1.1.{col}.{timeMark}.{localPortNum}.{remIndex}
+    const m = line.match(/(?:8802\.1\.1\.2\.1\.4\.1\.1|111\.1\.4\.1\.1)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\s*=\s*(.*)/);
     if (!m) return;
     const col = parseInt(m[1]);
     const key = `${m[3]}_${m[4]}`; // localPort_remIndex
     if (!neighbors[key]) neighbors[key] = { localPort: m[3] };
     const val = snmpVal(m[5]);
     switch (col) {
+      case 1:  neighbors[key].remChassisSubtype = parseInt(val) || 0; break;
+      case 2:  neighbors[key].remChassisIdRaw   = m[5].trim(); break; // raw for MAC parsing
       case 7:  neighbors[key].remPortId   = val; break;
       case 8:  neighbors[key].remPortDesc = val; break;
       case 9:  neighbors[key].remSysName  = val; break;
@@ -317,12 +328,14 @@ async function snmpLldp(host, community, version) {
   });
 
   // Lokale Port-Namen per ifName
-  const ifNameOut = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1');
-  // LLDP local port: .1.3.6.1.2.1.111.1.3.7.1.3.{portNum} = ifName/ifDescr
-  const lldpPortOut = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.111.1.3.7.1.3');
+  const lldpPortOid = useIeee ? '1.0.8802.1.1.2.1.3.7.1.3' : '1.3.6.1.2.1.111.1.3.7.1.3';
+  const [ifNameOut, lldpPortOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+    runSnmpWalk(host, community, version, lldpPortOid),
+  ]);
   const lldpPortNames = {};
   lldpPortOut.split('\n').forEach(line => {
-    const m = line.match(/111\.1\.3\.7\.1\.3\.(\d+)\s*=\s*(.*)/);
+    const m = line.match(/(?:8802\.1\.1\.2\.1\.3\.7\.1\.3|111\.1\.3\.7\.1\.3)\.(\d+)\s*=\s*(.*)/);
     if (m) lldpPortNames[m[1]] = snmpVal(m[2]);
   });
   const ifNames = {};
@@ -331,10 +344,19 @@ async function snmpLldp(host, community, version) {
     if (m) ifNames[m[1]] = m[2].trim();
   });
 
-  const entries = Object.values(neighbors).map(n => ({
-    ...n,
-    localPortName: lldpPortNames[n.localPort] || ifNames[n.localPort] || `Port ${n.localPort}`,
-  }));
+  const entries = Object.values(neighbors).map(n => {
+    // Chassis-ID als MAC extrahieren wenn Subtype=6 (macAddress)
+    let remMac = null;
+    if (n.remChassisSubtype === 6) {
+      const hx = (n.remChassisIdRaw||'').match(/Hex-STRING:\s*([\da-fA-F ]+)/i);
+      if (hx) remMac = macFromHexStr(hx[1].trim());
+    }
+    return {
+      ...n,
+      remMac,
+      localPortName: lldpPortNames[n.localPort] || ifNames[n.localPort] || `Port ${n.localPort}`,
+    };
+  });
   entries.sort((a, b) => (a.localPortName || '').localeCompare(b.localPortName || '', undefined, { numeric: true }));
   return { entries, count: entries.length };
 }
@@ -362,8 +384,9 @@ function parseWdsConfig(raw) {
     if (!linkName) return;
     if (!links[linkName]) links[linkName] = { linkName };
     const val = m[3].trim().replace(/^(STRING|INTEGER):\s*/, '').replace(/^"(.*)"$/, '$1');
-    if (col === 2) links[linkName].ssid  = val;
-    if (col === 4) links[linkName].radio = parseInt(val, 10) || 0;
+    if (col === 2) links[linkName].ssid   = val;
+    if (col === 3) links[linkName].remote = parseInt(val, 10) === 1; // 1 = STA/remote side
+    if (col === 4) links[linkName].radio  = parseInt(val, 10) || 0;
   });
   return links;
 }
@@ -555,6 +578,7 @@ function detectLancomOs(sysDescr, sysObjectId) {
   if (desc.includes('LCOS-LX') || desc.includes('LCOS LX')) return 'LCOS LX';
   if (desc.includes('LCOS-SX') || desc.includes('LCOS SX')) return 'LCOS SX';
   if (desc.includes('LCOS-FX') || desc.includes('LCOS FX')) return 'LCOS FX';
+  if (desc.includes('GS-2'))    return 'LCOS SX';
   if (desc.includes('LCOS'))    return 'LCOS';
   if ((sysObjectId || '').includes('.2356.')) return 'LANCOM';
   return null;
@@ -562,25 +586,30 @@ function detectLancomOs(sysDescr, sysObjectId) {
 
 async function scanHost(host, community, version) {
   const out = await runSnmpGet(host, community, version, [
-    '1.3.6.1.2.1.1.1.0', // sysDescr
-    '1.3.6.1.2.1.1.2.0', // sysObjectID
-    '1.3.6.1.2.1.1.5.0', // sysName
-    '1.3.6.1.2.1.1.6.0', // sysLocation
+    '1.3.6.1.2.1.1.1.0',  // sysDescr
+    '1.3.6.1.2.1.1.2.0',  // sysObjectID
+    '1.3.6.1.2.1.1.5.0',  // sysName
+    '1.3.6.1.2.1.1.6.0',  // sysLocation
+    '1.3.6.1.2.1.2.2.1.6.1', // ifPhysAddress.1 (Management-MAC, Interface 1)
   ]);
   if (!out.trim()) return null;
 
-  let sysDescr = '', sysObjectId = '', sysName = '', sysLocation = '';
+  let sysDescr = '', sysObjectId = '', sysName = '', sysLocation = '', mac = '';
   out.split('\n').forEach(line => {
-    if (/\.1\.1\.0\s*=/.test(line)) sysDescr    = snmpVal(line.split('=').slice(1).join('='));
-    if (/\.1\.2\.0\s*=/.test(line)) sysObjectId = (line.match(/OID:\s*(.+)/) || [])[1]?.trim() || '';
-    if (/\.1\.5\.0\s*=/.test(line)) sysName     = snmpVal(line.split('=').slice(1).join('='));
-    if (/\.1\.6\.0\s*=/.test(line)) sysLocation = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.2\.1\.1\.1\.0\s*=/.test(line))  sysDescr    = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.2\.1\.1\.2\.0\s*=/.test(line))  sysObjectId = (line.match(/OID:\s*(.+)/) || [])[1]?.trim() || '';
+    if (/\.2\.1\.1\.5\.0\s*=/.test(line))  sysName     = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.2\.1\.1\.6\.0\s*=/.test(line))  sysLocation = snmpVal(line.split('=').slice(1).join('='));
+    if (/\.2\.2\.1\.6\.1\s*=/.test(line)) {
+      const hx = line.match(/Hex-STRING:\s*([\da-fA-F ]+)/i);
+      if (hx) mac = hx[1].trim().replace(/\s+/g, ':').toLowerCase();
+    }
   });
 
   const os = detectLancomOs(sysDescr, sysObjectId);
   if (!os) return null;
 
-  return { ip: host, sysName, sysDescr, sysLocation, os };
+  return { ip: host, sysName, sysDescr, sysLocation, os, mac };
 }
 
 // ── HTTP Server ───────────────────────────────────────────────────────────────
@@ -676,17 +705,25 @@ const server = http.createServer(async (req, res) => {
         'Connection':    'keep-alive',
       });
 
-      const send = (obj) => { try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch {} };
+      // Track client disconnect so workers can stop early
+      let aborted = false;
+      req.on('close', () => { aborted = true; });
+
+      const send = (obj) => {
+        if (aborted) return;
+        try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch { aborted = true; }
+      };
 
       send({ type: 'start', total: hosts.length });
 
-      const CONCURRENCY = 30;
+      const CONCURRENCY = 20;
       let idx = 0, done = 0, found = 0;
 
       async function worker() {
-        while (idx < hosts.length) {
+        while (idx < hosts.length && !aborted) {
           const host = hosts[idx++];
-          const device = await scanHost(host, community, version);
+          let device = null;
+          try { device = await scanHost(host, community, version); } catch { /* skip host */ }
           done++;
           if (device) {
             found++;
@@ -697,9 +734,14 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      await Promise.all(Array(Math.min(CONCURRENCY, hosts.length)).fill(null).map(() => worker()));
-      send({ type: 'done', total: hosts.length, found });
-      res.end();
+      try {
+        await Promise.all(Array(Math.min(CONCURRENCY, hosts.length)).fill(null).map(() => worker()));
+      } catch { /* ignore – individual errors are caught per host */ }
+
+      if (!aborted) {
+        send({ type: 'done', total: hosts.length, found });
+        res.end();
+      }
     });
     return;
   }
@@ -722,6 +764,39 @@ const server = http.createServer(async (req, res) => {
           case 'wlan':       result = await snmpWlan(host, community, version);       break;
           case 'wds':        result = await snmpWds(host, community, version);        break;
           case 'l2tp':       result = await snmpL2tp(host, community, version);       break;
+          case 'ping': {
+            const out = await runSnmpGet(host, community, version, ['1.3.6.1.2.1.1.5.0'], 2000);
+            if (!out.trim()) throw new Error('No SNMP response');
+            result = { reachable: true };
+            break;
+          }
+          case 'ifmacs': {
+            // ifPhysAddress (1.3.6.1.2.1.2.2.1.6) — nur eigene Interface-MACs des Geräts.
+            // Bridge-FDB / ARP (verbundene Clients) werden NICHT gelesen.
+            const [ifPhysOut, ifNameOut] = await Promise.all([
+              runSnmpWalk(host, community, version, '1.3.6.1.2.1.2.2.1.6'),
+              runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+            ]);
+            // Interface-Namen einlesen um virtuelle Interfaces (Tunnel, Loopback) auszuschließen
+            const ifNames = {};
+            ifNameOut.split('\n').forEach(line => {
+              const m = line.match(/31\.1\.1\.1\.1\.(\d+)\s*=\s*(?:STRING:\s*)?\"?([^"\n]+?)\"?\s*$/);
+              if (m) ifNames[m[1]] = m[2].trim().toLowerCase();
+            });
+            const macs = [];
+            ifPhysOut.split('\n').forEach(line => {
+              // Nur Hex-STRING Einträge sind echte MAC-Adressen
+              const m = line.match(/2\.2\.1\.6\.(\d+)\s*=\s*Hex-STRING:\s*([\da-fA-F ]+)/i);
+              if (!m) return;
+              const idx = m[1], name = ifNames[idx] || '';
+              // Tunnel, Loopback und reine Bridge-Interfaces ausschließen
+              if (/^(lo|tun|gre|l2tp|ppp|sit|ip6tnl)/.test(name)) return;
+              const mac = macFromHexStr(m[2].trim());
+              if (mac && mac !== '00:00:00:00:00:00' && !macs.includes(mac)) macs.push(mac);
+            });
+            result = { macs };
+            break;
+          }
           default:           throw new Error(`Unbekannter Typ: ${type}`);
         }
 

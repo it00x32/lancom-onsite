@@ -83,6 +83,10 @@ body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-sys
 .table-title .cnt { color:var(--text3); font-weight:400; font-size:12px; }
 table { width:100%; border-collapse:collapse; }
 th { background:var(--bg3); color:var(--text3); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+th.sortable { cursor:pointer; user-select:none; }
+th.sortable:hover { color:var(--text2); }
+th.sort-asc::after  { content:' ▲'; font-size:9px; color:var(--accent); }
+th.sort-desc::after { content:' ▼'; font-size:9px; color:var(--accent); }
 td { padding:8px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
 tr:last-child td { border-bottom:none; }
 tr:hover td { background:var(--bg3); }
@@ -144,6 +148,13 @@ td.mono { font-family:monospace; font-size:12px; }
 ::-webkit-scrollbar { width:6px; height:6px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* Topology */
+#topo-svg { background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(37,99,235,.04) 0%,transparent 70%); }
+.topo-node:hover .topo-node-rect { stroke-width:2.5px !important; }
+.topo-select { background:var(--bg2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px; outline:none; cursor:pointer; font-family:inherit; transition:border-color .15s; }
+.topo-select:focus { border-color:var(--blue); }
+.topo-select option { background:var(--bg2); }
 </style>
 </head>
 <body>
@@ -155,9 +166,10 @@ td.mono { font-family:monospace; font-size:12px; }
 </div>
 
 <div class="tabs" id="main-tabs">
-  <div class="tab active" onclick="showTab('mesh')"    id="tab-mesh">    WiFi Mesh <span class="badge" id="badge-mesh"></span></div>
+  <div class="tab active" onclick="showTab('devices')" id="tab-devices"> Geräte <span class="badge" id="badge-devices"></span></div>
+  <div class="tab"        onclick="showTab('mesh')"    id="tab-mesh">    WiFi Mesh <span class="badge" id="badge-mesh"></span></div>
   <div class="tab"        onclick="showTab('l2tp')"    id="tab-l2tp">    L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
-  <div class="tab"        onclick="showTab('devices')" id="tab-devices"> Geräte <span class="badge" id="badge-devices"></span></div>
+  <div class="tab"        onclick="showTab('topology')" id="tab-topology">Netzwerkplan</div>
   <div class="tab"        onclick="showTab('scanner')" id="tab-scanner"> Scanner</div>
   <div class="tab"        onclick="showTab('lmc')"     id="tab-lmc">     LMC Import</div>
   <div class="tab"        onclick="showTab('settings')"id="tab-settings">Einstellungen</div>
@@ -169,7 +181,7 @@ td.mono { font-family:monospace; font-size:12px; }
 <div class="content">
 
 <!-- ═══ WIFI MESH ═══════════════════════════════════════════════════════════ -->
-<div class="panel active" id="panel-mesh">
+<div class="panel" id="panel-mesh">
   <div class="toolbar">
     <div class="filter-group" id="mesh-filters">
       <button class="fbtn active"    onclick="setMeshFilter('all')"    id="mf-all">Alle</button>
@@ -179,17 +191,14 @@ td.mono { font-family:monospace; font-size:12px; }
       <button class="fbtn f-red"     onclick="setMeshFilter('red')"    id="mf-red"><span class="dot dot-red"></span>Offline</button>
     </div>
     <input class="search-input" id="mesh-search" placeholder="Gerätename suchen…" oninput="renderMesh()" style="width:200px">
-    <div class="toolbar-spacer"></div>
-    <span id="mesh-sync-lbl" style="font-size:11px;color:var(--text3)"></span>
-    <button class="btn btn-sm btn-ghost" id="btn-mesh-sync" onclick="syncMesh()">&#x21BB; Sync alle</button>
   </div>
   <div id="mesh-status" class="status-bar"></div>
   <div class="table-wrap">
     <div class="table-title">WDS-Verbindungen <span class="cnt" id="cnt-mesh"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-mesh">
-        <thead><tr><th>Gerätename</th><th>Gerät-IP</th><th>WDS-Link</th><th>Band</th><th>RSSI</th><th>Status</th><th></th></tr></thead>
-        <tbody><tr><td colspan="7" class="empty">Sync starten um WDS-Verbindungen zu laden</td></tr></tbody>
+        <thead id="thead-mesh"></thead>
+        <tbody><tr><td colspan="10" class="empty">Sync starten um WDS-Verbindungen zu laden</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -204,16 +213,13 @@ td.mono { font-family:monospace; font-size:12px; }
       <button class="fbtn f-down"  onclick="setL2tpFilter('down')" id="lf-down"><span class="dot dot-red"></span>DOWN</button>
     </div>
     <input class="search-input" id="l2tp-search" placeholder="Gerätename suchen…" oninput="renderL2tp()" style="width:200px">
-    <div class="toolbar-spacer"></div>
-    <span id="l2tp-sync-lbl" style="font-size:11px;color:var(--text3)"></span>
-    <button class="btn btn-sm btn-ghost" id="btn-l2tp-sync" onclick="syncL2tp()">&#x21BB; Sync alle</button>
   </div>
   <div id="l2tp-status" class="status-bar"></div>
   <div class="table-wrap">
     <div class="table-title">L2TPv3-Endpunkte <span class="cnt" id="cnt-l2tp"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-l2tp">
-        <thead><tr><th>Gerätename</th><th>Gerät-IP</th><th>Endpoint</th><th>Gegenstelle</th><th>Remote-IP</th><th>Status</th><th></th></tr></thead>
+        <thead id="thead-l2tp"></thead>
         <tbody><tr><td colspan="7" class="empty">Sync starten um L2TPv3-Endpunkte zu laden</td></tr></tbody>
       </table>
     </div>
@@ -221,28 +227,96 @@ td.mono { font-family:monospace; font-size:12px; }
 </div>
 
 <!-- ═══ GERÄTE ═══════════════════════════════════════════════════════════════ -->
-<div class="panel" id="panel-devices">
+<div class="panel active" id="panel-devices">
   <div class="toolbar">
-    <select id="dev-type-filter" class="search-input" onchange="renderDevices()" style="width:180px">
-      <option value="all">Alle Typen</option>
-      <option value="lx-ap">LX Access Point</option>
-      <option value="lcos-ap">LCOS Access Point</option>
-      <option value="switch">Switch</option>
-      <option value="router">Router</option>
-      <option value="firewall">Firewall</option>
-      <option value="unknown">Unbekannt</option>
-    </select>
+    <div class="filter-group">
+      <button class="fbtn active"    onclick="setDevFilter('all')"     id="df-all">Alle</button>
+      <button class="fbtn f-green"   onclick="setDevFilter('online')"  id="df-online"><span class="dot dot-green"></span>Online</button>
+      <button class="fbtn f-red"     onclick="setDevFilter('offline')" id="df-offline"><span class="dot dot-red"></span>Offline</button>
+    </div>
     <input class="search-input" id="dev-search" placeholder="Name / IP suchen…" oninput="renderDevices()" style="width:200px">
     <div class="toolbar-spacer"></div>
+    <button class="btn btn-sm" id="btn-topo-sync-all" onclick="syncTopologyAll()">&#x21BB; Daten Abrufen</button>
+    <div class="sep"></div>
+    <button class="btn btn-sm btn-ghost" id="btn-check-status" onclick="checkAllDeviceStatus()">Status</button>
+    <button class="btn btn-sm btn-ghost" id="btn-lldp-sync" onclick="syncDeviceLldp()">LLDP</button>
+    <button class="btn btn-sm btn-ghost" id="btn-wds-sync" onclick="syncWdsAll()">WDS</button>
+    <button class="btn btn-sm btn-ghost" id="btn-l2tp-sync2" onclick="syncL2tpAll()">L2TPv3</button>
+    <button class="btn btn-sm btn-ghost" id="btn-mac-sync" onclick="syncDeviceMacs()">MAC</button>
     <button class="btn btn-sm btn-danger" onclick="clearAllDevices()">Liste leeren</button>
+  </div>
+  <div id="dev-sync-status" class="status-bar"></div>
+  <div id="dev-progress-wrap" style="display:none;padding:6px 0 2px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:7px;background:var(--bg2);border-radius:4px;overflow:hidden">
+        <div id="dev-progress-bar" style="height:100%;width:0;background:var(--accent);transition:width 0.15s ease"></div>
+      </div>
+      <span id="dev-progress-text" style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:60px;text-align:right">0 / 0</span>
+    </div>
   </div>
   <div class="table-wrap">
     <div class="table-title">Geräte <span class="cnt" id="cnt-devices"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-devices">
-        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Typ</th><th>Quelle</th><th>Zuletzt gesehen</th><th></th></tr></thead>
-        <tbody><tr><td colspan="7" class="empty">Noch keine Geräte – Scanner oder LMC Import verwenden</td></tr></tbody>
+        <thead id="thead-devices"></thead>
+        <tbody><tr><td colspan="13" class="empty">Noch keine Geräte – Scanner oder LMC Import verwenden</td></tr></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NETZWERKPLAN ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-topology">
+  <div class="toolbar">
+    <span style="font-size:13px;font-weight:700;color:var(--text)">Netzwerkplan</span>
+    <select id="topo-root-select" class="topo-select" onchange="topoChangeRoot()" style="min-width:160px;" title="Startgerät (Wurzel)"></select>
+    <button class="btn btn-sm btn-ghost" onclick="topoZoom(1.25)" title="Vergrößern">＋</button>
+    <button class="btn btn-sm btn-ghost" onclick="topoZoom(0.8)" title="Verkleinern">－</button>
+    <button class="btn btn-sm btn-ghost" onclick="topoFit()" title="Ansicht anpassen">⊡</button>
+  </div>
+  <div id="topo-status" class="status-bar"></div>
+  <div id="topo-container" style="position:relative;width:100%;height:620px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;user-select:none">
+    <svg id="topo-svg" width="100%" height="100%"
+         onmousedown="topoBgDragStart(event)"
+         onmousemove="topoMouseMove(event)"
+         onmouseup="topoMouseUp(event)"
+         onmouseleave="topoMouseUp(event)"
+         onwheel="topoWheel(event)">
+      <defs>
+        <filter id="topo-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g id="topo-g"></g>
+    </svg>
+    <div id="topo-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text3);font-size:13px;pointer-events:none;white-space:nowrap;text-align:center">
+      Keine Online-Geräte – "Daten Abrufen" starten um Verbindungen abzufragen</div>
+    <div style="position:absolute;bottom:12px;left:12px;background:rgba(15,17,23,.82);border:1px solid var(--border);border-radius:6px;padding:8px 12px;pointer-events:none;display:flex;flex-direction:column;gap:6px;z-index:10;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(37,99,235,.7)" stroke-width="2.5" stroke-dasharray="none"/></svg>
+        <span style="font-size:11px;color:var(--text2)">Direkt (LLDP)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(249,115,22,.8)" stroke-width="2.5" stroke-dasharray="6 3"/></svg>
+        <span style="font-size:11px;color:var(--text2)">WDS / Mesh</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(34,197,94,.8)" stroke-width="2.5" stroke-dasharray="3 3"/></svg>
+        <span style="font-size:11px;color:var(--text2)">L2TPv3</span>
+      </div>
+    </div>
+    <div id="topo-detail" style="display:none;position:absolute;top:0;right:0;bottom:0;width:320px;background:var(--bg);border-left:1px solid var(--border);flex-direction:column;z-index:20;box-shadow:-6px 0 24px rgba(0,0,0,.45);">
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0">
+        <span id="topo-detail-dot" style="width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block;"></span>
+        <div style="flex:1;min-width:0">
+          <div id="topo-detail-name" style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div id="topo-detail-sub" style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button id="topo-detail-setroot" onclick="topoSetRootFromDetail()" style="background:rgba(37,99,235,.15);border:1px solid var(--border);border-radius:6px;color:#60a5fa;font-size:10px;font-weight:600;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#x2325; Startpunkt</button>
+        <button onclick="topoCloseDetail()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:13px;padding:3px 7px;flex-shrink:0;">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 14px;" id="topo-detail-content"></div>
     </div>
   </div>
 </div>
@@ -276,8 +350,8 @@ td.mono { font-family:monospace; font-size:12px; }
     <div class="table-title">Gefundene LANCOM-Geräte <span class="cnt" id="cnt-scan"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-scan">
-        <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Standort</th><th>Beschreibung</th><th></th></tr></thead>
-        <tbody><tr><td colspan="6" class="empty">Noch kein Scan gestartet</td></tr></tbody>
+        <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Beschreibung</th><th></th></tr></thead>
+        <tbody><tr><td colspan="7" class="empty">Noch kein Scan gestartet</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -314,7 +388,7 @@ td.mono { font-family:monospace; font-size:12px; }
     <div class="table-title">Synchronisierte Geräte <span class="cnt" id="cnt-lmc"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-lmc">
-        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Typ</th><th>Status</th></tr></thead>
+        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Betriebssystem</th><th>Typ</th><th>Status</th><th>Import</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -338,16 +412,16 @@ td.mono { font-family:monospace; font-size:12px; }
     </div>
   </div>
   <div class="settings-section">
-    <h3>RSSI-Schwellwerte (WiFi Mesh)</h3>
+    <h3>RSSI-Schwellwerte (WiFi Mesh, in %)</h3>
     <div class="settings-grid">
-      <label><span class="dot dot-green"></span>Grün ab (≥)</label>
-      <input class="settings-input" id="cfg-rssi-green" type="number" min="0" max="255">
-      <label><span class="dot dot-yellow"></span>Gelb ab (≥)</label>
-      <input class="settings-input" id="cfg-rssi-yellow" type="number" min="0" max="255">
-      <label><span class="dot dot-orange"></span>Orange ab (≥)</label>
-      <input class="settings-input" id="cfg-rssi-orange" type="number" min="0" max="255">
+      <label><span class="dot dot-green"></span>Grün ab (≥ %)</label>
+      <input class="settings-input" id="cfg-rssi-green" type="number" min="0" max="100">
+      <label><span class="dot dot-yellow"></span>Gelb ab (≥ %)</label>
+      <input class="settings-input" id="cfg-rssi-yellow" type="number" min="0" max="100">
+      <label><span class="dot dot-orange"></span>Orange ab (≥ %)</label>
+      <input class="settings-input" id="cfg-rssi-orange" type="number" min="0" max="100">
     </div>
-    <p class="settings-hint" style="margin-top:10px">Verbindungen unter dem Orange-Schwellwert (aber verbunden) werden als Orange angezeigt. Offline-Verbindungen immer Rot.</p>
+    <p class="settings-hint" style="margin-top:10px">Bereiche: <span class="dot dot-green"></span>Grün ≥ Grün-Wert &nbsp;·&nbsp; <span class="dot dot-yellow"></span>Gelb ≥ Gelb-Wert &nbsp;·&nbsp; <span class="dot dot-orange"></span>Orange ≥ Orange-Wert &nbsp;·&nbsp; <span class="dot dot-red"></span>Rot = Offline. Änderungen werden sofort auf der WiFi-Mesh-Seite übernommen.</p>
   </div>
   <button class="btn" onclick="saveSettings()">Einstellungen speichern</button>
   <span id="settings-save-lbl" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Gespeichert</span>
@@ -458,7 +532,7 @@ function statusBadge(val) {
 function setBadge(id, n) { const el=q('badge-'+id); if(el) el.textContent = n>0?n:''; }
 
 const TYPE_LABELS = {
-  'lx-ap':'LX Access Point','lcos-ap':'LCOS Access Point',
+  'lx-ap':'Access Point','lcos-ap':'Access Point',
   'switch':'Switch','router':'Router','firewall':'Firewall','unknown':'Unbekannt'
 };
 const TYPE_BADGE = {
@@ -493,6 +567,10 @@ let meshData     = [];   // live WDS data
 let l2tpData     = [];   // live L2TP data
 let meshFilter   = 'all';
 let l2tpFilter   = 'all';
+let devFilter    = 'all';
+let meshSort     = { col: null, dir: 1 };
+let l2tpSort     = { col: null, dir: 1 };
+let devSort      = { col: 'ip', dir: 1 };
 let scanResults  = [];
 let scanAbort    = null;
 let scanFoundCnt = 0;
@@ -501,16 +579,51 @@ let scanFoundCnt = 0;
 // SETTINGS (server-side)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ── Sortier-Hilfsfunktionen ────────────────────────────────────────────────────
+function mkTh(label, col, sort, clickFn) {
+  const active = sort.col === col;
+  const cls = active ? (sort.dir === 1 ? 'sortable sort-asc' : 'sortable sort-desc') : 'sortable';
+  return `<th class="${cls}" onclick="${clickFn}('${col}')">${label}</th>`;
+}
+function noSortTh(label) { return `<th>${label}</th>`; }
+
+function applySort(arr, sort, keyFn) {
+  if (!sort.col) return arr;
+  return [...arr].sort((a, b) => {
+    const va = keyFn(a, sort.col), vb = keyFn(b, sort.col);
+    if (va === vb) return 0;
+    return (va < vb ? -1 : 1) * sort.dir;
+  });
+}
+
+function clickSort(sort, col, renderFn) {
+  if (sort.col === col) sort.dir *= -1;
+  else { sort.col = col; sort.dir = 1; }
+  renderFn();
+}
+
+function meshSortClick(col)  { clickSort(meshSort, col, renderMesh); }
+function l2tpSortClick(col)  { clickSort(l2tpSort, col, renderL2tp); }
+function devSortClick(col)   { clickSort(devSort,  col, renderDevices); }
+
+function setDevFilter(f) {
+  devFilter = f;
+  ['all','online','offline'].forEach(k => {
+    const el = q('df-'+k); if (el) el.classList.toggle('active', k === f);
+  });
+  renderDevices();
+}
+
 async function loadSettings() {
   try {
     const r = await fetch('/api/settings'); appSettings = await r.json();
-  } catch { appSettings = { snmpReadCommunity:'public', snmpWriteCommunity:'private', snmpVersion:'2c', rssiGreen:200, rssiYellow:150, rssiOrange:80 }; }
+  } catch { appSettings = { snmpReadCommunity:'public', snmpWriteCommunity:'private', snmpVersion:'2c', rssiGreen:80, rssiYellow:50, rssiOrange:0 }; }
   q('cfg-snmp-read').value    = appSettings.snmpReadCommunity  || 'public';
   q('cfg-snmp-write').value   = appSettings.snmpWriteCommunity || 'private';
   q('cfg-snmp-version').value = appSettings.snmpVersion        || '2c';
-  q('cfg-rssi-green').value   = appSettings.rssiGreen  ?? 200;
-  q('cfg-rssi-yellow').value  = appSettings.rssiYellow ?? 150;
-  q('cfg-rssi-orange').value  = appSettings.rssiOrange ?? 80;
+  q('cfg-rssi-green').value   = appSettings.rssiGreen  ?? 80;
+  q('cfg-rssi-yellow').value  = appSettings.rssiYellow ?? 50;
+  q('cfg-rssi-orange').value  = appSettings.rssiOrange ?? 0;
   // Pre-fill scanner community from settings
   q('scan-community').value = appSettings.snmpReadCommunity || 'public';
   q('scan-version').value   = appSettings.snmpVersion       || '2c';
@@ -523,13 +636,15 @@ async function saveSettings() {
     snmpReadCommunity:  q('cfg-snmp-read').value.trim(),
     snmpWriteCommunity: q('cfg-snmp-write').value.trim(),
     snmpVersion:        q('cfg-snmp-version').value,
-    rssiGreen:  parseInt(q('cfg-rssi-green').value)  || 200,
-    rssiYellow: parseInt(q('cfg-rssi-yellow').value) || 150,
-    rssiOrange: parseInt(q('cfg-rssi-orange').value) || 80,
+    rssiGreen:  parseInt(q('cfg-rssi-green').value)  ?? 80,
+    rssiYellow: parseInt(q('cfg-rssi-yellow').value) ?? 50,
+    rssiOrange: parseInt(q('cfg-rssi-orange').value) ?? 0,
   };
   await fetch('/api/settings',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(appSettings) });
   const lbl = q('settings-save-lbl');
   lbl.style.display=''; setTimeout(()=>{ lbl.style.display='none'; }, 2500);
+  renderMesh();
+  renderL2tp();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -573,19 +688,63 @@ async function clearAllDevices() {
 }
 
 function renderDevices() {
-  const typeF = q('dev-type-filter')?.value || 'all';
-  const srch  = (q('dev-search')?.value||'').toLowerCase();
-  const devs  = Object.values(deviceStore)
-    .filter(d => (typeF==='all' || d.type===typeF) && (!srch || (d.name||d.ip||'').toLowerCase().includes(srch) || (d.ip||'').includes(srch)))
-    .sort((a,b) => { const n=ip=>ip.split('.').reduce((s,o)=>s*256+parseInt(o),0); return n(a.ip)-n(b.ip); });
+  const srch = (q('dev-search')?.value||'').toLowerCase();
+  const ipNum = ip => ip.split('.').reduce((s,o) => s*256+parseInt(o), 0);
+
+  let devs = Object.values(deviceStore).filter(d => {
+    if (srch && !(d.name||d.ip||'').toLowerCase().includes(srch) && !d.ip.includes(srch)) return false;
+    if (devFilter === 'online'  && d.online !== true)  return false;
+    if (devFilter === 'offline' && d.online !== false) return false;
+    return true;
+  });
+
+  // Sortierung
+  const keyFn = (d, col) => {
+    switch (col) {
+      case 'name':     return (d.name||'').toLowerCase();
+      case 'ip':       return ipNum(d.ip||'0.0.0.0');
+      case 'mac':      return (d.mac||'').toLowerCase();
+      case 'macs':     return d.macs?.length ?? -1;
+      case 'lldp':     return d.lldpCount ?? -1;
+      case 'wds':      return d.wdsLinks?.length ?? -1;
+      case 'l2tp':     return d.l2tpEndpoints?.length ?? -1;
+      case 'model':    return (d.model||'').toLowerCase();
+      case 'os':       return (d.os||'').toLowerCase();
+      case 'type':     return (d.type||'').toLowerCase();
+      case 'source':   return (d.source||'').toLowerCase();
+      case 'lastSeen': return d.lastSeen||'';
+      default:         return '';
+    }
+  };
+  devs = devSort.col
+    ? applySort(devs, devSort, keyFn)
+    : devs.sort((a,b) => ipNum(a.ip) - ipNum(b.ip));
 
   const total = Object.keys(deviceStore).length;
   setBadge('devices', total);
   q('cnt-devices').textContent = total ? total+' Gerät'+(total!==1?'e':'') : '';
 
+  // Thead
+  const S = col => mkTh.bind(null, col, col, devSort, 'devSortClick');
+  q('thead-devices').innerHTML = `<tr>
+    ${mkTh('Gerätename','name',devSort,'devSortClick')}
+    ${mkTh('IP-Adresse','ip',devSort,'devSortClick')}
+    ${mkTh('MAC-Adresse','mac',devSort,'devSortClick')}
+    ${mkTh('MACs','macs',devSort,'devSortClick')}
+    ${mkTh('LLDP','lldp',devSort,'devSortClick')}
+    ${mkTh('WDS','wds',devSort,'devSortClick')}
+    ${mkTh('L2TPv3','l2tp',devSort,'devSortClick')}
+    ${mkTh('Modell','model',devSort,'devSortClick')}
+    ${mkTh('Betriebssystem','os',devSort,'devSortClick')}
+    ${mkTh('Typ','type',devSort,'devSortClick')}
+    ${mkTh('Quelle','source',devSort,'devSortClick')}
+    ${mkTh('Zuletzt gesehen','lastSeen',devSort,'devSortClick')}
+    ${noSortTh('')}
+  </tr>`;
+
   const tbody = q('tbl-devices').querySelector('tbody');
   if (!devs.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">Keine Geräte ${typeF!=='all'||srch?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" class="empty">Keine Geräte ${srch||devFilter!=='all'?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
     return;
   }
   tbody.innerHTML = devs.map(dev => {
@@ -593,9 +752,15 @@ function renderDevices() {
     const typCls = TYPE_BADGE[dev.type]||'badge-gray';
     const srcLbl = dev.source==='lmc' ? '<span class="badge badge-blue">LMC</span>' : '<span class="badge badge-gray">Scanner</span>';
     return `<tr>
-      <td style="font-weight:600">${h(dev.name||'—')}</td>
+      <td style="font-weight:600"><span class="dot ${dev.online===true?'dot-green':dev.online===false?'dot-red':'dot-gray'}" title="${dev.online===true?'Online':dev.online===false?'Offline':'Unbekannt'}"></span>${h(dev.name||'—')}</td>
       <td class="mono">${h(dev.ip)}</td>
-      <td style="color:var(--text2);font-size:12px">${h(dev.model||dev.os||'—')}</td>
+      <td class="mono" style="font-size:12px;color:var(--text2)">${h(dev.mac||'—')}</td>
+      <td style="font-size:12px;text-align:center;color:${dev.macs?.length?'var(--accent)':'var(--text3)'}" title="${dev.macs?.length?dev.macs.join('\n'):'Noch kein MAC-Sync'}">${dev.macs?.length??'—'}</td>
+      <td style="font-size:12px;text-align:center;color:${dev.lldpCount?'var(--accent)':'var(--text3)'}" title="${dev.lldpNeighbors?.length?dev.lldpNeighbors.join('\n'):'Noch kein LLDP Sync'}">${dev.lldpCount??'—'}</td>
+      <td style="font-size:12px;text-align:center;color:${dev.wdsLinks?.length?'var(--orange)':'var(--text3)'}" title="${dev.wdsLinks?.length?dev.wdsLinks.map(l=>l.linkName||l.mac||'?').join('\n'):'Keine WDS-Daten'}">${dev.wdsLinks?.length??'—'}</td>
+      <td style="font-size:12px;text-align:center;color:${dev.l2tpEndpoints?.length?'var(--green)':'var(--text3)'}" title="${dev.l2tpEndpoints?.length?dev.l2tpEndpoints.map(e=>e.endpointName||e.remoteIp||'?').join('\n'):'Keine L2TP-Daten'}">${dev.l2tpEndpoints?.length??'—'}</td>
+      <td style="color:var(--text2);font-size:12px">${h(dev.model||'—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${h(dev.os||'—')}</td>
       <td><span class="badge ${typCls}">${typLbl}</span></td>
       <td>${srcLbl}</td>
       <td style="color:var(--text3);font-size:11px">${fmtDate(dev.lastSeen)}</td>
@@ -624,6 +789,182 @@ function devCredentials(ip) {
   };
 }
 
+function setDeviceOnline(ip, online) {
+  if (!deviceStore[ip]) return;
+  deviceStore[ip].online = online;
+  renderDevices();
+}
+
+async function checkAllDeviceStatus() {
+  const btn  = q('btn-check-status');
+  const st   = q('dev-sync-status');
+  const wrap = q('dev-progress-wrap');
+  const bar  = q('dev-progress-bar');
+  const txt  = q('dev-progress-text');
+  const devList = Object.values(deviceStore);
+  if (!devList.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine Geräte vorhanden.'; return;
+  }
+
+  btn.disabled = true; btn.textContent = '…';
+  st.className = ''; st.textContent = '';
+  wrap.style.display = 'block'; bar.style.width = '0%';
+  txt.textContent = `0 / ${devList.length}`;
+
+  let done = 0, online = 0;
+  const total = devList.length;
+
+  try {
+    const CONCURRENCY = 5;
+    async function checkOne(dev) {
+      const community = dev.community || appSettings.snmpReadCommunity || 'public';
+      const version   = dev.version   || appSettings.snmpVersion       || '2c';
+      try {
+        await snmpQ(dev.ip, community, version, 'ping');
+        if (deviceStore[dev.ip]) { deviceStore[dev.ip].online = true; online++; }
+      } catch {
+        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
+      }
+      done++;
+      bar.style.width = Math.round(done / total * 100) + '%';
+      txt.textContent = `${done} / ${total}`;
+      renderDevices();
+    }
+    for (let i = 0; i < devList.length; i += CONCURRENCY) {
+      await Promise.all(devList.slice(i, i + CONCURRENCY).map(checkOne));
+    }
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    st.className = 'status-bar ok';
+    st.textContent = `Status aktualisiert – ${online} online, ${total - online} offline.`;
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Status';
+    bar.style.width = '100%';
+    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
+  }
+}
+
+async function syncDeviceMacs() {
+  const btn  = q('btn-mac-sync');
+  const st   = q('dev-sync-status');
+  const wrap = q('dev-progress-wrap');
+  const bar  = q('dev-progress-bar');
+  const txt  = q('dev-progress-text');
+  const devList = Object.values(deviceStore).filter(d => d.online !== false);
+  if (!devList.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
+  }
+
+  btn.disabled = true; btn.textContent = '…';
+  st.className = ''; st.textContent = '';
+  wrap.style.display = 'block'; bar.style.width = '0%';
+  txt.textContent = `0 / ${devList.length}`;
+
+  let done = 0;
+  const total = devList.length;
+
+  try {
+    const CONCURRENCY = 3;
+    const queue = [...devList];
+    async function worker() {
+      while (queue.length) {
+        const dev = queue.shift();
+        const { community, version } = devCredentials(dev.ip);
+        try {
+          const result = await snmpQ(dev.ip, community, version, 'ifmacs');
+          if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
+        } catch {}
+        done++;
+        bar.style.width = Math.round(done / total * 100) + '%';
+        txt.textContent = `${done} / ${total}`;
+      }
+    }
+    await Promise.all(Array(Math.min(CONCURRENCY, devList.length)).fill(null).map(worker));
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    renderMesh(); renderDevices();
+    st.className = 'status-bar ok';
+    st.textContent = `MAC-Adressen aktualisiert – ${devList.length} Geräte abgefragt.`;
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'MAC';
+    bar.style.width = '100%';
+    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
+  }
+}
+
+// Gemeinsame LLDP-Kernlogik – onProgress(done, total, dev) optional
+async function lldpSyncCore(devList, onProgress) {
+  const CONCURRENCY = 3;
+  const queue = [...devList];
+  let done = 0;
+  async function worker() {
+    while (queue.length) {
+      const dev = queue.shift();
+      const { community, version } = devCredentials(dev.ip);
+      try {
+        const result = await snmpQ(dev.ip, community, version, 'lldp');
+        if (deviceStore[dev.ip]) {
+          deviceStore[dev.ip].lldpCount     = result.entries?.length ?? 0;
+          deviceStore[dev.ip].lldpNeighbors = (result.entries||[])
+            .map(e => e.remSysName||e.remPortId||'?').filter(Boolean);
+          deviceStore[dev.ip].lldpData = (result.entries||[]).map(e => ({
+            localPortName: e.localPortName||'',
+            remSysName:    e.remSysName||'',
+            remPortId:     e.remPortId||'',
+            remPortDesc:   e.remPortDesc||'',
+            remMac:        e.remMac||'',
+          }));
+        }
+      } catch { /* Gerät unterstützt LLDP evtl. nicht */ }
+      done++;
+      if (onProgress) onProgress(done, devList.length, dev);
+    }
+  }
+  await Promise.all(Array(Math.min(CONCURRENCY, devList.length || 1)).fill(null).map(worker));
+}
+
+async function syncDeviceLldp() {
+  const btn  = q('btn-lldp-sync');
+  const st   = q('dev-sync-status');
+  const wrap = q('dev-progress-wrap');
+  const bar  = q('dev-progress-bar');
+  const txt  = q('dev-progress-text');
+  const devList = Object.values(deviceStore).filter(d => d.online !== false);
+  if (!devList.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
+  }
+
+  btn.disabled = true; btn.textContent = '…';
+  st.className = ''; st.textContent = '';
+  wrap.style.display = 'block'; bar.style.width = '0%';
+  txt.textContent = `0 / ${devList.length}`;
+
+  try {
+    await lldpSyncCore(devList, (done, total) => {
+      bar.style.width = Math.round(done / total * 100) + '%';
+      txt.textContent = `${done} / ${total}`;
+    });
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    renderDevices();
+    st.className = 'status-bar ok';
+    st.textContent = `LLDP aktualisiert – ${devList.length} Geräte abgefragt.`;
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'LLDP';
+    bar.style.width = '100%';
+    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // WIFI MESH
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -631,9 +972,11 @@ function devCredentials(ip) {
 function rssiStatus(signal, connected) {
   if (!connected) return 'red';
   if (signal == null) return 'orange';
-  if (signal >= (appSettings.rssiGreen  || 200)) return 'green';
-  if (signal >= (appSettings.rssiYellow || 150)) return 'yellow';
-  return 'orange';
+  const pct = Number(signal);
+  if (pct >= (appSettings.rssiGreen  ?? 80)) return 'green';
+  if (pct >= (appSettings.rssiYellow ?? 50)) return 'yellow';
+  if (pct >= (appSettings.rssiOrange ?? 0))  return 'orange';
+  return 'red';
 }
 const RS = {
   green:  { cls:'dot-green',  bcls:'badge-green',  lbl:'Gut'    },
@@ -650,36 +993,143 @@ function setMeshFilter(f) {
   renderMesh();
 }
 
+function resolvePeerDev(mac) {
+  const low = (mac||'').toLowerCase();
+  if (!low) return null;
+  return Object.values(deviceStore).find(d => {
+    if ((d.mac||'').toLowerCase() === low) return true;
+    if (d.macs?.some(m => m.toLowerCase() === low)) return true;
+    return false;
+  }) || null;
+}
+
 function renderMesh() {
   const srch = (q('mesh-search')?.value||'').toLowerCase();
-  const rows = meshData.filter(r => {
+
+  // Step 1: Resolve peer device for every entry
+  const entries = meshData.map(r => ({ ...r, peerDev: resolvePeerDev(r.mac) }));
+
+  // Step 2a: Merge rows where BOTH sides are known devices (one row per bidirectional link)
+  const processedKeys = new Set();
+  const mergedRows = [];
+  for (const r of entries.filter(e => e.peerDev)) {
+    const key = [r.deviceIp, r.peerDev.ip].sort().join('|');
+    if (processedKeys.has(key)) continue;
+    processedKeys.add(key);
+
+    const other = entries.find(o => o !== r && o.deviceIp === r.peerDev.ip && o.peerDev?.ip === r.deviceIp);
+    if (other) {
+      // Both sides queried → merge; prefer the non-remote (master/AP) side as primary
+      const primary   = !r.isRemote ? r : (!other.isRemote ? other : r);
+      const secondary = primary === r ? other : r;
+      mergedRows.push({ ...primary, peerSignal: secondary.signal, peerConnected: secondary.connected, merged: true });
+    } else {
+      // Peer known but only one side was queried (offline, not an LX AP, etc.)
+      mergedRows.push({ ...r, merged: false });
+    }
+  }
+
+  // Step 2b: Legacy deduplication for entries where peer is unknown (use isRemote flag)
+  const unknownPeerEntries = entries.filter(e => !e.peerDev);
+  const nonRemoteMacs = new Set(unknownPeerEntries.filter(r => !r.isRemote && r.mac).map(r => r.mac));
+  const singleRows = unknownPeerEntries
+    .filter(r => !r.isRemote || !nonRemoteMacs.has(r.mac))
+    .map(r => ({ ...r, merged: false }));
+
+  const allRows = [...mergedRows, ...singleRows];
+
+  // Step 3: Filter
+  const rows = allRows.filter(r => {
     const st = rssiStatus(r.signal, r.connected);
-    if (meshFilter!=='all' && st!==meshFilter) return false;
-    if (srch && !r.deviceName.toLowerCase().includes(srch) && !r.deviceIp.includes(srch)) return false;
+    if (meshFilter !== 'all' && st !== meshFilter) return false;
+    if (srch) {
+      const peer = r.peerDev?.name || r.peerDev?.ip || '';
+      if (!r.deviceName.toLowerCase().includes(srch) &&
+          !r.deviceIp.includes(srch) &&
+          !(r.mac||'').toLowerCase().includes(srch) &&
+          !peer.toLowerCase().includes(srch)) return false;
+    }
     return true;
   });
 
-  setBadge('mesh', meshData.length);
-  q('cnt-mesh').textContent = meshData.length ? meshData.length+' Link'+(meshData.length!==1?'s':'') : '';
+  // Step 3b: Sort
+  const meshKeyFn = (r, col) => {
+    switch (col) {
+      case 'deviceName': return r.deviceName.toLowerCase();
+      case 'deviceIp':   return r.deviceIp.split('.').reduce((s,o)=>s*256+parseInt(o),0);
+      case 'linkName':   return r.linkName.toLowerCase();
+      case 'peer':       return (r.peerDev?.name||r.peerDev?.ip||r.mac||'').toLowerCase();
+      case 'band':       return r.band||'';
+      case 'signal':     return r.signal??-1;
+      case 'txRate':     return r.txRate??-1;
+      case 'rxRate':     return r.rxRate??-1;
+      case 'status':     return rssiStatus(r.signal, r.connected);
+      default:           return '';
+    }
+  };
+  const sortedRows = applySort(rows, meshSort, meshKeyFn);
+
+  setBadge('mesh', allRows.length);
+  q('cnt-mesh').textContent = allRows.length ? allRows.length+' Link'+(allRows.length!==1?'s':'') : '';
+
+  // Thead
+  q('thead-mesh').innerHTML = `<tr>
+    ${mkTh('Gerätename','deviceName',meshSort,'meshSortClick')}
+    ${mkTh('Gerät-IP','deviceIp',meshSort,'meshSortClick')}
+    ${mkTh('WDS-Link','linkName',meshSort,'meshSortClick')}
+    ${mkTh('Gegenstelle','peer',meshSort,'meshSortClick')}
+    ${mkTh('Band','band',meshSort,'meshSortClick')}
+    ${mkTh('RSSI','signal',meshSort,'meshSortClick')}
+    ${mkTh('Eff.-Tx-Rate','txRate',meshSort,'meshSortClick')}
+    ${mkTh('Eff.-Rx-Rate','rxRate',meshSort,'meshSortClick')}
+    ${mkTh('Status','status',meshSort,'meshSortClick')}
+    ${noSortTh('')}
+  </tr>`;
 
   const tbody = q('tbl-mesh').querySelector('tbody');
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
+  if (!sortedRows.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map(r => {
-    const st  = rssiStatus(r.signal, r.connected);
-    const s   = RS[st];
-    const wpa = r.wpaVersion===3?'WPA3':r.wpaVersion===2?'WPA2':r.wpaVersion===1?'WPA1':r.wpaVersion===0?'Open':'—';
-    const txrx = (r.txRate!=null&&r.rxRate!=null) ? `${r.txRate}/${r.rxRate} Mbps` : '—';
+
+  tbody.innerHTML = sortedRows.map(r => {
+    const st = rssiStatus(r.signal, r.connected);
+    const s  = RS[st];
+
+    const peerLabel = r.peerDev
+      ? `<span title="${h(r.mac)}" style="font-weight:600">${h(r.peerDev.name||r.peerDev.ip)}</span><br><span class="mono" style="font-size:11px;color:var(--text3)">${h(r.mac)}</span>`
+      : `<span class="mono">${h(r.mac||'—')}</span>`;
+
+    const rssiColor = st => `var(--${st})`;
+    const localSt   = rssiStatus(r.signal, r.connected);
+    const localRssi = r.connected && r.signal != null ? r.signal+'%' : '—';
+    let rssiCell;
+    if (r.merged) {
+      const peerSt  = rssiStatus(r.peerSignal, r.peerConnected);
+      const peerVal = r.peerConnected && r.peerSignal != null ? r.peerSignal+'%' : '—';
+      rssiCell = `<span style="font-weight:700;color:${rssiColor(localSt)}">${localRssi}</span>`+
+                 `<span style="color:var(--text3);font-size:11px"> / </span>`+
+                 `<span style="font-weight:700;color:${rssiColor(peerSt)}">${peerVal}</span>`;
+    } else {
+      rssiCell = `<span style="font-weight:700;color:${rssiColor(localSt)}">${localRssi}</span>`;
+    }
+
+    const syncBtns = r.merged && r.peerDev
+      ? `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')" title="Sync ${h(r.deviceName)}">&#x21BB;</button>`+
+        `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.peerDev.ip)}')" title="Sync ${h(r.peerDev.name||r.peerDev.ip)}">&#x21BB;</button>`
+      : `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')">&#x21BB;</button>`;
+
     return `<tr>
       <td style="font-weight:600">${h(r.deviceName)}</td>
       <td class="mono">${h(r.deviceIp)}</td>
       <td style="font-weight:500">${h(r.linkName)}</td>
+      <td>${peerLabel}</td>
       <td style="color:var(--text2)">${r.band||'—'}</td>
-      <td style="font-weight:700;color:var(--text2)">${r.connected&&r.signal!=null?r.signal:'—'}</td>
+      <td>${rssiCell}</td>
+      <td style="color:var(--text2)">${r.txRate!=null?r.txRate+' Mbps':'—'}</td>
+      <td style="color:var(--text2)">${r.rxRate!=null?r.rxRate+' Mbps':'—'}</td>
       <td><span class="dot ${s.cls}"></span><span class="badge ${s.bcls}">${s.lbl}</span></td>
-      <td><button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')">&#x21BB;</button></td>
+      <td><div style="display:flex;gap:4px">${syncBtns}</div></td>
     </tr>`;
   }).join('');
 }
@@ -687,13 +1137,26 @@ function renderMesh() {
 async function syncMeshDevice(ip) {
   const dev = deviceStore[ip];
   if (!dev) return;
+  const name = dev.name||dev.sysName||ip;
+  const st = q('mesh-status');
+  st.className = 'status-bar loading';
+  st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
   const { community, version } = devCredentials(ip);
   try {
     const result = await snmpQ(ip, community, version, 'wds');
+    setDeviceOnline(ip, true);
     meshData = meshData.filter(r => r.deviceIp !== ip);
-    if (result.configured) mergeMeshResult(ip, dev.name||dev.sysName||ip, result);
+    if (result.configured) mergeMeshResult(ip, name, result);
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
     renderMesh();
-  } catch {}
+    const cnt = meshData.filter(r => r.deviceIp === ip).length;
+    st.className = 'status-bar ok';
+    st.textContent = `${name}: ${cnt} WDS-Link${cnt!==1?'s':''} aktualisiert`;
+  } catch {
+    setDeviceOnline(ip, false);
+    st.className = 'status-bar error';
+    st.textContent = `${name}: SNMP nicht erreichbar`;
+  }
 }
 
 function mergeMeshResult(ip, name, result) {
@@ -703,24 +1166,31 @@ function mergeMeshResult(ip, name, result) {
     if (!linkMap[se.linkName]) linkMap[se.linkName]={};
     Object.assign(linkMap[se.linkName], se);
   });
-  Object.values(linkMap).forEach(l => meshData.push({
-    deviceName: name, deviceIp: ip,
-    linkName:   l.linkName||'—',
-    band:       l.radio===1?'2.4 GHz':l.radio===2?'5 GHz':'—',
-    signal:     l.signal??null,
-    connected:  !!l.connected,
-    mac:        l.mac||'',
-    txRate:     l.txRate, rxRate: l.rxRate, wpaVersion: l.wpaVersion,
-  }));
+  const stored = [];
+  Object.values(linkMap).forEach(l => {
+    const entry = {
+      deviceName: name, deviceIp: ip,
+      linkName:   l.linkName||'—',
+      band:       l.radio===1?'2.4 GHz':l.radio===2?'5 GHz':'—',
+      signal:     l.signal??null,
+      connected:  !!l.connected,
+      mac:        l.mac||'',
+      txRate:     l.txRate??null, rxRate: l.rxRate??null, wpaVersion: l.wpaVersion,
+      isRemote:   !!l.remote,
+    };
+    meshData.push(entry);
+    stored.push(entry);
+  });
+  if (deviceStore[ip]) deviceStore[ip].wdsLinks = stored;
 }
 
 async function syncMesh() {
-  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap');
+  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap' && d.online !== false);
   if (!lxDevs.length) {
     q('mesh-status').className='status-bar error';
     q('mesh-status').textContent='Keine LX Access Points in der Geräteliste. Bitte zuerst Geräte importieren.'; return;
   }
-  const btn=q('btn-mesh-sync'); btn.disabled=true; btn.textContent='⟳ Läuft…';
+  const btn=q('btn-mesh-sync'); if(btn){ btn.disabled=true; btn.textContent='⟳ Läuft…'; }
   q('mesh-status').className='status-bar loading';
   q('mesh-status').innerHTML='<span class="spinner"></span> Sync läuft…';
   meshData = [];
@@ -731,10 +1201,12 @@ async function syncMesh() {
     const {community,version} = devCredentials(dev.ip);
     try {
       const result = await snmpQ(dev.ip, community, version, 'wds');
+      setDeviceOnline(dev.ip, true);
       if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.sysName||dev.ip, result);
-    } catch {}
+    } catch { setDeviceOnline(dev.ip, false); }
   }
 
+  await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
   btn.disabled=false; btn.textContent='⟳ Sync alle';
   q('mesh-sync-lbl').textContent = `Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
   q('mesh-status').className='status-bar ok';
@@ -754,7 +1226,7 @@ function setL2tpFilter(f) {
 
 function renderL2tp() {
   const srch = (q('l2tp-search')?.value||'').toLowerCase();
-  const rows = l2tpData.filter(r => {
+  const filtered = l2tpData.filter(r => {
     const up = r.state==='UP';
     if (l2tpFilter==='up' && !up) return false;
     if (l2tpFilter==='down' && up) return false;
@@ -762,8 +1234,31 @@ function renderL2tp() {
     return true;
   });
 
+  const l2tpKeyFn = (r, col) => {
+    switch (col) {
+      case 'deviceName':   return r.deviceName.toLowerCase();
+      case 'deviceIp':     return r.deviceIp.split('.').reduce((s,o)=>s*256+parseInt(o),0);
+      case 'endpointName': return (r.endpointName||'').toLowerCase();
+      case 'remoteEnd':    return (r.remoteEnd||'').toLowerCase();
+      case 'remoteIp':     return (r.remoteIp||'').split('.').reduce((s,o)=>s*256+parseInt(o||'0'),0);
+      case 'state':        return r.state||'';
+      default:             return '';
+    }
+  };
+  const rows = applySort(filtered, l2tpSort, l2tpKeyFn);
+
   setBadge('l2tp', l2tpData.length);
   q('cnt-l2tp').textContent = l2tpData.length ? l2tpData.length+' Endpunkt'+(l2tpData.length!==1?'e':'') : '';
+
+  q('thead-l2tp').innerHTML = `<tr>
+    ${mkTh('Gerätename','deviceName',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Gerät-IP','deviceIp',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Endpoint','endpointName',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Gegenstelle','remoteEnd',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Remote-IP','remoteIp',l2tpSort,'l2tpSortClick')}
+    ${mkTh('Status','state',l2tpSort,'l2tpSortClick')}
+    ${noSortTh('')}
+  </tr>`;
 
   const tbody = q('tbl-l2tp').querySelector('tbody');
   if (!rows.length) {
@@ -786,13 +1281,26 @@ function renderL2tp() {
 
 async function syncL2tpDevice(ip) {
   const dev = deviceStore[ip]; if (!dev) return;
+  const name = dev.name||dev.ip;
+  const st = q('l2tp-status');
+  st.className = 'status-bar loading';
+  st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
   const {community,version} = devCredentials(ip);
   try {
     const result = await snmpQ(ip, community, version, 'l2tp');
+    setDeviceOnline(ip, true);
     l2tpData = l2tpData.filter(r => r.deviceIp!==ip);
-    if (result.configured) mergeL2tpResult(ip, dev.name||dev.ip, result);
+    if (result.configured) mergeL2tpResult(ip, name, result);
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
     renderL2tp();
-  } catch {}
+    const cnt = l2tpData.filter(r => r.deviceIp===ip).length;
+    st.className = 'status-bar ok';
+    st.textContent = `${name}: ${cnt} Endpunkt${cnt!==1?'e':''} aktualisiert`;
+  } catch {
+    setDeviceOnline(ip, false);
+    st.className = 'status-bar error';
+    st.textContent = `${name}: SNMP nicht erreichbar`;
+  }
 }
 
 function mergeL2tpResult(ip, name, result) {
@@ -802,20 +1310,26 @@ function mergeL2tpResult(ip, name, result) {
     const k=se.endpointName||se.remoteEnd; if(!epMap[k])epMap[k]={};
     Object.assign(epMap[k],se);
   });
-  Object.values(epMap).forEach(ep => l2tpData.push({
-    deviceName:ep.remoteEnd||'—', deviceIp:ip, endpointName:ep.name||ep.endpointName||'—',
-    remoteEnd:ep.remoteEnd||'—', remoteIp:ep.remoteIp||'—', port:ep.port,
-    state:ep.state||'—', iface:ep.iface||'—', connStartTime:ep.connStartTime||'',
-  }));
+  const stored = [];
+  Object.values(epMap).forEach(ep => {
+    const entry = {
+      deviceName:name, deviceIp:ip, endpointName:ep.name||ep.endpointName||'—',
+      remoteEnd:ep.remoteEnd||'—', remoteIp:ep.remoteIp||'—', port:ep.port,
+      state:ep.state||'—', iface:ep.iface||'—', connStartTime:ep.connStartTime||'',
+    };
+    l2tpData.push(entry);
+    stored.push(entry);
+  });
+  if (deviceStore[ip]) deviceStore[ip].l2tpEndpoints = stored;
 }
 
 async function syncL2tp() {
-  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap');
+  const lxDevs = Object.values(deviceStore).filter(d => d.type==='lx-ap' && d.online !== false);
   if (!lxDevs.length) {
     q('l2tp-status').className='status-bar error';
     q('l2tp-status').textContent='Keine LX Access Points in der Geräteliste.'; return;
   }
-  const btn=q('btn-l2tp-sync'); btn.disabled=true; btn.textContent='⟳ Läuft…';
+  const btn=q('btn-l2tp-sync'); if(btn){ btn.disabled=true; btn.textContent='⟳ Läuft…'; }
   q('l2tp-status').className='status-bar loading';
   q('l2tp-status').innerHTML='<span class="spinner"></span> Sync läuft…';
   l2tpData=[];
@@ -826,10 +1340,12 @@ async function syncL2tp() {
     const {community,version}=devCredentials(dev.ip);
     try {
       const result = await snmpQ(dev.ip, community, version, 'l2tp');
+      setDeviceOnline(dev.ip, true);
       if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
-    } catch {}
+    } catch { setDeviceOnline(dev.ip, false); }
   }
 
+  await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
   btn.disabled=false; btn.textContent='⟳ Sync alle';
   q('l2tp-sync-lbl').textContent=`Letzter Sync: ${new Date().toLocaleTimeString('de-DE')}`;
   q('l2tp-status').className='status-bar ok';
@@ -899,7 +1415,7 @@ function handleScanEvent(ev) {
   } else if (ev.type==='done') {
     q('scan-bar').style.width='100%';
     setScanStatus(ev.found>0?`Scan abgeschlossen — ${ev.found} Gerät${ev.found!==1?'e':''} gefunden`:`Scan abgeschlossen — keine LANCOM-Geräte gefunden`, ev.found>0?'ok':'');
-    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="6" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
+    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="7" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
     setBadge('scanner',ev.found||0);
     if(ev.found>0){ q('btn-save-all').style.display=''; q('sep-save-all').style.display=''; q('btn-save-all').textContent=`Alle ${ev.found} speichern`; }
   }
@@ -912,11 +1428,13 @@ function appendScanRow(dev) {
   scanFoundCnt++;
   q('cnt-scan').textContent=scanFoundCnt+' Gerät'+(scanFoundCnt!==1?'e':'');
   const osC={'LCOS LX':'badge-green','LCOS FX':'badge-yellow','LCOS SX':'badge-yellow','LCOS':'badge-gray','LANCOM':'badge-gray'};
+  const devType = detectDeviceType(dev.os, dev.sysDescr);
   const tr=document.createElement('tr');
   tr.innerHTML=`
     <td class="mono">${h(dev.ip)}</td>
     <td style="font-weight:600">${h(dev.sysName||'—')}</td>
     <td><span class="badge ${osC[dev.os]||'badge-gray'}">${h(dev.os)}</span></td>
+    <td><span class="badge ${TYPE_BADGE[devType]||'badge-gray'}">${h(TYPE_LABELS[devType]||devType)}</span></td>
     <td style="color:var(--text2)">${h(dev.sysLocation||'—')}</td>
     <td class="mono" style="color:var(--text3);font-size:11px">${h((dev.sysDescr||'').split(/[\r\n]/)[0].substring(0,55))}</td>
     <td style="display:flex;gap:6px">
@@ -928,31 +1446,41 @@ function appendScanRow(dev) {
 
 async function saveScanDevice(devJson) {
   const dev = JSON.parse(devJson);
+  if (deviceStore[dev.ip]) {
+    setScanStatus(`${dev.ip} ist bereits unter Geräte gespeichert – nicht übernommen.`, 'error');
+    return;
+  }
   const type = detectDeviceType(dev.os, dev.sysDescr);
   await saveDevice({
     ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
-    sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
+    mac:dev.mac||'', sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
     community:q('scan-community').value.trim()||'public',
     version:q('scan-version').value||'2c',
-    source:'scanner', lastSeen:new Date().toISOString(),
+    source:'scanner', online:true, lastSeen:new Date().toISOString(),
   });
+  setScanStatus(`${dev.sysName||dev.ip} gespeichert.`, 'ok');
 }
 
 async function saveScanResults() {
   if (!scanResults.length) return;
   const patch = {};
+  const skipped = [];
   scanResults.forEach(dev => {
+    if (deviceStore[dev.ip]) { skipped.push(dev.ip); return; }
     const type = detectDeviceType(dev.os, dev.sysDescr);
     patch[dev.ip] = {
       ip:dev.ip, name:dev.sysName||dev.ip, model:extractModel(dev.sysDescr), os:dev.os, type,
-      sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
+      mac:dev.mac||'', sysDescr:dev.sysDescr, sysLocation:dev.sysLocation,
       community:q('scan-community').value.trim()||'public',
       version:q('scan-version').value||'2c',
-      source:'scanner', lastSeen:new Date().toISOString(),
+      source:'scanner', online:true, lastSeen:new Date().toISOString(),
     };
   });
-  await saveDevices(patch);
-  setScanStatus(`${Object.keys(patch).length} Gerät${Object.keys(patch).length!==1?'e':''} gespeichert`,'ok');
+  const n = Object.keys(patch).length;
+  if (n) await saveDevices(patch);
+  let msg = n ? `${n} Gerät${n!==1?'e':''} gespeichert` : 'Keine neuen Geräte';
+  if (skipped.length) msg += ` – ${skipped.length} bereits vorhanden und übersprungen`;
+  setScanStatus(msg, skipped.length && !n ? 'error' : 'ok');
 }
 
 document.addEventListener('keydown', e => { if(e.key==='Enter'&&e.target.id==='scan-subnet') startScan(); });
@@ -1015,38 +1543,57 @@ async function lmcSync() {
     devs.forEach(d => {
       const ip   = d.status?.ip||d.status?.ipAddress||d.ipAddress||'';
       if (!ip) return;
-      const name = d.name||d.label||d.status?.deviceLabel||d.status?.name||ip;
-      const model= d.status?.model||d.model||'';
-      const osRaw= (d.firmwareInfo?.currentOsType||d.osType||model||'').toUpperCase();
-      let os='LANCOM';
-      if(osRaw.includes('LCOS-LX')||osRaw.includes('LCOS LX')||osRaw==='LCOSLX') os='LCOS LX';
-      else if(osRaw.includes('LCOS-FX')||osRaw.includes('LCOS FX')||osRaw==='LCOSFX') os='LCOS FX';
-      else if(osRaw.includes('LCOS-SX')||osRaw.includes('LCOS SX')||osRaw==='LCOSSX') os='LCOS SX';
-      else if(osRaw.includes('LCOS')) os='LCOS';
+      const name    = d.name||d.label||d.status?.deviceLabel||d.status?.name||ip;
+      const model   = d.status?.model||d.model||'';
+      const fwLabel = (d.status?.fwLabel||d.fwLabel||'').toUpperCase();
+      const devType = (d.status?.type||'').toUpperCase(); // ROUTER|ACCESS_POINT|SWITCH|FIREWALL
+      const modelUp = model.toUpperCase();
+      let os='LCOS';
+      if     (fwLabel.includes('LCOS-LX')||fwLabel.includes('LCOS LX')) os='LCOS LX';
+      else if(fwLabel.includes('LCOS-FX')||fwLabel.includes('LCOS FX')) os='LCOS FX';
+      else if(fwLabel.includes('LCOS-SX')||fwLabel.includes('LCOS SX')) os='LCOS SX';
+      else if(fwLabel.includes('LCOS')) os='LCOS';
+      else if(devType==='SWITCH')   os='LCOS SX';
+      else if(devType==='FIREWALL') os='LCOS FX';
+      else if(/\b(OAP|LAP|WAP-LX)\b/.test(modelUp)) os='LCOS LX';
+      else if(/LANCOM (LX|LW|OX|OW)\b/.test(modelUp)) os='LCOS LX';
       const type=detectDeviceType(os,model);
-      patch[ip]={ ip, name, model, os, type, source:'lmc', lmcId:d.id||'',
+      const mac = (d.status?.mac||d.status?.ethMac||d.mac||'').toLowerCase();
+      patch[ip]={ ip, name, model, os, type, mac, source:'lmc', lmcId:d.id||'',
         community:appSettings.snmpReadCommunity||'public', version:appSettings.snmpVersion||'2c',
         lastSeen:new Date().toISOString() };
     });
 
-    await saveDevices(patch);
-    const n=Object.keys(patch).length;
-    setLmcStatus(`${n} Gerät${n!==1?'e':''} synchronisiert und gespeichert`,'ok');
+    // Bereits vorhandene Geräte überspringen
+    const skipped = Object.keys(patch).filter(ip => deviceStore[ip]);
+    skipped.forEach(ip => delete patch[ip]);
+    const n = Object.keys(patch).length;
+    if (n) await saveDevices(patch);
 
-    // Show result table
+    let msg = n ? `${n} Gerät${n!==1?'e':''} importiert` : 'Keine neuen Geräte';
+    if (skipped.length) msg += ` – ${skipped.length} bereits vorhanden und übersprungen`;
+    setLmcStatus(msg, skipped.length && !n ? 'error' : 'ok');
+
+    // Show result table (alle aus LMC, inkl. übersprungener)
+    const allPatch = {...patch};
+    skipped.forEach(ip => { allPatch[ip] = deviceStore[ip]; });
     q('lmc-result-wrap').style.display='';
-    q('cnt-lmc').textContent=n+' Gerät'+(n!==1?'e':'');
+    const total = Object.keys(allPatch).length;
+    q('cnt-lmc').textContent = total+' Gerät'+(total!==1?'e':'');
     const tbody=q('tbl-lmc').querySelector('tbody');
-    tbody.innerHTML=Object.values(patch).map(dev => {
+    tbody.innerHTML=Object.values(allPatch).map(dev => {
       const online = devs.find(d=>(d.status?.ip||d.status?.ipAddress)===dev.ip);
       const isOn = online?.heartbeatState?.toUpperCase()==='ACTIVE'||online?.status?.heartbeatState?.toUpperCase()==='ACTIVE';
       const typCls=TYPE_BADGE[dev.type]||'badge-gray'; const typLbl=TYPE_LABELS[dev.type]||'—';
+      const wasSkipped = skipped.includes(dev.ip);
       return `<tr>
         <td style="font-weight:600">${h(dev.name)}</td>
         <td class="mono">${h(dev.ip)}</td>
         <td style="font-size:12px;color:var(--text2)">${h(dev.model||'—')}</td>
+        <td style="font-size:12px">${h(dev.os||'—')}</td>
         <td><span class="badge ${typCls}">${typLbl}</span></td>
         <td><span class="dot ${isOn?'dot-green':'dot-red'}"></span>${isOn?'Online':'Offline'}</td>
+        <td>${wasSkipped?'<span class="badge badge-yellow">Vorhanden</span>':'<span class="badge badge-green">Neu</span>'}</td>
       </tr>`;
     }).join('');
   } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }
@@ -1164,6 +1711,682 @@ function renderDetailLldp(data) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// NETZWERKPLAN (LLDP TOPOLOGY)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let topoNodes = {}; // id → {id,name,type,os,model,online,x,y,ghost,fixed}
+let topoEdges = []; // {id,src,tgt,srcPort,dstPort}
+let topoLldpMap = {}; // ip → full lldp entries (from sync)
+let topoTx = 0, topoTy = 0, topoScale = 1;
+let topoDragNode = null, topoPan = null, topoWasDrag = false;
+let topoRootId = '', topoDetailId = null;
+
+const NW = 190, NH = 60, HG = 230, VG = 130;
+const TOPO_TYPE_BADGE = {
+  switch:   {label:'SW', bg:'rgba(170,218,247,.15)', color:'#aadaf7'},
+  'lx-ap':  {label:'AP', bg:'rgba(249,115,22,.15)',  color:'#f97316'},
+  'lcos-ap':{label:'AP', bg:'rgba(249,115,22,.15)',  color:'#f97316'},
+  router:   {label:'GW', bg:'rgba(37,99,235,.15)',   color:'#7b9fff'},
+  firewall: {label:'FW', bg:'rgba(239,68,68,.15)',   color:'#ef4444'},
+};
+
+// ── Nachbar-Matching ──────────────────────────────────────────────────────────
+function resolveTopoNeighbor(entry) {
+  const sysName = (entry.remSysName||'').toLowerCase();
+  const remMac  = (entry.remMac||'').toLowerCase();
+  for (const d of Object.values(deviceStore)) {
+    if (sysName && (d.name||'').toLowerCase() === sysName) return d.ip;
+    if (remMac) {
+      if ((d.mac||'').toLowerCase() === remMac) return d.ip;
+      if (d.macs?.some(m => m.toLowerCase() === remMac)) return d.ip;
+    }
+  }
+  if (sysName) {
+    for (const d of Object.values(deviceStore)) {
+      const dn = (d.name||'').toLowerCase();
+      if (dn && (dn.includes(sysName) || sysName.includes(dn))) return d.ip;
+    }
+  }
+  return null;
+}
+
+// ── Graph aufbauen ────────────────────────────────────────────────────────────
+function buildTopoGraph(lldpMap) {
+  topoNodes = {}; topoEdges = [];
+
+  Object.values(deviceStore).filter(d => d.online !== false).forEach(d => {
+    topoNodes[d.ip] = {
+      id: d.ip, name: d.name||d.ip, type: d.type||'unknown',
+      os: d.os||'', model: d.model||'', online: d.online, ghost: false,
+      x: 0, y: 0, fixed: false,
+    };
+  });
+
+  const edgeSet = new Set();
+  Object.entries(lldpMap).forEach(([srcIp, entries]) => {
+    entries.forEach(e => {
+      const tgtIp = resolveTopoNeighbor(e);
+      let tgtId = tgtIp;
+      if (!tgtIp) {
+        tgtId = 'ghost_' + (e.remSysName || e.remMac || 'unknown').replace(/[^a-z0-9]/gi,'_');
+        if (!topoNodes[tgtId]) {
+          topoNodes[tgtId] = {
+            id: tgtId, name: e.remSysName||e.remPortId||'Unbekannt', type:'unknown',
+            os:'', model:'', online: undefined, ghost: true, x: 0, y: 0, fixed: false,
+          };
+        }
+      }
+      const edgeKey = [srcIp, tgtId].sort().join('||');
+      if (edgeSet.has(edgeKey)) {
+        const ex = topoEdges.find(ed => ed.id === edgeKey);
+        if (ex && ex.src === tgtId && !ex.dstPort) ex.dstPort = e.localPortName;
+        if (ex && ex.src === srcIp && !ex.dstPort) ex.dstPort = e.remPortId||e.remPortDesc||'';
+      } else {
+        edgeSet.add(edgeKey);
+        topoEdges.push({ id:edgeKey, src:srcIp, tgt:tgtId,
+          srcPort: e.localPortName||'', dstPort: e.remPortId||e.remPortDesc||'' });
+      }
+    });
+  });
+}
+
+// ── BFS Tree Layout ───────────────────────────────────────────────────────────
+function layoutTopo(rootId) {
+  const ids = Object.keys(topoNodes);
+  if (!ids.length) return {};
+
+  const adj = {};
+  ids.forEach(id => { adj[id] = []; });
+  topoEdges.forEach(e => {
+    if (adj[e.src] !== undefined && topoNodes[e.tgt]) adj[e.src].push(e.tgt);
+    if (adj[e.tgt] !== undefined && topoNodes[e.src]) adj[e.tgt].push(e.src);
+  });
+
+  let root = ids.includes(rootId) ? rootId : '';
+  if (!root) {
+    const deg = {};
+    ids.forEach(id => { deg[id] = (adj[id]||[]).length; });
+    root = [...ids].sort((a,b) => deg[b]-deg[a])[0] || ids[0];
+    topoRootId = root;
+  }
+
+  const level = {}, byLevel = {};
+  const queue = [root]; let head = 0;
+  level[root] = 0; byLevel[0] = [root];
+  while (head < queue.length) {
+    const curr = queue[head++];
+    (adj[curr]||[]).forEach(next => {
+      if (level[next] === undefined) {
+        level[next] = level[curr] + 1;
+        if (!byLevel[level[next]]) byLevel[level[next]] = [];
+        byLevel[level[next]].push(next);
+        queue.push(next);
+      }
+    });
+  }
+
+  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+  levels.forEach(lvl => {
+    const group = byLevel[lvl];
+    const totalW = (group.length - 1) * HG;
+    group.forEach((id,i) => { topoNodes[id].x = i*HG - totalW/2; topoNodes[id].y = lvl*VG; });
+  });
+
+  const unconnected = ids.filter(id => level[id] === undefined);
+  const maxLvl = levels.length ? Math.max(...levels) : 0;
+  const unconnY = (maxLvl + 2) * VG;
+  const totalUW = (unconnected.length - 1) * HG;
+  unconnected.forEach((id,i) => { topoNodes[id].x = i*HG - totalUW/2; topoNodes[id].y = unconnY; });
+
+  return { level, byLevel, unconnected, maxLvl };
+}
+
+// ── Root selector ─────────────────────────────────────────────────────────────
+function buildTopoSelector() {
+  const devIds = Object.keys(topoNodes).filter(id => !topoNodes[id].ghost);
+  if (!devIds.length) return;
+  if (!devIds.includes(topoRootId)) {
+    const deg = {};
+    devIds.forEach(id => { deg[id] = 0; });
+    topoEdges.forEach(e => { if (deg[e.src]!==undefined) deg[e.src]++; if (deg[e.tgt]!==undefined) deg[e.tgt]++; });
+    topoRootId = [...devIds].sort((a,b) => deg[b]-deg[a])[0] || devIds[0];
+  }
+  const sorted = [...devIds].sort((a,b) => (topoNodes[a].name||'').localeCompare(topoNodes[b].name||''));
+  const sel = q('topo-root-select');
+  sel.innerHTML = sorted.map(id =>
+    `<option value="${h(id)}"${id===topoRootId?' selected':''}>${h(topoNodes[id].name)}</option>`
+  ).join('');
+}
+
+function topoChangeRoot() {
+  topoRootId = q('topo-root-select').value;
+  layoutTopo(topoRootId);
+  renderTopoSvg();
+  setTimeout(topoFit, 50);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderTopoSvg() {
+  const nodes = Object.values(topoNodes);
+  q('topo-empty').style.display = nodes.length ? 'none' : '';
+  if (!nodes.length) { q('topo-g').innerHTML = ''; return; }
+
+  const hw = NW/2, hh = NH/2;
+
+  function borderPt(cx, cy, tx, ty) {
+    const dx = tx-cx, dy = ty-cy;
+    if (!dx && !dy) return {x:cx, y:cy+hh};
+    const sX = dx ? hw/Math.abs(dx) : Infinity;
+    const sY = dy ? hh/Math.abs(dy) : Infinity;
+    const s = Math.min(sX, sY);
+    return {x: cx+dx*s, y: cy+dy*s};
+  }
+  const LOFF = 14;
+  function labelPt(cx, cy, bx, by) {
+    if (Math.abs(Math.abs(by-cy)-hh) < 0.5) {
+      return {x:bx, y:cy+Math.sign(by-cy)*(hh+LOFF), anchor:'middle'};
+    }
+    return {x:cx+Math.sign(bx-cx)*(hw+LOFF), y:by, anchor:bx>cx?'start':'end'};
+  }
+
+  let svg = '';
+
+  // Separator for unconnected nodes
+  const hasEdge = id => topoEdges.some(e => e.src===id || e.tgt===id);
+  const unconn = nodes.filter(n => !hasEdge(n.id));
+  const conn   = nodes.filter(n =>  hasEdge(n.id));
+  if (unconn.length && conn.length) {
+    const uy = Math.min(...unconn.map(n=>n.y));
+    const xs = unconn.map(n=>n.x);
+    const x1 = Math.min(...xs)-hw-30, x2 = Math.max(...xs)+hw+30;
+    svg += `<line x1="${x1}" y1="${uy-55}" x2="${x2}" y2="${uy-55}" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="6,5"/>`;
+    svg += `<text x="${(x1+x2)/2}" y="${uy-64}" text-anchor="middle" font-size="9" font-weight="600" fill="rgba(148,163,184,.35)" font-family="system-ui,sans-serif" letter-spacing="0.1em">KEINE VERBINDUNG</text>`;
+  }
+
+  // Count edges per node pair so we can offset parallel edges
+  const pairCount = {}, pairSeen = {};
+  topoEdges.forEach(e => {
+    const k = [e.src, e.tgt].sort().join('||');
+    pairCount[k] = (pairCount[k]||0) + 1;
+    pairSeen[k]  = 0;
+  });
+
+  // Edge type colors
+  function edgeColor(e, bothOnline, ghost) {
+    if (ghost) return 'rgba(100,116,139,.4)';
+    if (e.type === 'wds')  return bothOnline ? 'rgba(249,115,22,.7)'  : 'rgba(249,115,22,.3)';
+    if (e.type === 'l2tp') return bothOnline ? 'rgba(34,197,94,.7)'   : 'rgba(34,197,94,.3)';
+    return bothOnline ? 'rgba(37,99,235,.6)' : 'rgba(37,99,235,.25)';
+  }
+
+  // Edges
+  topoEdges.forEach(e => {
+    const f = topoNodes[e.src], t = topoNodes[e.tgt];
+    if (!f || !t) return;
+    const bothOnline = f.online===true && t.online===true;
+    const ghost = f.ghost || t.ghost;
+
+    // Offset parallel edges between same pair
+    const pairKey = [e.src, e.tgt].sort().join('||');
+    const total = pairCount[pairKey] || 1;
+    const idx   = pairSeen[pairKey]++;
+    const offset = (idx - (total - 1) / 2) * 44;
+
+    const midY = (f.y + t.y) / 2 + offset;
+    const midX = (f.x + t.x) / 2 + (f.y === t.y ? offset : 0);
+    const fs = borderPt(f.x, f.y, t.x, t.y);
+    const te = borderPt(t.x, t.y, f.x, f.y);
+
+    const color = edgeColor(e, bothOnline, ghost);
+    const w = ghost ? 1.5 : 2;
+    const disconnected = e.type ? e.connected === false : !bothOnline;
+    const dash = (ghost || disconnected) ? ' stroke-dasharray="5,4"' : '';
+    svg += `<path d="M${fs.x.toFixed(1)},${fs.y.toFixed(1)} C${fs.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${te.y.toFixed(1)}" stroke="${color}" stroke-width="${w}" fill="none"${dash}/>`;
+
+    const ts = `font-size="10" font-weight="600" fill="rgba(203,213,225,.9)" font-family="system-ui,sans-serif" paint-order="stroke" stroke="rgba(1,9,30,.95)" stroke-width="4" stroke-linejoin="round" dominant-baseline="middle"`;
+    if (e.srcPort) { const lp=labelPt(f.x,f.y,fs.x,fs.y); svg+=`<text x="${lp.x.toFixed(1)}" y="${(lp.y+offset*0.3).toFixed(1)}" text-anchor="${lp.anchor}" ${ts} fill="${color}">${h(e.srcPort)}</text>`; }
+    if (e.dstPort) { const rp=labelPt(t.x,t.y,te.x,te.y); svg+=`<text x="${rp.x.toFixed(1)}" y="${(rp.y+offset*0.3).toFixed(1)}" text-anchor="${rp.anchor}" ${ts} fill="${color}">${h(e.dstPort)}</text>`; }
+  });
+
+  // Nodes
+  nodes.forEach(node => {
+    const {x, y} = node;
+    const rx = x-hw, ry = y-hh;
+    const isRoot = node.id === topoRootId;
+
+    if (node.ghost) {
+      const dn = node.name.length>22 ? node.name.slice(0,21)+'…' : node.name;
+      svg += `<g opacity="0.65" onclick="topoNodeClick('${node.id.replace(/'/g,'')}')">
+        <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="rgba(15,20,40,.5)" stroke="rgba(100,116,139,.4)" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="${rx+NW/2}" y="${ry+25}" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(148,163,184,.8)" font-family="system-ui,sans-serif">${h(dn)}</text>
+        <text x="${rx+NW/2}" y="${ry+42}" text-anchor="middle" font-size="9" fill="rgba(100,116,139,.7)" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
+      </g>`;
+      return;
+    }
+
+    const dotColor    = node.online===true ? '#a0ed3a' : node.online===false ? '#ff004d' : 'rgba(100,116,139,.6)';
+    const borderColor = node.online===true ? 'rgba(160,237,58,.55)' : node.online===false ? 'rgba(255,0,77,.4)' : 'rgba(100,116,139,.4)';
+    const bgFill      = node.online===true ? 'rgba(160,237,58,.05)' : node.online===false ? 'rgba(255,0,77,.04)' : 'rgba(100,116,139,.04)';
+    const glow        = isRoot ? ' filter="url(#topo-glow)"' : '';
+    const badge       = TOPO_TYPE_BADGE[node.type];
+    const badgeLabel  = badge?.label || '?';
+    const badgeBg     = badge?.bg    || 'rgba(100,116,139,.15)';
+    const badgeColor  = badge?.color || 'rgba(148,163,184,.9)';
+    const dname       = node.name.length>21 ? node.name.slice(0,20)+'…' : node.name;
+    const dsub        = (node.model||node.os||'').slice(0,26);
+
+    svg += `<g class="topo-node" onmousedown="topoNodeDragStart(event,'${node.id.replace(/'/g,'')}',event)" onclick="topoNodeClick('${node.id.replace(/'/g,'')}');"${glow}>
+      <rect class="topo-node-rect" x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${bgFill}" stroke="${borderColor}" stroke-width="${isRoot?2.5:1.5}"/>
+      ${isRoot?`<rect x="${rx-2}" y="${ry-2}" width="${NW+4}" height="${NH+4}" rx="10" fill="none" stroke="${borderColor}" stroke-width="0.5" opacity="0.4"/>`:''}
+      <circle cx="${rx+14}" cy="${y}" r="5" fill="${dotColor}"${node.online===true?' filter="url(#topo-glow)"':''}/>
+      <rect x="${rx+NW-34}" y="${ry+6}" width="26" height="14" rx="4" fill="${badgeBg}"/>
+      <text x="${rx+NW-21}" y="${ry+16}" text-anchor="middle" font-size="9" font-weight="800" fill="${badgeColor}" font-family="system-ui,sans-serif">${h(badgeLabel)}</text>
+      <text x="${rx+26}" y="${ry+24}" font-size="12" font-weight="700" fill="rgba(226,232,240,.95)" font-family="system-ui,sans-serif">${h(dname)}</text>
+      <text x="${rx+26}" y="${ry+41}" font-size="10" fill="rgba(148,163,184,.6)" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
+    </g>`;
+  });
+
+  q('topo-g').innerHTML = svg;
+}
+
+// ── Detail panel ──────────────────────────────────────────────────────────────
+function topoNodeClick(id) {
+  if (topoWasDrag) { topoWasDrag = false; return; }
+  topoOpenDetail(id);
+}
+
+function topoOpenDetail(id) {
+  const node = topoNodes[id]; if (!node) return;
+  topoDetailId = id;
+  const dotColor = node.online===true ? '#a0ed3a' : node.online===false ? '#ff004d' : 'rgba(100,116,139,.6)';
+  q('topo-detail-dot').style.background = dotColor;
+  q('topo-detail-name').textContent = node.name;
+  const subParts = [node.model, node.os, node.ghost ? null : node.id].filter(Boolean);
+  q('topo-detail-sub').textContent = subParts.join(' · ') || '–';
+  q('topo-detail-setroot').style.display = node.ghost ? 'none' : '';
+
+  const entries = topoLldpMap[id] || [];
+  let html = '';
+
+  if (entries.length) {
+    html += `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">LLDP Nachbarn (${entries.length})</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--text3);font-size:10px">
+      <th style="text-align:left;padding:0 6px 4px 0;font-weight:600">Port</th>
+      <th style="text-align:left;padding:0 6px 4px 0;font-weight:600">Nachbar</th>
+      <th style="text-align:left;padding:0 0 4px 0;font-weight:600">Gegenstelle</th>
+    </tr></thead><tbody>`;
+    entries.forEach(e => {
+      html += `<tr style="border-top:1px solid var(--border)">
+        <td style="padding:5px 6px 5px 0;color:#60a5fa;font-weight:600">${h(e.localPortName||'–')}</td>
+        <td style="padding:5px 6px 5px 0;font-weight:600">${h(e.remSysName||e.remPortId||'?')}</td>
+        <td style="padding:5px 0;color:var(--text3);font-size:11px">${h(e.remPortDesc||e.remPortId||'–')}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  // Edges connecting to this node
+  const links = topoEdges.filter(e => e.tgt===id || e.src===id);
+  if (links.length) {
+    const typeColor = { wds:'var(--orange)', l2tp:'var(--green)' };
+    const typeLabel = { wds:'WDS', l2tp:'L2TP', undefined:'LLDP' };
+    html += `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">Verbindungen (${links.length})</div>`;
+    links.forEach(e => {
+      const otherId = e.src===id ? e.tgt : e.src;
+      const other = topoNodes[otherId];
+      if (!other) return;
+      const myPort = e.src===id ? e.srcPort : e.dstPort;
+      const theirPort = e.src===id ? e.dstPort : e.srcPort;
+      const tcolor = typeColor[e.type] || '#60a5fa';
+      const tlabel = typeLabel[e.type] || 'LLDP';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600">${h(other.name)}</span>
+        <span style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:${tcolor};font-weight:700">${tlabel}</span>
+          <span style="color:var(--text3);font-size:11px">${h([myPort,theirPort].filter(Boolean).join(' → '))}</span>
+        </span>
+      </div>`;
+    });
+  }
+
+  if (!html) html = `<p style="color:var(--text3);font-size:12px">Keine LLDP-Daten verfügbar.<br>LLDP Sync starten um Verbindungen zu laden.</p>`;
+  q('topo-detail-content').innerHTML = html;
+  q('topo-detail').style.display = 'flex';
+}
+
+function topoCloseDetail() { q('topo-detail').style.display='none'; topoDetailId=null; }
+
+function topoSetRootFromDetail() {
+  if (!topoDetailId || topoNodes[topoDetailId]?.ghost) return;
+  topoRootId = topoDetailId;
+  q('topo-root-select').value = topoRootId;
+  layoutTopo(topoRootId);
+  renderTopoSvg();
+  setTimeout(topoFit, 50);
+}
+
+// ── Pan / Zoom / Drag ─────────────────────────────────────────────────────────
+function topoSvgPt(e) {
+  const r = q('topo-svg').getBoundingClientRect();
+  return { x:(e.clientX-r.left-topoTx)/topoScale, y:(e.clientY-r.top-topoTy)/topoScale };
+}
+function topoNodeDragStart(e, id) {
+  e.stopPropagation();
+  const pt = topoSvgPt(e), n = topoNodes[id];
+  if (!n) return;
+  topoDragNode = { id, ox:pt.x-n.x, oy:pt.y-n.y };
+  topoWasDrag = false;
+}
+function topoBgDragStart(e) {
+  if (topoDragNode) return;
+  topoPan = { sx:e.clientX, sy:e.clientY, tx:topoTx, ty:topoTy };
+}
+function topoMouseMove(e) {
+  if (topoDragNode) {
+    const pt = topoSvgPt(e), n = topoNodes[topoDragNode.id];
+    if (!n) return;
+    n.x = pt.x - topoDragNode.ox;
+    n.y = pt.y - topoDragNode.oy;
+    topoWasDrag = true;
+    renderTopoSvg();
+  } else if (topoPan) {
+    topoTx = topoPan.tx + (e.clientX - topoPan.sx);
+    topoTy = topoPan.ty + (e.clientY - topoPan.sy);
+    const g = document.getElementById('topo-g');
+    if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
+  }
+}
+function topoMouseUp()  { topoDragNode = null; topoPan = null; }
+function topoWheel(e) {
+  e.preventDefault();
+  const svgEl = q('topo-svg');
+  const r = svgEl.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  const newScale = Math.max(0.1, Math.min(5, topoScale * factor));
+  topoTx = mx - (mx - topoTx) * (newScale / topoScale);
+  topoTy = my - (my - topoTy) * (newScale / topoScale);
+  topoScale = newScale;
+  const g = document.getElementById('topo-g');
+  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
+}
+function topoZoom(factor) {
+  topoScale = Math.max(0.1, Math.min(5, topoScale * factor));
+  const g = document.getElementById('topo-g');
+  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
+}
+function topoFit() {
+  const svgEl = q('topo-svg');
+  const W = svgEl.clientWidth || 900, H = svgEl.clientHeight || 620;
+  const nodes = Object.values(topoNodes);
+  if (!nodes.length) return;
+  const xs = nodes.map(n=>n.x), ys = nodes.map(n=>n.y);
+  const minX=Math.min(...xs)-NW/2-20, maxX=Math.max(...xs)+NW/2+20;
+  const minY=Math.min(...ys)-NH/2-20, maxY=Math.max(...ys)+NH/2+20;
+  const sw=maxX-minX, sh=maxY-minY;
+  topoScale = Math.min(W/sw, H/sh, 1.5);
+  topoTx = W/2 - (minX+maxX)/2 * topoScale;
+  topoTy = H/2 - (minY+maxY)/2 * topoScale;
+  const g = document.getElementById('topo-g');
+  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
+}
+
+// ── WDS Sync (Geräte-Tab) ─────────────────────────────────────────────────────
+async function syncWdsAll() {
+  const btn = q('btn-wds-sync');
+  const st  = q('dev-sync-status');
+  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false);
+  if (!lxDevs.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
+  }
+  btn.disabled = true;
+  st.className = 'status-bar loading';
+  meshData = [];
+  let done = 0;
+  try {
+    for (let i = 0; i < lxDevs.length; i += 4) {
+      await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
+        const { community, version } = devCredentials(dev.ip);
+        try {
+          const result = await snmpQ(dev.ip, community, version, 'wds');
+          if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
+        } catch {}
+        done++;
+        st.innerHTML = `<span class="spinner"></span> WDS – ${done} / ${lxDevs.length} – ${h(dev.name||dev.ip)}`;
+      }));
+    }
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    st.className = 'status-bar ok';
+    st.textContent = `WDS abgeschlossen – ${meshData.length} Verbindungen.`;
+    renderDevices(); renderMesh();
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'WDS';
+  }
+}
+
+// ── L2TPv3 Sync (Geräte-Tab) ──────────────────────────────────────────────────
+async function syncL2tpAll() {
+  const btn = q('btn-l2tp-sync2');
+  const st  = q('dev-sync-status');
+  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false);
+  if (!lxDevs.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
+  }
+  btn.disabled = true;
+  st.className = 'status-bar loading';
+  l2tpData = [];
+  let done = 0;
+  try {
+    for (let i = 0; i < lxDevs.length; i += 4) {
+      await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
+        const { community, version } = devCredentials(dev.ip);
+        try {
+          const result = await snmpQ(dev.ip, community, version, 'l2tp');
+          if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
+        } catch {}
+        done++;
+        st.innerHTML = `<span class="spinner"></span> L2TPv3 – ${done} / ${lxDevs.length} – ${h(dev.name||dev.ip)}`;
+      }));
+    }
+    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    st.className = 'status-bar ok';
+    st.textContent = `L2TPv3 abgeschlossen – ${l2tpData.length} Endpunkte.`;
+    renderDevices(); renderL2tp();
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'L2TPv3';
+  }
+}
+
+// ── All-in-one sync for Netzwerkplan ─────────────────────────────────────────
+async function syncTopologyAll() {
+  const btn = q('btn-topo-sync-all');
+  const st  = q('dev-sync-status');
+  const allDevs = Object.values(deviceStore);
+  if (!allDevs.length) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine Geräte gespeichert – bitte zuerst Geräte importieren.';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '⟳ Läuft…';
+  st.className = 'status-bar loading';
+
+  try {
+    // ── Phase 1: Online/Offline-Status für alle Geräte prüfen ────────────────
+    st.innerHTML = `<span class="spinner"></span> Phase 1/4: Status prüfen – 0 / ${allDevs.length}`;
+    let done = 0;
+
+    async function checkStatus(dev) {
+      const { community, version } = devCredentials(dev.ip);
+      try {
+        await snmpQ(dev.ip, community, version, 'ping');
+        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = true;
+      } catch {
+        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
+      }
+      done++;
+      st.innerHTML = `<span class="spinner"></span> Phase 1/4: Status prüfen – ${done} / ${allDevs.length} – ${h(dev.name||dev.ip)}`;
+      renderDevices();
+    }
+    const CONC_STATUS = 5;
+    for (let i = 0; i < allDevs.length; i += CONC_STATUS) {
+      await Promise.all(allDevs.slice(i, i + CONC_STATUS).map(checkStatus));
+    }
+
+    // ── Phase 2: WiFi Mesh (nur lx-ap, nur online) ───────────────────────────
+    const lxOnline = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online === true);
+    meshData = [];
+    done = 0;
+    st.innerHTML = `<span class="spinner"></span> Phase 2/4: WiFi Mesh – 0 / ${lxOnline.length}`;
+
+    async function syncWds(dev) {
+      const { community, version } = devCredentials(dev.ip);
+      try {
+        const result = await snmpQ(dev.ip, community, version, 'wds');
+        if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
+      } catch {}
+      done++;
+      st.innerHTML = `<span class="spinner"></span> Phase 2/4: WiFi Mesh – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
+    }
+    const CONC_WDS = 4;
+    for (let i = 0; i < lxOnline.length; i += CONC_WDS) {
+      await Promise.all(lxOnline.slice(i, i + CONC_WDS).map(syncWds));
+    }
+
+    // ── Phase 3: L2TPv3 (nur lx-ap, nur online) ─────────────────────────────
+    l2tpData = [];
+    done = 0;
+    st.innerHTML = `<span class="spinner"></span> Phase 3/4: L2TPv3 – 0 / ${lxOnline.length}`;
+
+    async function syncL2tpDev(dev) {
+      const { community, version } = devCredentials(dev.ip);
+      try {
+        const result = await snmpQ(dev.ip, community, version, 'l2tp');
+        if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
+      } catch {}
+      done++;
+      st.innerHTML = `<span class="spinner"></span> Phase 3/4: L2TPv3 – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
+    }
+    const CONC_L2TP = 4;
+    for (let i = 0; i < lxOnline.length; i += CONC_L2TP) {
+      await Promise.all(lxOnline.slice(i, i + CONC_L2TP).map(syncL2tpDev));
+    }
+
+    // ── Phase 4: LLDP – identisch mit "LLDP Sync" unter Geräte ──────────────
+    const onlineDevs = Object.values(deviceStore).filter(d => d.online !== false);
+    st.innerHTML = `<span class="spinner"></span> Phase 4/4: LLDP – 0 / ${onlineDevs.length}`;
+    await lldpSyncCore(onlineDevs, (d, total, dev) => {
+      st.innerHTML = `<span class="spinner"></span> Phase 4/4: LLDP – ${d} / ${total} – ${h(dev.name||dev.ip)}`;
+    });
+
+    // ── Speichern ────────────────────────────────────────────────────────────
+    st.innerHTML = `<span class="spinner"></span> Daten werden gespeichert…`;
+    try {
+      await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
+    } catch (e) {
+      console.error('Fehler beim Speichern:', e);
+    }
+
+    st.className = 'status-bar ok';
+    st.textContent = 'Sync abgeschlossen.';
+    renderDevices();
+    buildTopoFromStore();
+
+  } catch (e) {
+    st.className = 'status-bar error';
+    st.textContent = `Fehler: ${e.message}`;
+    console.error('syncTopologyAll:', e);
+  } finally {
+    btn.disabled = false; btn.textContent = '⟳ Daten Abrufen';
+  }
+}
+
+// ── Build topology from stored device data ────────────────────────────────────
+function buildTopoFromStore() {
+  // LLDP edges
+  topoLldpMap = {};
+  Object.values(deviceStore).forEach(dev => {
+    if (dev.lldpData?.length) topoLldpMap[dev.ip] = dev.lldpData;
+  });
+  buildTopoGraph(topoLldpMap); // builds nodes + LLDP edges
+
+  // Track all existing edge pairs (both directions)
+  const existingPairs = new Set(topoEdges.map(e => [e.src, e.tgt].sort().join('||')));
+
+  // WDS / Mesh edges
+  let wdsCnt = 0;
+  Object.values(deviceStore).forEach(dev => {
+    (dev.wdsLinks||[]).forEach(link => {
+      if (!link.mac) return;
+      const peerDev = resolvePeerDev(link.mac);
+      if (!peerDev || peerDev.ip === dev.ip) return;
+      const pairKey = [dev.ip, peerDev.ip].sort().join('||');
+      // Allow WDS edges even if LLDP edge exists — they'll be rendered offset
+      const edgeId = 'wds:' + pairKey;
+      if (topoEdges.some(e => e.id === edgeId)) return; // deduplicate WDS itself
+      topoEdges.push({ id: edgeId, src: dev.ip, tgt: peerDev.ip,
+        srcPort: link.linkName||'WDS', dstPort: '',
+        type: 'wds', label: link.band||'WDS', connected: link.connected });
+      wdsCnt++;
+    });
+  });
+
+  // L2TP edges – Ziel wird auch dann als Knoten ergänzt wenn es offline ist
+  let l2tpCnt = 0;
+  Object.values(deviceStore).forEach(dev => {
+    (dev.l2tpEndpoints||[]).forEach(ep => {
+      const remoteIp = ep.remoteIp;
+      if (!remoteIp || remoteIp === dev.ip) return;
+      // Offline-Gerät als Knoten eintragen damit die Kante gezeichnet werden kann
+      if (!topoNodes[remoteIp]) {
+        const rd = deviceStore[remoteIp];
+        topoNodes[remoteIp] = {
+          id: remoteIp, name: rd ? (rd.name||remoteIp) : remoteIp,
+          type: rd?.type||'unknown', os: rd?.os||'', model: rd?.model||'',
+          online: rd ? rd.online : false, ghost: !rd, x: 0, y: 0, fixed: false,
+        };
+      }
+      const edgeId = 'l2tp:' + [dev.ip, remoteIp].sort().join('||');
+      if (topoEdges.some(e => e.id === edgeId)) return;
+      topoEdges.push({ id: edgeId, src: dev.ip, tgt: remoteIp,
+        srcPort: ep.endpointName||'L2TP', dstPort: '',
+        type: 'l2tp', label: 'L2TP', connected: ep.state==='connected' });
+      l2tpCnt++;
+    });
+  });
+
+  buildTopoSelector();
+  layoutTopo(topoRootId);
+  renderTopoSvg();
+  setTimeout(topoFit, 60);
+
+  const nc = Object.keys(topoNodes).length;
+  const ec = topoEdges.length;
+  const devWithLldp = Object.values(deviceStore).filter(d => d.lldpData?.length).length;
+  const st = q('topo-status');
+
+  if (!devWithLldp && !wdsCnt && !l2tpCnt) {
+    st.className = 'status-bar error';
+    st.textContent = 'Keine Verbindungsdaten gespeichert – bitte LLDP Sync, Mesh Sync oder L2TP Sync unter den jeweiligen Tabs ausführen.';
+  } else {
+    const parts = [];
+    if (devWithLldp) parts.push(`LLDP: ${devWithLldp} Gerät${devWithLldp!==1?'e':''}`);
+    if (wdsCnt)      parts.push(`WDS: ${wdsCnt} Link${wdsCnt!==1?'s':''}`);
+    if (l2tpCnt)     parts.push(`L2TP: ${l2tpCnt} Verbindung${l2tpCnt!==1?'en':''}`);
+    st.className = 'status-bar ok';
+    st.textContent = `${nc} Knoten, ${ec} Kante${ec!==1?'n':''} – ${parts.join(' · ')}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TAB NAVIGATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1172,7 +2395,8 @@ function showTab(name) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const tab=q('tab-'+name); if(tab) tab.classList.add('active');
   const panel=q('panel-'+name); if(panel) panel.classList.add('active');
-  if(name==='devices') renderDevices();
+  if(name==='devices')  renderDevices();
+  if(name==='topology') buildTopoFromStore();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
