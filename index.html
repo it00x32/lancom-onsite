@@ -1012,6 +1012,14 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     </div>
   </div>
   <div class="settings-section">
+    <h3>Import-Filter</h3>
+    <div class="settings-grid">
+      <label>Modell-Filter</label>
+      <input class="settings-input" id="cfg-model-filter" type="text" placeholder="leer = alle, z.B. GS-2310, 1780, IAP">
+    </div>
+    <p class="settings-hint" style="margin-top:8px">Komma-getrennte Begriffe. Ein Gerät wird importiert wenn sein Modellname einen der Begriffe enthält (Groß/Kleinschreibung egal). Gilt für Scanner und LMC Import. „Alle speichern" überspringt nicht-passende Geräte – einzeln können sie trotzdem gespeichert werden.</p>
+  </div>
+  <div class="settings-section">
     <h3>RSSI-Schwellwerte (WiFi Mesh, in %)</h3>
     <div class="settings-grid">
       <label><span class="dot dot-green"></span>Grün ab (≥ %)</label>
@@ -1302,6 +1310,7 @@ async function loadSettings() {
   q('cfg-v3-authpass').value  = appSettings.snmpV3AuthPassword  || '';
   q('cfg-v3-privproto').value = appSettings.snmpV3PrivProtocol  || 'AES';
   q('cfg-v3-privpass').value  = appSettings.snmpV3PrivPassword  || '';
+  q('cfg-model-filter').value = appSettings.modelFilter || '';
   onSnmpVersionChange();
   if (appSettings.lastScanSubnet) q('scan-subnet').value = appSettings.lastScanSubnet;
 }
@@ -1321,6 +1330,7 @@ async function saveSettings() {
     snmpV3AuthPassword:  q('cfg-v3-authpass').value,
     snmpV3PrivProtocol:  q('cfg-v3-privproto').value,
     snmpV3PrivPassword:  q('cfg-v3-privpass').value,
+    modelFilter: q('cfg-model-filter').value.trim(),
   };
   await fetch('/api/settings',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(appSettings) });
   const lbl = q('settings-save-lbl');
@@ -2080,6 +2090,14 @@ function handleScanEvent(ev) {
   }
 }
 
+function matchesModelFilter(model) {
+  const filter = (appSettings.modelFilter || '').trim();
+  if (!filter) return true;
+  const terms = filter.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
+  if (!terms.length) return true;
+  return terms.some(t => (model || '').toLowerCase().includes(t));
+}
+
 function appendScanRow(dev) {
   scanResults.push(dev);
   const tbody=q('tbl-scan').querySelector('tbody');
@@ -2088,7 +2106,11 @@ function appendScanRow(dev) {
   q('cnt-scan').textContent=scanFoundCnt+' Gerät'+(scanFoundCnt!==1?'e':'');
   const osC={'LCOS LX':'badge-green','LCOS FX':'badge-yellow','LCOS SX':'badge-yellow','LCOS':'badge-gray','LANCOM':'badge-gray'};
   const devType = detectDeviceType(dev.os, dev.sysDescr);
+  const model = extractModel(dev.sysDescr);
+  const filtered = !matchesModelFilter(model);
   const tr=document.createElement('tr');
+  if (filtered) tr.style.opacity = '0.4';
+  tr.title = filtered ? 'Kein Treffer im Modell-Filter – wird bei „Alle speichern" übersprungen' : '';
   tr.innerHTML=`
     <td class="mono">${h(dev.ip)}</td>
     <td style="font-weight:600">${h(dev.sysName||'—')}</td>
@@ -2118,15 +2140,19 @@ async function saveScanResults() {
   if (!scanResults.length) return;
   const patch = {};
   const skipped = [];
+  const filtered = [];
   scanResults.forEach(dev => {
     if (deviceStore[dev.ip]) { skipped.push(dev.ip); return; }
+    const model = extractModel(dev.sysDescr);
+    if (!matchesModelFilter(model)) { filtered.push(dev.ip); return; }
     patch[dev.ip] = buildScanDeviceEntry(dev);
   });
   const n = Object.keys(patch).length;
   if (n) await saveDevices(patch);
   let msg = n ? `${n} Gerät${n!==1?'e':''} gespeichert` : 'Keine neuen Geräte';
-  if (skipped.length) msg += ` – ${skipped.length} bereits vorhanden und übersprungen`;
-  setScanStatus(msg, skipped.length && !n ? 'error' : 'ok');
+  if (skipped.length)  msg += ` – ${skipped.length} bereits vorhanden`;
+  if (filtered.length) msg += ` – ${filtered.length} durch Modell-Filter übersprungen`;
+  setScanStatus(msg, !n ? 'error' : 'ok');
 }
 
 function getScanLocation() {
@@ -2226,15 +2252,18 @@ async function lmcSync() {
         lastSeen:new Date().toISOString() };
     });
 
-    // Bereits vorhandene Geräte überspringen
-    const skipped = Object.keys(patch).filter(ip => deviceStore[ip]);
+    // Bereits vorhandene und durch Filter ausgeschlossene Geräte überspringen
+    const skipped  = Object.keys(patch).filter(ip => deviceStore[ip]);
+    const filtered = Object.keys(patch).filter(ip => !skipped.includes(ip) && !matchesModelFilter(patch[ip].model));
     skipped.forEach(ip => delete patch[ip]);
+    filtered.forEach(ip => delete patch[ip]);
     const n = Object.keys(patch).length;
     if (n) await saveDevices(patch);
 
     let msg = n ? `${n} Gerät${n!==1?'e':''} importiert` : 'Keine neuen Geräte';
-    if (skipped.length) msg += ` – ${skipped.length} bereits vorhanden und übersprungen`;
-    setLmcStatus(msg, skipped.length && !n ? 'error' : 'ok');
+    if (skipped.length)  msg += ` – ${skipped.length} bereits vorhanden`;
+    if (filtered.length) msg += ` – ${filtered.length} durch Modell-Filter übersprungen`;
+    setLmcStatus(msg, !n ? 'error' : 'ok');
 
     // Show result table (alle aus LMC, inkl. übersprungener)
     const allPatch = {...patch};
@@ -2247,8 +2276,14 @@ async function lmcSync() {
       const online = devs.find(d=>(d.status?.ip||d.status?.ipAddress)===dev.ip);
       const isOn = online?.heartbeatState?.toUpperCase()==='ACTIVE'||online?.status?.heartbeatState?.toUpperCase()==='ACTIVE';
       const typCls=TYPE_BADGE[dev.type]||'badge-gray'; const typLbl=TYPE_LABELS[dev.type]||'—';
-      const wasSkipped = skipped.includes(dev.ip);
-      return `<tr>
+      const wasSkipped  = skipped.includes(dev.ip);
+      const wasFiltered = filtered.includes(dev.ip);
+      const rowStyle = wasFiltered ? ' style="opacity:0.4"' : '';
+      const rowTitle = wasFiltered ? ' title="Kein Treffer im Modell-Filter – nicht importiert"' : '';
+      const badge = wasSkipped  ? '<span class="badge badge-yellow">Vorhanden</span>'
+                  : wasFiltered ? '<span class="badge badge-gray">Gefiltert</span>'
+                  :               '<span class="badge badge-green">Neu</span>';
+      return `<tr${rowStyle}${rowTitle}>
         <td style="font-weight:600">${h(dev.name)}</td>
         <td class="mono">${h(dev.ip)}</td>
         <td style="font-size:12px;color:var(--text2)">${h(dev.model||'—')}</td>
@@ -2256,7 +2291,7 @@ async function lmcSync() {
         <td><span class="badge ${typCls}">${typLbl}</span></td>
         <td style="font-size:12px;color:var(--text2)">${h(dev.location||'—')}</td>
         <td><span class="dot ${isOn?'dot-green':'dot-red'}"></span>${isOn?'Online':'Offline'}</td>
-        <td>${wasSkipped?'<span class="badge badge-yellow">Vorhanden</span>':'<span class="badge badge-green">Neu</span>'}</td>
+        <td>${badge}</td>
       </tr>`;
     }).join('');
   } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }

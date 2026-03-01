@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS = {
   snmpV3AuthPassword:  '',
   snmpV3PrivProtocol:  'AES',
   snmpV3PrivPassword:  '',
+  modelFilter: '',
 };
 
 let _settingsCache = null;
