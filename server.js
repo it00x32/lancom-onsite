@@ -723,8 +723,9 @@ const server = http.createServer(async (req, res) => {
       try {
         const parsed = JSON.parse(body);
         if (!parsed.subnet) throw new Error('subnet fehlt');
-        community = parsed.community || 'public';
-        version   = parsed.version   || '2c';
+        const s = readSettings();
+        community = s.snmpReadCommunity || 'public';
+        version   = s.snmpVersion       || '2c';
         hosts     = subnetToHosts(parsed.subnet);
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -787,8 +788,11 @@ const server = http.createServer(async (req, res) => {
     req.on('data', d => (body += d));
     req.on('end', async () => {
       try {
-        const { host, community = 'public', version = '2c', type } = JSON.parse(body);
+        const { host, type } = JSON.parse(body);
         if (!host) throw new Error('host fehlt');
+        const _s = readSettings();
+        const community = _s.snmpReadCommunity || 'public';
+        const version   = _s.snmpVersion       || '2c';
 
         let result;
         switch (type) {

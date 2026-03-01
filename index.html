@@ -879,14 +879,6 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
   <div class="toolbar">
     <label style="font-size:12px;color:var(--text2)">Subnetz</label>
     <input type="text" id="scan-subnet" class="search-input" placeholder="z.B. 192.168.1.0/24 oder 192.168.1.1-254" style="width:280px">
-    <label style="font-size:12px;color:var(--text2)">Community</label>
-    <input type="text" id="scan-community" class="search-input" style="width:110px">
-    <label style="font-size:12px;color:var(--text2)">Version</label>
-    <select id="scan-version" class="search-input" style="width:110px">
-      <option value="2c">SNMPv2c</option>
-      <option value="1">SNMPv1</option>
-      <option value="3">SNMPv3</option>
-    </select>
     <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
     <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
     <div class="sep" id="sep-save-all" style="display:none"></div>
@@ -1311,9 +1303,6 @@ async function loadSettings() {
   q('cfg-v3-privproto').value = appSettings.snmpV3PrivProtocol  || 'AES';
   q('cfg-v3-privpass').value  = appSettings.snmpV3PrivPassword  || '';
   onSnmpVersionChange();
-  // Pre-fill scanner community from settings
-  q('scan-community').value = appSettings.snmpReadCommunity || 'public';
-  q('scan-version').value   = appSettings.snmpVersion       || '2c';
   if (appSettings.lastScanSubnet) q('scan-subnet').value = appSettings.lastScanSubnet;
 }
 
@@ -1491,8 +1480,8 @@ function renderDevices() {
 // SNMP QUERY HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function snmpQ(host, community, version, type) {
-  const r = await fetch('/snmp',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host,community,version,type}) });
+async function snmpQ(host, type) {
+  const r = await fetch('/snmp',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host,type}) });
   const d = await r.json(); if (d.error) throw new Error(d.error); return d;
 }
 
@@ -1533,10 +1522,8 @@ async function checkAllDeviceStatus() {
   try {
     const CONCURRENCY = 5;
     async function checkOne(dev) {
-      const community = dev.community || appSettings.snmpReadCommunity || 'public';
-      const version   = dev.version   || appSettings.snmpVersion       || '2c';
       try {
-        await snmpQ(dev.ip, community, version, 'ping');
+        await snmpQ(dev.ip, 'ping');
         if (deviceStore[dev.ip]) { deviceStore[dev.ip].online = true; online++; }
       } catch {
         if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
@@ -1588,9 +1575,8 @@ async function syncDeviceMacs() {
     async function worker() {
       while (queue.length) {
         const dev = queue.shift();
-        const { community, version } = devCredentials(dev.ip);
         try {
-          const result = await snmpQ(dev.ip, community, version, 'ifmacs');
+          const result = await snmpQ(dev.ip, 'ifmacs');
           if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
         } catch {}
         done++;
@@ -1621,9 +1607,8 @@ async function lldpSyncCore(devList, onProgress) {
   async function worker() {
     while (queue.length) {
       const dev = queue.shift();
-      const { community, version } = devCredentials(dev.ip);
       try {
-        const result = await snmpQ(dev.ip, community, version, 'lldp');
+        const result = await snmpQ(dev.ip, 'lldp');
         if (deviceStore[dev.ip]) {
           deviceStore[dev.ip].lldpCount     = result.entries?.length ?? 0;
           deviceStore[dev.ip].lldpNeighbors = (result.entries||[])
@@ -1868,9 +1853,8 @@ async function syncMeshDevice(ip) {
   const st = q('dev-sync-status');
   st.className = 'status-bar loading';
   st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
-  const { community, version } = devCredentials(ip);
   try {
-    const result = await snmpQ(ip, community, version, 'wds');
+    const result = await snmpQ(ip, 'wds');
     setDeviceOnline(ip, true);
     meshData = meshData.filter(r => r.deviceIp !== ip);
     if (result.configured) mergeMeshResult(ip, name, result);
@@ -1994,9 +1978,8 @@ async function syncL2tpDevice(ip) {
   const st = q('dev-sync-status');
   st.className = 'status-bar loading';
   st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
-  const {community,version} = devCredentials(ip);
   try {
-    const result = await snmpQ(ip, community, version, 'l2tp');
+    const result = await snmpQ(ip, 'l2tp');
     setDeviceOnline(ip, true);
     l2tpData = l2tpData.filter(r => r.deviceIp!==ip);
     if (result.configured) mergeL2tpResult(ip, name, result);
@@ -2039,9 +2022,7 @@ function mergeL2tpResult(ip, name, result) {
 function setScanStatus(msg,type='') { const el=q('scan-status'); el.className='status-bar'+(type?' '+type:''); el.innerHTML=type==='loading'?`<span class="spinner"></span> ${msg}`:msg; }
 
 async function startScan() {
-  const subnet    = q('scan-subnet').value.trim();
-  const community = q('scan-community').value.trim()||'public';
-  const version   = q('scan-version').value;
+  const subnet = q('scan-subnet').value.trim();
   if (!subnet) { setScanStatus('Bitte Subnetz eingeben.','error'); return; }
 
   // Save last subnet (fire and forget — not critical for scan start)
@@ -2063,7 +2044,7 @@ async function startScan() {
   setScanStatus('Scan läuft…','loading');
 
   try {
-    const resp = await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subnet,community,version}),signal:scanAbort.signal});
+    const resp = await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subnet}),signal:scanAbort.signal});
     if (!resp.ok) { const e=await resp.json().catch(()=>({error:resp.statusText})); throw new Error(e.error||'Serverfehler'); }
     const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
     while (true) {
@@ -2160,8 +2141,6 @@ function buildScanDeviceEntry(dev) {
     ip: dev.ip, name: dev.sysName||dev.ip, model: extractModel(dev.sysDescr),
     os: dev.os, type, mac: dev.mac||'', sysDescr: dev.sysDescr,
     sysLocation: dev.sysLocation, location: getScanLocation(),
-    community: q('scan-community').value.trim()||'public',
-    version:   q('scan-version').value||'2c',
     source: 'scanner', online: true, lastSeen: new Date().toISOString(),
   };
 }
@@ -2321,11 +2300,11 @@ async function queryDetail() {
 
   const t0=Date.now();
   const [sys,ifaces,mac,wlan,lldp] = await Promise.allSettled([
-    snmpQ(ip,community,version,'system'),
-    snmpQ(ip,community,version,'interfaces'),
-    snmpQ(ip,community,version,'mac'),
-    snmpQ(ip,community,version,'wlan'),
-    snmpQ(ip,community,version,'lldp'),
+    snmpQ(ip,'system'),
+    snmpQ(ip,'interfaces'),
+    snmpQ(ip,'mac'),
+    snmpQ(ip,'wlan'),
+    snmpQ(ip,'lldp'),
   ]);
 
   if(sys.status==='fulfilled') renderDetailSystem(sys.value);
@@ -2872,9 +2851,8 @@ async function syncWdsAll() {
   try {
     for (let i = 0; i < lxDevs.length; i += 4) {
       await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
-        const { community, version } = devCredentials(dev.ip);
         try {
-          const result = await snmpQ(dev.ip, community, version, 'wds');
+          const result = await snmpQ(dev.ip, 'wds');
           if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
         } catch {}
         done++;
@@ -2909,9 +2887,8 @@ async function syncL2tpAll() {
   try {
     for (let i = 0; i < lxDevs.length; i += 4) {
       await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
-        const { community, version } = devCredentials(dev.ip);
         try {
-          const result = await snmpQ(dev.ip, community, version, 'l2tp');
+          const result = await snmpQ(dev.ip, 'l2tp');
           if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
         } catch {}
         done++;
@@ -2950,9 +2927,8 @@ async function syncTopologyAll() {
     let done = 0;
 
     async function checkStatus(dev) {
-      const { community, version } = devCredentials(dev.ip);
       try {
-        await snmpQ(dev.ip, community, version, 'ping');
+        await snmpQ(dev.ip, 'ping');
         if (deviceStore[dev.ip]) deviceStore[dev.ip].online = true;
       } catch {
         if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
@@ -2973,9 +2949,8 @@ async function syncTopologyAll() {
     st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – 0 / ${lxOnline.length}`;
 
     async function syncWds(dev) {
-      const { community, version } = devCredentials(dev.ip);
       try {
-        const result = await snmpQ(dev.ip, community, version, 'wds');
+        const result = await snmpQ(dev.ip, 'wds');
         if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
       } catch {}
       done++;
@@ -2992,9 +2967,8 @@ async function syncTopologyAll() {
     st.innerHTML = `<span class="spinner"></span> Phase 3/5: L2TPv3 – 0 / ${lxOnline.length}`;
 
     async function syncL2tpDev(dev) {
-      const { community, version } = devCredentials(dev.ip);
       try {
-        const result = await snmpQ(dev.ip, community, version, 'l2tp');
+        const result = await snmpQ(dev.ip, 'l2tp');
         if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
       } catch {}
       done++;
@@ -3019,9 +2993,8 @@ async function syncTopologyAll() {
     async function macWorker() {
       while (macQueue.length) {
         const dev = macQueue.shift();
-        const { community, version } = devCredentials(dev.ip);
         try {
-          const result = await snmpQ(dev.ip, community, version, 'ifmacs');
+          const result = await snmpQ(dev.ip, 'ifmacs');
           if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
         } catch {}
         done++;
