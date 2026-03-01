@@ -2244,7 +2244,6 @@ async function lmcSync() {
       const mac = (d.status?.mac||d.status?.ethMac||d.mac||'').toLowerCase();
       const location = d.siteName||d.location?.name||d.locationName||d.site?.name||d.status?.location?.name||d.status?.locationName||d.status?.location||'';
       patch[ip]={ ip, name, model, os, type, mac, location, source:'lmc', lmcId:d.id||'',
-        community:appSettings.snmpReadCommunity||'public', version:appSettings.snmpVersion||'2c',
         lastSeen:new Date().toISOString() };
     });
 
