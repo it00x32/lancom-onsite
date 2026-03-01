@@ -885,6 +885,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <select id="scan-version" class="search-input" style="width:110px">
       <option value="2c">SNMPv2c</option>
       <option value="1">SNMPv1</option>
+      <option value="3">SNMPv3</option>
     </select>
     <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
     <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
@@ -966,10 +967,56 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
       <label>Write Community</label>
       <input class="settings-input" id="cfg-snmp-write" type="text">
       <label>Version</label>
-      <select class="settings-input" id="cfg-snmp-version">
+      <select class="settings-input" id="cfg-snmp-version" onchange="onSnmpVersionChange()">
         <option value="2c">SNMPv2c</option>
         <option value="1">SNMPv1</option>
+        <option value="3">SNMPv3</option>
       </select>
+    </div>
+
+    <div id="cfg-v3-section" style="display:none;margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">SNMPv3 – Identität</div>
+      <div class="settings-grid">
+        <label>Security Name</label>
+        <input class="settings-input" id="cfg-v3-secname" type="text" placeholder="admin" autocomplete="off">
+        <label>Security Level</label>
+        <select class="settings-input" id="cfg-v3-seclevel" onchange="onV3LevelChange()">
+          <option value="noAuthNoPriv">noAuthNoPriv – kein Auth, keine Verschlüsselung</option>
+          <option value="authNoPriv">authNoPriv – Auth, keine Verschlüsselung</option>
+          <option value="authPriv">authPriv – Auth + Verschlüsselung</option>
+        </select>
+      </div>
+
+      <div id="cfg-v3-auth-block" style="display:none;margin-top:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Authentifizierung</div>
+        <div class="settings-grid">
+          <label>Auth Protokoll</label>
+          <select class="settings-input" id="cfg-v3-authproto">
+            <option value="SHA">SHA</option>
+            <option value="SHA-256">SHA-256</option>
+            <option value="SHA-512">SHA-512</option>
+            <option value="MD5">MD5</option>
+          </select>
+          <label>Auth Passwort</label>
+          <input class="settings-input" id="cfg-v3-authpass" type="password" autocomplete="new-password" placeholder="min. 8 Zeichen">
+        </div>
+      </div>
+
+      <div id="cfg-v3-priv-block" style="display:none;margin-top:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Privacy (Verschlüsselung)</div>
+        <div class="settings-grid">
+          <label>Priv Protokoll</label>
+          <select class="settings-input" id="cfg-v3-privproto">
+            <option value="AES">AES</option>
+            <option value="AES-192">AES-192</option>
+            <option value="AES-256">AES-256</option>
+            <option value="DES">DES</option>
+          </select>
+          <label>Priv Passwort</label>
+          <input class="settings-input" id="cfg-v3-privpass" type="password" autocomplete="new-password" placeholder="min. 8 Zeichen">
+        </div>
+      </div>
+      <p class="settings-hint" style="margin-top:12px">Bei SNMPv3 werden Read/Write Community ignoriert. Die Zugangsdaten gelten global für alle Geräte ohne eigene Konfiguration.</p>
     </div>
   </div>
   <div class="settings-section">
@@ -1000,6 +1047,7 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <select id="detail-version" class="search-input" style="width:110px">
       <option value="2c">SNMPv2c</option>
       <option value="1">SNMPv1</option>
+      <option value="3">SNMPv3</option>
     </select>
     <button class="btn btn-sm" onclick="queryDetail()">&#x21BB; Abfragen</button>
   </div>
@@ -1234,6 +1282,17 @@ function setMeshLocFilter(v) { meshLocFilter = v; renderMesh(); }
 function setL2tpLocFilter(v) { l2tpLocFilter = v; renderL2tp(); }
 function setTopoLocFilter(v) { topoLocFilter = v; buildTopoFromStore(); }
 
+function onSnmpVersionChange() {
+  const v3 = q('cfg-snmp-version').value === '3';
+  q('cfg-v3-section').style.display = v3 ? '' : 'none';
+  if (v3) onV3LevelChange();
+}
+function onV3LevelChange() {
+  const lvl = q('cfg-v3-seclevel').value;
+  q('cfg-v3-auth-block').style.display = (lvl === 'authNoPriv' || lvl === 'authPriv') ? '' : 'none';
+  q('cfg-v3-priv-block').style.display = (lvl === 'authPriv') ? '' : 'none';
+}
+
 async function loadSettings() {
   try {
     const r = await fetch('/api/settings'); appSettings = await r.json();
@@ -1244,6 +1303,14 @@ async function loadSettings() {
   q('cfg-rssi-green').value   = appSettings.rssiGreen  ?? 80;
   q('cfg-rssi-yellow').value  = appSettings.rssiYellow ?? 50;
   q('cfg-rssi-orange').value  = appSettings.rssiOrange ?? 0;
+  // SNMPv3
+  q('cfg-v3-secname').value   = appSettings.snmpV3SecurityName  || '';
+  q('cfg-v3-seclevel').value  = appSettings.snmpV3SecurityLevel || 'authPriv';
+  q('cfg-v3-authproto').value = appSettings.snmpV3AuthProtocol  || 'SHA';
+  q('cfg-v3-authpass').value  = appSettings.snmpV3AuthPassword  || '';
+  q('cfg-v3-privproto').value = appSettings.snmpV3PrivProtocol  || 'AES';
+  q('cfg-v3-privpass').value  = appSettings.snmpV3PrivPassword  || '';
+  onSnmpVersionChange();
   // Pre-fill scanner community from settings
   q('scan-community').value = appSettings.snmpReadCommunity || 'public';
   q('scan-version').value   = appSettings.snmpVersion       || '2c';
@@ -1259,6 +1326,12 @@ async function saveSettings() {
     rssiGreen:  parseInt(q('cfg-rssi-green').value)  ?? 80,
     rssiYellow: parseInt(q('cfg-rssi-yellow').value) ?? 50,
     rssiOrange: parseInt(q('cfg-rssi-orange').value) ?? 0,
+    snmpV3SecurityName:  q('cfg-v3-secname').value.trim(),
+    snmpV3SecurityLevel: q('cfg-v3-seclevel').value,
+    snmpV3AuthProtocol:  q('cfg-v3-authproto').value,
+    snmpV3AuthPassword:  q('cfg-v3-authpass').value,
+    snmpV3PrivProtocol:  q('cfg-v3-privproto').value,
+    snmpV3PrivPassword:  q('cfg-v3-privpass').value,
   };
   await fetch('/api/settings',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(appSettings) });
   const lbl = q('settings-save-lbl');

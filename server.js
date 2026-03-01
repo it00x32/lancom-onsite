@@ -29,6 +29,12 @@ const DEFAULT_SETTINGS = {
   rssiYellow: 50,
   rssiOrange:  0,
   lastScanSubnet: '',
+  snmpV3SecurityName:  '',
+  snmpV3SecurityLevel: 'authPriv',
+  snmpV3AuthProtocol:  'SHA',
+  snmpV3AuthPassword:  '',
+  snmpV3PrivProtocol:  'AES',
+  snmpV3PrivPassword:  '',
 };
 
 let _settingsCache = null;
@@ -91,10 +97,31 @@ function lmcProxy(service, apiPath, method, token, body) {
 
 // ── SNMP helpers ──────────────────────────────────────────────────────────────
 
+function buildSnmpAuthArgs(version, community) {
+  if (version === '3') {
+    const s = readSettings();
+    const secName   = s.snmpV3SecurityName  || '';
+    const secLevel  = s.snmpV3SecurityLevel || 'authPriv';
+    const authProto = s.snmpV3AuthProtocol  || 'SHA';
+    const authPass  = s.snmpV3AuthPassword  || '';
+    const privProto = s.snmpV3PrivProtocol  || 'AES';
+    const privPass  = s.snmpV3PrivPassword  || '';
+    const args = ['-v', '3', '-u', secName, '-l', secLevel];
+    if (secLevel === 'authNoPriv' || secLevel === 'authPriv') {
+      args.push('-a', authProto, '-A', authPass);
+    }
+    if (secLevel === 'authPriv') {
+      args.push('-x', privProto, '-X', privPass);
+    }
+    return args;
+  }
+  return ['-v', version, '-c', community];
+}
+
 function runSnmpWalk(host, community, version, oid, timeout = 12000) {
   return new Promise((resolve) => {
-    const cmd  = version === '1' ? 'snmpwalk' : 'snmpbulkwalk';
-    const args = ['-v', version, '-c', community, '-On', '-t', '5', '-r', '1', host, oid];
+    const cmd  = (version === '1') ? 'snmpwalk' : 'snmpbulkwalk';
+    const args = [...buildSnmpAuthArgs(version, community), '-On', '-t', '5', '-r', '1', host, oid];
     const proc = spawn(cmd, args);
     let out = '';
     proc.stdout.on('data', d => (out += d));
@@ -568,7 +595,7 @@ function subnetToHosts(input) {
 
 function runSnmpGet(host, community, version, oids, timeout = 2000) {
   return new Promise((resolve) => {
-    const args = ['-v', version, '-c', community, '-t', '1', '-r', '0', '-On', host, ...oids];
+    const args = [...buildSnmpAuthArgs(version, community), '-t', '1', '-r', '0', '-On', host, ...oids];
     const proc = spawn('snmpget', args);
     let out = '';
     proc.stdout.on('data', d => (out += d));
