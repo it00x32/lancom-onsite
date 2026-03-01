@@ -951,8 +951,14 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
 
 <!-- ═══ EINSTELLUNGEN ════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-settings">
-  <div class="settings-section">
-    <h3>SNMP</h3>
+  <div class="sub-tabs">
+    <div class="stab active" onclick="showCfgTab('snmp')"   id="cfgtab-snmp">SNMP</div>
+    <div class="stab"        onclick="showCfgTab('import')" id="cfgtab-import">Import-Filter</div>
+    <div class="stab"        onclick="showCfgTab('rssi')"   id="cfgtab-rssi">WiFi / RSSI</div>
+  </div>
+
+  <!-- SNMP -->
+  <div class="sub-panel active settings-section" id="cfgpanel-snmp">
     <div class="settings-grid">
       <label>Read Community</label>
       <input class="settings-input" id="cfg-snmp-read" type="text">
@@ -965,7 +971,6 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
         <option value="3">SNMPv3</option>
       </select>
     </div>
-
     <div id="cfg-v3-section" style="display:none;margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">SNMPv3 – Identität</div>
       <div class="settings-grid">
@@ -978,7 +983,6 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
           <option value="authPriv">authPriv – Auth + Verschlüsselung</option>
         </select>
       </div>
-
       <div id="cfg-v3-auth-block" style="display:none;margin-top:14px">
         <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Authentifizierung</div>
         <div class="settings-grid">
@@ -993,7 +997,6 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
           <input class="settings-input" id="cfg-v3-authpass" type="password" autocomplete="new-password" placeholder="min. 8 Zeichen">
         </div>
       </div>
-
       <div id="cfg-v3-priv-block" style="display:none;margin-top:14px">
         <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Privacy (Verschlüsselung)</div>
         <div class="settings-grid">
@@ -1011,16 +1014,18 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
       <p class="settings-hint" style="margin-top:12px">Bei SNMPv3 werden Read/Write Community ignoriert. Die Zugangsdaten gelten global für alle Geräte ohne eigene Konfiguration.</p>
     </div>
   </div>
-  <div class="settings-section">
-    <h3>Import-Filter</h3>
+
+  <!-- Import-Filter -->
+  <div class="sub-panel settings-section" id="cfgpanel-import">
     <div class="settings-grid">
       <label>Modell-Filter</label>
       <input class="settings-input" id="cfg-model-filter" type="text" placeholder="leer = alle, z.B. GS-2310, 1780, IAP">
     </div>
     <p class="settings-hint" style="margin-top:8px">Komma-getrennte Begriffe. Ein Gerät wird importiert wenn sein Modellname einen der Begriffe enthält (Groß/Kleinschreibung egal). Gilt für Scanner und LMC Import. „Alle speichern" überspringt nicht-passende Geräte – einzeln können sie trotzdem gespeichert werden.</p>
   </div>
-  <div class="settings-section">
-    <h3>RSSI-Schwellwerte (WiFi Mesh, in %)</h3>
+
+  <!-- RSSI -->
+  <div class="sub-panel settings-section" id="cfgpanel-rssi">
     <div class="settings-grid">
       <label><span class="dot dot-green"></span>Grün ab (≥ %)</label>
       <input class="settings-input" id="cfg-rssi-green" type="number" min="0" max="100">
@@ -1031,8 +1036,11 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     </div>
     <p class="settings-hint" style="margin-top:10px">Bereiche: <span class="dot dot-green"></span>Grün ≥ Grün-Wert &nbsp;·&nbsp; <span class="dot dot-yellow"></span>Gelb ≥ Gelb-Wert &nbsp;·&nbsp; <span class="dot dot-orange"></span>Orange ≥ Orange-Wert &nbsp;·&nbsp; <span class="dot dot-red"></span>Rot = Offline. Änderungen werden sofort auf der WiFi-Mesh-Seite übernommen.</p>
   </div>
-  <button class="btn" onclick="saveSettings()">Einstellungen speichern</button>
-  <span id="settings-save-lbl" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Gespeichert</span>
+
+  <div style="margin-top:20px">
+    <button class="btn" onclick="saveSettings()">Einstellungen speichern</button>
+    <span id="settings-save-lbl" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Gespeichert</span>
+  </div>
 </div>
 
 <!-- ═══ GERÄT DETAIL ══════════════════════════════════════════════════════════ -->
@@ -1281,6 +1289,13 @@ function setDevLocFilter(v)  { devLocFilter  = v; renderDevices(); }
 function setMeshLocFilter(v) { meshLocFilter = v; renderMesh(); }
 function setL2tpLocFilter(v) { l2tpLocFilter = v; renderL2tp(); }
 function setTopoLocFilter(v) { topoLocFilter = v; buildTopoFromStore(); }
+
+function showCfgTab(name) {
+  ['snmp','import','rssi'].forEach(t => {
+    q('cfgtab-'+t).classList.toggle('active', t===name);
+    q('cfgpanel-'+t).classList.toggle('active', t===name);
+  });
+}
 
 function onSnmpVersionChange() {
   const v3 = q('cfg-snmp-version').value === '3';
