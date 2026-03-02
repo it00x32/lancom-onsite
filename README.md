@@ -221,4 +221,6 @@ Alle Daten liegen unter `data/` im Projektverzeichnis (nicht im Git-Repository):
 
 ## Lizenz
 
-MIT
+MIT – siehe [LICENSE](LICENSE)
+
+> Die Software wird ohne jegliche Gewährleistung bereitgestellt. Der Autor übernimmt keine Haftung für Schäden, die durch die Nutzung entstehen. Produktnamen wie LCOS, LCOS LX, LCOS SX, LCOS FX sind Eigentum der jeweiligen Hersteller. Der Autor steht in keiner Verbindung zu LANCOM Systems GmbH.
