@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * LANCOM OnSite – lokaler SNMP-Server
+ * OnSite – lokaler SNMP-Server
  * Keine npm-Abhängigkeiten. Erfordert snmpwalk / snmpbulkwalk auf dem System.
  * Start: node server.js [port]
  */
@@ -990,7 +990,7 @@ function runSnmpSet(host, community, version, oid, type, value, timeout = 8000) 
   });
 }
 
-function detectLancomOs(sysDescr, sysObjectId) {
+function detectDeviceOs(sysDescr, sysObjectId) {
   const desc = (sysDescr || '').toUpperCase();
   const { osCriteria } = readCriteria();
   for (const rule of osCriteria) {
@@ -1030,7 +1030,7 @@ async function scanHost(host, community, version) {
     if (/\.2356\.14\.1\.1\.1\.13\.0\s*=/.test(line)) { const v = snmpVal(line.split('=').slice(1).join('=')); if (v && !v.includes('No Such')) serial = v; }
   });
 
-  const os = detectLancomOs(sysDescr, sysObjectId);
+  const os = detectDeviceOs(sysDescr, sysObjectId);
   if (!os) return null;
 
   return { ip: host, sysName, sysDescr, sysLocation, os, mac, serial };
@@ -1401,6 +1401,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`LANCOM OnSite läuft auf http://localhost:${PORT}`);
+  console.log(`OnSite läuft auf http://localhost:${PORT}`);
   console.log('Voraussetzung: snmpwalk / snmpbulkwalk muss installiert sein');
 });
