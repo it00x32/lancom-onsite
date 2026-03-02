@@ -15,6 +15,10 @@ const { spawn } = require('child_process');
 const PORT        = parseInt(process.argv[2] || process.env.PORT || '3002', 10);
 const APP_VERSION = '0.7-beta';
 
+// PKG-Binary-Erkennung: beschreibbare Dateien neben der Binary, nicht im Snapshot
+const IS_PKG  = !!process.pkg;
+const BASE_DIR = IS_PKG ? path.dirname(process.execPath) : __dirname;
+
 // ── Statische Assets ──────────────────────────────────────────────────────────
 
 const STATIC_FILES = {
@@ -30,7 +34,7 @@ function sendJson(req, res, statusCode, obj) {
 
 // ── Datenpersistenz ───────────────────────────────────────────────────────────
 
-const DATA_DIR       = path.join(__dirname, 'data');
+const DATA_DIR       = path.join(BASE_DIR, 'data');
 const SETTINGS_FILE  = path.join(DATA_DIR, 'settings.json');
 const DEVICES_FILE   = path.join(DATA_DIR, 'devices.json');
 const CRITERIA_FILE  = path.join(DATA_DIR, 'criteria.json');
@@ -41,7 +45,7 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // ── Lizenz-System ──────────────────────────────────────────────────────────────
 
-const TRIAL_DAYS = 30;
+const TRIAL_MINUTES = 30;
 
 const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA27gAr8vOWQ+Fa2QLxMzj
@@ -82,14 +86,16 @@ function validateLicense() {
       return { status: 'active', customer: lic.customer, email: lic.email, issuedAt: lic.issuedAt, expiresAt: lic.expiresAt, daysLeft };
     } catch { return { status: 'invalid', message: 'Lizenz-Datei fehlerhaft' }; }
   }
+  // Keine Lizenz nach explizitem Entfernen
+  const trial = getTrialInfo();
+  if (trial.removed) return { status: 'none', message: 'Keine Lizenz installiert' };
   // Trial-Modus
-  const trial    = getTrialInfo();
-  const start    = new Date(trial.firstRun);
-  const now      = new Date();
-  const elapsed  = Math.floor((now - start) / 86400000);
-  const daysLeft = Math.max(0, TRIAL_DAYS - elapsed);
-  if (daysLeft <= 0) return { status: 'trial_expired', daysLeft: 0, message: `Trial-Zeitraum (${TRIAL_DAYS} Tage) abgelaufen` };
-  return { status: 'trial', daysLeft, trialStart: trial.firstRun, message: `Trial — noch ${daysLeft} Tag${daysLeft !== 1 ? 'e' : ''}` };
+  const start       = new Date(trial.firstRun);
+  const now         = new Date();
+  const elapsed     = Math.floor((now - start) / 60000);
+  const minutesLeft = Math.max(0, TRIAL_MINUTES - elapsed);
+  if (minutesLeft <= 0) return { status: 'trial_expired', minutesLeft: 0, message: `Trial-Zeitraum (${TRIAL_MINUTES} Minuten) abgelaufen` };
+  return { status: 'trial', minutesLeft, trialStart: trial.firstRun, message: `Trial — noch ${minutesLeft} Minute${minutesLeft !== 1 ? 'n' : ''}` };
 }
 
 const DEFAULT_SDN = {
@@ -1101,6 +1107,17 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
+  // ── Lizenzsperre ──────────────────────────────────────────────────────────
+  const ALLOWED_WITHOUT_LICENSE = ['/api/license', '/api/version', '/', '/index.html', '/app.js', '/styles.css'];
+  if (req.url.startsWith('/api/') && !ALLOWED_WITHOUT_LICENSE.includes(req.url)) {
+    const lic = validateLicense();
+    if (lic.status !== 'active' && lic.status !== 'trial') {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Keine gültige Lizenz', status: lic.status }));
+      return;
+    }
+  }
+
   // ── REST-API: Settings & Devices & LMC ────────────────────────────────────
 
   if (req.url === '/api/sdn') {
@@ -1144,6 +1161,8 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'DELETE') {
       try { fs.unlinkSync(LICENSE_FILE); } catch {}
+      const trial = getTrialInfo();
+      fs.writeFileSync(TRIAL_FILE, JSON.stringify({ ...trial, removed: true }));
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(validateLicense())); return;
     }
@@ -1220,7 +1239,7 @@ const server = http.createServer(async (req, res) => {
     if (!os || !file || file.includes('..') || os.includes('..')) {
       res.writeHead(400); res.end(JSON.stringify({ error: 'Ungültige Parameter' })); return;
     }
-    const filePath = path.join(__dirname, 'addins', os, file);
+    const filePath = path.join(BASE_DIR, 'addins', os, file);
     try {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       sendJson(req, res, 200, data);
@@ -1235,8 +1254,8 @@ const server = http.createServer(async (req, res) => {
       const os  = params.get('os');
       const file = params.get('file');
       if (!os || !file) return sendJson(req, res, 400, { error: 'os und file erforderlich' });
-      const target = path.join(__dirname, 'addins', os, file);
-      if (!target.startsWith(path.join(__dirname, 'addins'))) return sendJson(req, res, 400, { error: 'Ungültiger Pfad' });
+      const target = path.join(BASE_DIR, 'addins', os, file);
+      if (!target.startsWith(path.join(BASE_DIR, 'addins'))) return sendJson(req, res, 400, { error: 'Ungültiger Pfad' });
       fs.unlinkSync(target);
       return sendJson(req, res, 200, { ok: true });
     } catch(e) { return sendJson(req, res, 500, { error: e.message }); }
@@ -1250,12 +1269,12 @@ const server = http.createServer(async (req, res) => {
         if (!os || !filename || filename.includes('..') || os.includes('..') || (originalOs||'').includes('..'))
           throw new Error('Ungültige Parameter');
         if (!filename.endsWith('.json')) throw new Error('Nur .json Dateien erlaubt');
-        const targetDir  = path.join(__dirname, 'addins', os);
-        const targetFile = path.join(__dirname, 'addins', os, filename);
+        const targetDir  = path.join(BASE_DIR, 'addins', os);
+        const targetFile = path.join(BASE_DIR, 'addins', os, filename);
         fs.mkdirSync(targetDir, { recursive: true });
         // Bei OS-Wechsel: alte Datei löschen
         if (originalOs && originalOs !== os) {
-          const sourceFile = path.join(__dirname, 'addins', originalOs, filename);
+          const sourceFile = path.join(BASE_DIR, 'addins', originalOs, filename);
           try { fs.unlinkSync(sourceFile); } catch { /* ignorieren falls nicht vorhanden */ }
         }
         fs.writeFileSync(targetFile, JSON.stringify({ ...data, os }, null, 2), 'utf8');
@@ -1265,7 +1284,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && req.url === '/api/addins') {
-    const addinsDir = path.join(__dirname, 'addins');
+    const addinsDir = path.join(BASE_DIR, 'addins');
     const osFolders = ['LCOS', 'LCOS LX', 'LCOS SX 3', 'LCOS SX 4', 'LCOS SX 5', 'LCOS FX'];
     const result = [];
     for (const os of osFolders) {
