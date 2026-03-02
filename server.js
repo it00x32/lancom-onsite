@@ -34,7 +34,62 @@ const SETTINGS_FILE  = path.join(DATA_DIR, 'settings.json');
 const DEVICES_FILE   = path.join(DATA_DIR, 'devices.json');
 const CRITERIA_FILE  = path.join(DATA_DIR, 'criteria.json');
 const SDN_FILE       = path.join(DATA_DIR, 'sdn.json');
+const LICENSE_FILE   = path.join(DATA_DIR, 'license.json');
+const TRIAL_FILE     = path.join(DATA_DIR, 'trial.json');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// ── Lizenz-System ──────────────────────────────────────────────────────────────
+
+const TRIAL_DAYS = 30;
+
+const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA27gAr8vOWQ+Fa2QLxMzj
+fnyFbqrE4OyyeD2rkWbbkWMr74/imZLdevq2pn7s907kapomw93RcbCCgG22tAlL
+EbM+kx7IHHamv44z3jJXtZSIcExNCcThcq30CuhLnLIG5KZeouulIsdwCJHdZQej
+TipHXNVxFALO5rmfELhpCnuSLd2WVwf7qjmGu1eijkTVUFnrgD/HVtRTO7F72m4S
+abzZQ0vGvkl5lnHfkR4mx5xBvFMTJzBjhKm8frzFIn2+M4ZNLXMfxUoCuvxy6Hop
+u9TsEodjQht1P6BGjJ0wolWFPakok57ffC79GBLi+AYPWEvlKTyei4N5b/EaMruy
+WwIDAQAB
+-----END PUBLIC KEY-----`;
+
+function getTrialInfo() {
+  try {
+    if (!fs.existsSync(TRIAL_FILE)) {
+      const data = { firstRun: new Date().toISOString() };
+      fs.writeFileSync(TRIAL_FILE, JSON.stringify(data));
+      return data;
+    }
+    return JSON.parse(fs.readFileSync(TRIAL_FILE, 'utf8'));
+  } catch { return { firstRun: new Date().toISOString() }; }
+}
+
+function validateLicense() {
+  // Lizenz-Datei prüfen
+  if (fs.existsSync(LICENSE_FILE)) {
+    try {
+      const lic = JSON.parse(fs.readFileSync(LICENSE_FILE, 'utf8'));
+      const { signature, ...payload } = lic;
+      const data = JSON.stringify(payload, Object.keys(payload).sort());
+      const verify = require('crypto').createVerify('SHA256');
+      verify.update(data);
+      const valid = verify.verify(PUBLIC_KEY, signature, 'base64');
+      if (!valid) return { status: 'invalid', message: 'Ungültige Lizenz (Signatur fehlerhaft)' };
+      const now      = new Date();
+      const expires  = new Date(lic.expiresAt);
+      if (now > expires) return { status: 'expired', customer: lic.customer, email: lic.email, expiresAt: lic.expiresAt, message: 'Lizenz abgelaufen' };
+      const daysLeft = Math.ceil((expires - now) / 86400000);
+      return { status: 'active', customer: lic.customer, email: lic.email, issuedAt: lic.issuedAt, expiresAt: lic.expiresAt, daysLeft };
+    } catch { return { status: 'invalid', message: 'Lizenz-Datei fehlerhaft' }; }
+  }
+  // Trial-Modus
+  const trial    = getTrialInfo();
+  const start    = new Date(trial.firstRun);
+  const now      = new Date();
+  const elapsed  = Math.floor((now - start) / 86400000);
+  const daysLeft = Math.max(0, TRIAL_DAYS - elapsed);
+  if (daysLeft <= 0) return { status: 'trial_expired', daysLeft: 0, message: `Trial-Zeitraum (${TRIAL_DAYS} Tage) abgelaufen` };
+  return { status: 'trial', daysLeft, trialStart: trial.firstRun, message: `Trial — noch ${daysLeft} Tag${daysLeft !== 1 ? 'e' : ''}` };
+}
 
 const DEFAULT_SDN = {
   vlans: [{ name: 'Management', vlanId: 1, isManagement: true }],
@@ -1058,6 +1113,38 @@ const server = http.createServer(async (req, res) => {
         try { writeSdn(JSON.parse(b)); res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
         catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
       }); return;
+    }
+  }
+
+  if (req.url === '/api/license') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(validateLicense())); return;
+    }
+    if (req.method === 'POST') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try {
+          const lic = JSON.parse(b);
+          if (!lic.signature || !lic.customer || !lic.expiresAt) throw new Error('Fehlende Felder');
+          const { signature, ...payload } = lic;
+          const data = JSON.stringify(payload, Object.keys(payload).sort());
+          const verify = require('crypto').createVerify('SHA256');
+          verify.update(data);
+          if (!verify.verify(PUBLIC_KEY, signature, 'base64')) throw new Error('Ungültige Signatur');
+          fs.writeFileSync(LICENSE_FILE, JSON.stringify(lic, null, 2));
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(validateLicense()));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'invalid', message: e.message }));
+        }
+      }); return;
+    }
+    if (req.method === 'DELETE') {
+      try { fs.unlinkSync(LICENSE_FILE); } catch {}
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(validateLicense())); return;
     }
   }
 
