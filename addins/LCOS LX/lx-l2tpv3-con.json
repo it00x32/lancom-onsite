@@ -1,0 +1,12 @@
+{
+  "name": "LX-L2TPv3-CON",
+  "description": "IMPORT OnSite",
+  "lcos": false,
+  "lcosLx": true,
+  "swos": false,
+  "lcosSxSdk4": false,
+  "lcosSxXs": false,
+  "lcosFx": false,
+  "script": "exports.main = function (config, context) {\n    // Dein Code hier\n};",
+  "os": "LCOS LX"
+}

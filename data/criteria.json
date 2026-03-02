@@ -1,0 +1,66 @@
+{
+  "osCriteria": [
+    {
+      "os": "LCOS LX",
+      "match": [
+        "LCOS LX",
+        "LCOS-LX",
+        "LX-",
+        "LW-",
+        "OW-",
+        "OX-"
+      ]
+    },
+    {
+      "os": "LCOS FX",
+      "match": [
+        "LCOS FX",
+        "LCOS-FX"
+      ]
+    },
+    {
+      "os": "LCOS SX 3",
+      "match": [
+        "LCOS SX 3.",
+        "LCOS-SX 3.",
+        "GS-2"
+      ]
+    },
+    {
+      "os": "LCOS SX 4",
+      "match": [
+        "LCOS SX 4.",
+        "LCOS-SX 4.",
+        "GS-3"
+      ]
+    },
+    {
+      "os": "LCOS SX 5",
+      "match": [
+        "LCOS SX 5.",
+        "LCOS-SX 5."
+      ]
+    },
+    {
+      "os": "LCOS",
+      "match": [
+        "LCOS",
+        "LN-"
+      ]
+    }
+  ],
+  "typeCriteria": [
+    {
+      "type": "Access Point",
+      "keywords": [
+        "OAP",
+        "IAP",
+        "LN"
+      ]
+    },
+    {
+      "type": "Router",
+      "keywords": []
+    }
+  ]
+}

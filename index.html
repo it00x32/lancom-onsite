@@ -7,690 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  /* Backgrounds */
-  --bg:      #f0f4f8;
-  --bg2:     #ffffff;
-  --bg3:     #e8eef4;
-  --bg4:     #dce6ef;
-  --border:  rgba(0,40,85,.14);
-  --border2: rgba(0,40,85,.07);
-
-  /* Brand colours */
-  --cyan:    #004c97;
-  --cyan2:   #003875;
-  --green:   #1a8a3e;
-  --green2:  #146b30;
-  --red:     #d32f2f;
-  --red2:    #b71c1c;
-  --yellow:  #d97706;
-  --orange:  #c2410c;
-  --blue:    #004c97;
-  --blue2:   #003875;
-  --accent:  #004c97;
-
-  /* Text */
-  --text:    #1a2b3c;
-  --text2:   #4a6478;
-  --text3:   #8aa0b8;
-  --radius:  4px;
-
-  /* Fonts */
-  --font:    'DM Sans', sans-serif;
-  --mono:    'JetBrains Mono', 'Courier New', monospace;
-  --display: 'DM Sans', sans-serif;
-
-  /* Theme helpers */
-  --btn-text:   #ffffff;
-  --btn-hover:  #0060c0;
-  --glow:       rgba(0,76,151,.22);
-  --glow-hover: rgba(0,76,151,.42);
-  --glow-sm:    rgba(0,76,151,.1);
-  --glow-focus: rgba(0,76,151,.08);
-  --focus-ring: rgba(0,76,151,.4);
-
-  /* Header */
-  --header-bg1:    #002855;
-  --header-bg2:    #001f40;
-  --header-accent: #0060c0;
-  --header-logo:   #ffffff;
-  --header-sub:    rgba(255,255,255,.55);
-  --signal-color:  rgba(255,255,255,.7);
-
-  /* Body gradient */
-  --body-grad1: rgba(0,76,151,.06);
-  --body-grad2: rgba(0,76,151,.03);
-  --tab-bg:     rgba(232,238,244,.98);
-}
-
-[data-theme="dark"] {
-  /* Deep navy — darkened from LANCOM brand #002855 */
-  --bg:      #0a1628;
-  --bg2:     #0f1f38;
-  --bg3:     #162844;
-  --bg4:     #1c3152;
-  --border:  rgba(255,255,255,.1);
-  --border2: rgba(255,255,255,.055);
-
-  /* LANCOM blue adapted for dark backgrounds */
-  --cyan:    #4da6ff;
-  --cyan2:   #2e8fe8;
-  --green:   #34d97b;
-  --green2:  #28b065;
-  --red:     #f05568;
-  --red2:    #d43350;
-  --yellow:  #fbbf24;
-  --orange:  #fb923c;
-  --blue:    #4da6ff;
-  --blue2:   #2e8fe8;
-  --accent:  #4da6ff;
-
-  --text:    #e8f0f8;
-  --text2:   #7ea8c8;
-  --text3:   #3d6485;
-
-  /* Same fonts as light mode — consistent brand identity */
-  --font:    'DM Sans', sans-serif;
-  --mono:    'JetBrains Mono', 'Courier New', monospace;
-  --display: 'DM Sans', sans-serif;
-
-  --btn-text:   #ffffff;
-  --btn-hover:  #6db8ff;
-  --glow:       rgba(77,166,255,.25);
-  --glow-hover: rgba(77,166,255,.45);
-  --glow-sm:    rgba(77,166,255,.12);
-  --glow-focus: rgba(77,166,255,.08);
-  --focus-ring: rgba(77,166,255,.45);
-
-  /* Header: deeper navy than bg */
-  --header-bg1:    #071220;
-  --header-bg2:    #04101b;
-  --header-accent: rgba(77,166,255,.25);
-  --header-logo:   #ffffff;
-  --header-sub:    rgba(255,255,255,.5);
-  --signal-color:  rgba(255,255,255,.65);
-
-  --body-grad1: rgba(77,166,255,.05);
-  --body-grad2: rgba(77,166,255,.025);
-  --tab-bg:     rgba(15,31,56,.98);
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 14px;
-  height: 100vh;
-  overflow: hidden;
-  background-image:
-    radial-gradient(ellipse 60% 40% at 20% 0%, var(--body-grad1) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 80% 100%, var(--body-grad2) 0%, transparent 50%);
-  transition: background .25s, color .25s;
-  display: flex;
-  flex-direction: column;
-}
-.app-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ── Header ─────────────────────────────────────────────────────────────────── */
-.header {
-  background: linear-gradient(180deg, var(--header-bg1) 0%, var(--header-bg2) 100%);
-  border-bottom: 1px solid var(--header-accent);
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 56px;
-  position: relative;
-  box-shadow: 0 2px 16px rgba(0,0,0,.35);
-}
-.header::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--header-accent) 30%, var(--header-accent) 70%, transparent 100%);
-  opacity: .5;
-}
-.header-logo {
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--header-logo);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.header-logo span {
-  color: var(--header-sub);
-  font-weight: 400;
-  font-size: 18px;
-  letter-spacing: 2px;
-  margin-left: 2px;
-}
-.header-signal {
-  display: flex;
-  gap: 3px;
-  align-items: flex-end;
-  height: 18px;
-  margin-left: 4px;
-}
-.header-signal span {
-  display: block;
-  width: 3px;
-  background: var(--signal-color);
-  border-radius: 1px;
-  opacity: .7;
-  animation: signal-bar 1.4s ease-in-out infinite;
-}
-.header-signal span:nth-child(1) { height: 6px;  animation-delay: 0s; }
-.header-signal span:nth-child(2) { height: 10px; animation-delay: .2s; }
-.header-signal span:nth-child(3) { height: 14px; animation-delay: .4s; }
-.header-signal span:nth-child(4) { height: 18px; animation-delay: .6s; }
-@keyframes signal-bar {
-  0%, 100% { opacity: .25; }
-  50% { opacity: .9; }
-}
-#detail-badge {
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: var(--radius);
-  padding: 4px 12px;
-  font-size: 11px;
-  font-family: var(--mono);
-  color: var(--header-logo);
-  cursor: pointer;
-  display: none;
-  letter-spacing: .5px;
-  transition: all .15s;
-}
-#detail-badge:hover { background: rgba(255,255,255,.18); }
-
-/* ── Theme toggle ────────────────────────────────────────────────────────────── */
-.theme-toggle {
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: var(--radius);
-  color: var(--header-logo);
-  width: 34px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 15px;
-  transition: background .2s, border-color .2s;
-  flex-shrink: 0;
-  line-height: 1;
-}
-.theme-toggle:hover {
-  background: rgba(255,255,255,.22);
-  border-color: rgba(255,255,255,.38);
-}
-
-/* ── Sidebar Nav ─────────────────────────────────────────────────────────────── */
-.tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px 8px;
-  background: var(--tab-bg);
-  border-right: 1px solid var(--border);
-  width: 172px;
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-.tabs::-webkit-scrollbar { width: 0; }
-.tab {
-  padding: 10px 12px;
-  font-family: var(--display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  color: var(--text3);
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  transition: color .2s, background .2s, border-color .2s;
-  white-space: nowrap;
-  position: relative;
-}
-.tab:hover { color: var(--text2); background: var(--bg3); }
-.tab.active {
-  color: var(--cyan);
-  border-left-color: var(--cyan);
-  background: rgba(0,76,151,.07);
-}
-[data-theme="dark"] .tab.active {
-  background: rgba(77,166,255,.1);
-}
-.tab .badge {
-  display: inline-block;
-  background: var(--bg4);
-  color: var(--text3);
-  font-size: 10px;
-  font-family: var(--mono);
-  padding: 1px 5px;
-  border-radius: 2px;
-  margin-left: 5px;
-  border: 1px solid var(--border2);
-}
-.tab.active .badge {
-  background: rgba(0,76,151,.08);
-  color: var(--cyan);
-  border-color: rgba(0,76,151,.25);
-}
-[data-theme="dark"] .tab.active .badge {
-  background: rgba(77,166,255,.12);
-  border-color: rgba(77,166,255,.3);
-}
-#tab-settings {
-  margin-top: auto;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
-}
-
-/* ── Content ─────────────────────────────────────────────────────────────────── */
-.content { padding: 20px 24px; flex: 1; overflow-y: auto; }
-.panel { display: none; }
-.panel.active { display: block; animation: panel-in .2s ease-out; }
-.sub-panel { display: none; }
-.sub-panel.active { display: block; }
-@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-
-/* ── Toolbar ─────────────────────────────────────────────────────────────────── */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border2);
-}
-.toolbar-spacer { flex: 1; }
-
-/* ── Buttons ─────────────────────────────────────────────────────────────────── */
-.btn {
-  background: var(--cyan);
-  color: var(--btn-text);
-  border: none;
-  border-radius: var(--radius);
-  padding: 7px 16px;
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .4px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all .15s;
-  white-space: nowrap;
-  box-shadow: 0 0 16px var(--glow);
-}
-.btn:hover {
-  background: var(--btn-hover);
-  box-shadow: 0 0 24px var(--glow-hover);
-  transform: translateY(-1px);
-}
-.btn:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; }
-.btn-sm { padding: 5px 10px; font-size: 11px; }
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text2);
-  box-shadow: none;
-  font-family: var(--display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .3px;
-  text-transform: uppercase;
-}
-.btn-ghost:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  background: var(--glow-focus);
-  box-shadow: 0 0 10px var(--glow-sm);
-  transform: none;
-}
-.btn-danger {
-  background: transparent;
-  border: 1px solid rgba(211,47,47,.25);
-  color: var(--text3);
-  box-shadow: none;
-  font-family: var(--display);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-[data-theme="dark"] .btn-danger { border-color: rgba(240,85,104,.2); }
-.btn-danger:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: rgba(211,47,47,.06);
-  box-shadow: none;
-  transform: none;
-}
-[data-theme="dark"] .btn-danger:hover { background: rgba(240,85,104,.07); }
-.sep { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
-
-/* ── Filter pills ────────────────────────────────────────────────────────────── */
-.filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
-.fbtn {
-  padding: 4px 12px;
-  border-radius: 2px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text3);
-  font-family: var(--display);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .4px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all .15s;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.fbtn:hover { border-color: var(--text3); color: var(--text2); }
-.fbtn.active { border-color: var(--cyan); color: var(--cyan); background: var(--glow-focus); }
-.fbtn.f-green.active  { border-color: var(--green);  color: var(--green);  background: rgba(26,138,62,.07); }
-.fbtn.f-yellow.active { border-color: var(--yellow); color: var(--yellow); background: rgba(217,119,6,.07); }
-.fbtn.f-orange.active { border-color: var(--orange); color: var(--orange); background: rgba(194,65,12,.07); }
-.fbtn.f-red.active    { border-color: var(--red);    color: var(--red);    background: rgba(211,47,47,.07); }
-.fbtn.f-up.active     { border-color: var(--green);  color: var(--green);  background: rgba(26,138,62,.07); }
-.fbtn.f-down.active   { border-color: var(--red);    color: var(--red);    background: rgba(211,47,47,.07); }
-[data-theme="dark"] .fbtn.f-green.active  { background: rgba(52,217,123,.07); }
-[data-theme="dark"] .fbtn.f-yellow.active { background: rgba(251,191,36,.07); }
-[data-theme="dark"] .fbtn.f-orange.active { background: rgba(251,146,60,.07); }
-[data-theme="dark"] .fbtn.f-red.active    { background: rgba(240,85,104,.07); }
-[data-theme="dark"] .fbtn.f-up.active     { background: rgba(52,217,123,.07); }
-[data-theme="dark"] .fbtn.f-down.active   { background: rgba(240,85,104,.07); }
-
-/* ── Status dots & badges ────────────────────────────────────────────────────── */
-.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-.dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-green 2s ease-in-out infinite; }
-.dot-yellow { background: var(--yellow); }
-.dot-orange { background: var(--orange); }
-.dot-red    { background: var(--red); box-shadow: 0 0 4px rgba(211,47,47,.5); }
-[data-theme="dark"] .dot-red { box-shadow: 0 0 4px rgba(240,85,104,.5); }
-.dot-gray   { background: var(--text3); }
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 4px var(--green); opacity: 1; }
-  50%       { box-shadow: 0 0 10px var(--green), 0 0 20px var(--green); opacity: .85; }
-}
-.badge { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 10px; font-family: var(--mono); font-weight: 500; letter-spacing: .3px; }
-.badge-green  { background: rgba(26,138,62,.1);   color: var(--green);  border: 1px solid rgba(26,138,62,.25); }
-.badge-red    { background: rgba(211,47,47,.1);   color: var(--red);    border: 1px solid rgba(211,47,47,.25); }
-.badge-yellow { background: rgba(217,119,6,.1);   color: var(--yellow); border: 1px solid rgba(217,119,6,.25); }
-.badge-orange { background: rgba(194,65,12,.1);   color: var(--orange); border: 1px solid rgba(194,65,12,.25); }
-.badge-gray   { background: var(--bg3);           color: var(--text3);  border: 1px solid var(--border2); }
-.badge-blue   { background: rgba(0,76,151,.08);   color: var(--cyan);   border: 1px solid rgba(0,76,151,.2); }
-[data-theme="dark"] .badge-green  { background: rgba(52,217,123,.1);  border-color: rgba(52,217,123,.25); }
-[data-theme="dark"] .badge-red    { background: rgba(240,85,104,.1);  border-color: rgba(240,85,104,.25); }
-[data-theme="dark"] .badge-yellow { background: rgba(251,191,36,.1);  border-color: rgba(251,191,36,.25); }
-[data-theme="dark"] .badge-orange { background: rgba(251,146,60,.1);  border-color: rgba(251,146,60,.25); }
-[data-theme="dark"] .badge-blue   { background: rgba(77,166,255,.1);  border-color: rgba(77,166,255,.25); }
-
-/* ── Tables ──────────────────────────────────────────────────────────────────── */
-.table-wrap {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.table-title {
-  padding: 10px 16px;
-  font-family: var(--display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text2);
-  border-bottom: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg3);
-}
-.table-title .cnt {
-  color: var(--cyan);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-}
-table { width: 100%; border-collapse: collapse; }
-th {
-  background: var(--bg3);
-  color: var(--text3);
-  font-family: var(--display);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  padding: 7px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border2);
-  white-space: nowrap;
-}
-th.sortable { cursor: pointer; user-select: none; }
-th.sortable:hover { color: var(--text2); }
-th.sort-asc::after  { content: ' ▲'; font-size: 8px; color: var(--accent); }
-th.sort-desc::after { content: ' ▼'; font-size: 8px; color: var(--accent); }
-td {
-  padding: 7px 14px;
-  border-bottom: 1px solid var(--border2);
-  font-size: 13px;
-  vertical-align: middle;
-}
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--bg3); }
-[data-theme="dark"] tr:hover td { background: rgba(77,166,255,.04); }
-td.mono { font-family: var(--mono); font-size: 11.5px; }
-
-/* ── Status bar ──────────────────────────────────────────────────────────────── */
-.status-bar {
-  padding: 6px 0;
-  font-size: 11.5px;
-  font-family: var(--mono);
-  color: var(--text3);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 28px;
-  letter-spacing: .2px;
-}
-.status-bar.loading { color: var(--cyan); }
-.status-bar.error   { color: var(--red); }
-.status-bar.ok      { color: var(--green); }
-.spinner {
-  display: inline-block;
-  width: 11px; height: 11px;
-  border: 1.5px solid var(--border);
-  border-top-color: var(--cyan);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  flex-shrink: 0;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Search input ────────────────────────────────────────────────────────────── */
-.search-input {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 6px 12px;
-  font-family: var(--mono);
-  font-size: 12px;
-  outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.search-input:focus {
-  border-color: var(--focus-ring);
-  box-shadow: 0 0 0 3px var(--glow-focus);
-}
-.search-input::placeholder { color: var(--text3); }
-
-/* ── Settings ────────────────────────────────────────────────────────────────── */
-.settings-section {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 16px;
-}
-.settings-section h3 {
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text2);
-  margin-bottom: 16px;
-}
-.settings-grid { display: grid; grid-template-columns: 220px 1fr; gap: 10px 16px; align-items: center; max-width: 520px; }
-.settings-grid label { font-size: 12px; color: var(--text2); }
-.settings-input {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 7px 12px;
-  font-family: var(--mono);
-  font-size: 12px;
-  outline: none;
-  width: 200px;
-  transition: border-color .15s;
-}
-.settings-input:focus { border-color: var(--focus-ring); }
-.settings-hint { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
-
-/* ── Form card (LMC Import) ──────────────────────────────────────────────────── */
-.form-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 16px;
-}
-.form-card h3 {
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--text2);
-  margin-bottom: 14px;
-}
-.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.form-label { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
-.form-input {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 7px 12px;
-  font-family: var(--mono);
-  font-size: 12px;
-  outline: none;
-  min-width: 200px;
-  transition: border-color .15s;
-}
-.form-input:focus { border-color: var(--focus-ring); }
-.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); cursor: pointer; }
-.checkbox-label input { accent-color: var(--cyan); }
-
-/* ── Info cards ──────────────────────────────────────────────────────────────── */
-.info-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 10px; margin-bottom: 20px; }
-.info-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
-}
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 2px; height: 100%;
-  background: var(--cyan);
-  opacity: .3;
-}
-.info-card .label {
-  font-family: var(--display);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  margin-bottom: 4px;
-}
-.info-card .value { font-size: 14px; font-weight: 500; word-break: break-all; color: var(--text); }
-.info-card .value.mono { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
-
-/* ── Sub-tabs (device detail) ────────────────────────────────────────────────── */
-.sub-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border2); }
-.stab {
-  padding: 8px 16px;
-  font-family: var(--display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-  color: var(--text3);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all .15s;
-  white-space: nowrap;
-}
-.stab:hover { color: var(--text2); }
-.stab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-[data-theme="dark"] .stab.active { text-shadow: none; }
-
-/* ── Progress ────────────────────────────────────────────────────────────────── */
-.progress-track { background: var(--bg3); border-radius: 2px; height: 4px; overflow: hidden; }
-.progress-fill { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); height: 100%; border-radius: 2px; transition: width .2s; }
-
-/* ── Empty state ─────────────────────────────────────────────────────────────── */
-.empty { color: var(--text3); text-align: center; padding: 48px 20px; font-size: 13px; font-family: var(--mono); letter-spacing: .2px; }
-.empty .icon { font-size: 28px; margin-bottom: 10px; opacity: .3; }
-
-/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border2); }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(77,166,255,.18); }
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(77,166,255,.32); }
-
-/* ── Topology ────────────────────────────────────────────────────────────────── */
-#topo-svg { background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--body-grad1) 0%, transparent 70%); }
-.topo-node:hover .topo-node-rect { stroke-width: 2px !important; filter: drop-shadow(0 0 8px var(--glow-sm)); }
-.topo-select {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: 5px 10px;
-  font-family: var(--display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .3px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color .15s;
-}
-.topo-select:focus { border-color: var(--focus-ring); }
-.topo-select option { background: var(--bg3); }
-</style>
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
@@ -699,20 +16,22 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
   <div class="header-signal"><span></span><span></span><span></span><span></span></div>
   <div style="flex:1"></div>
   <div id="detail-badge" onclick="showTab('detail')"></div>
+  <span class="version-tag" id="version-tag">v1.0.0</span>
   <button class="theme-toggle" onclick="toggleTheme()" title="Tag / Nacht Modus" id="theme-toggle-btn">☀️</button>
 </div>
 
 <div class="app-body">
 <div class="tabs" id="main-tabs">
   <div class="tab active" onclick="showTab('devices')" id="tab-devices"> Geräte <span class="badge" id="badge-devices"></span></div>
-  <div class="tab"        onclick="showTab('mesh')"    id="tab-mesh">    WiFi Mesh <span class="badge" id="badge-mesh"></span></div>
+  <div class="tab"        onclick="showTab('mesh')"    id="tab-mesh">    WiFi WDS <span class="badge" id="badge-mesh"></span></div>
   <div class="tab"        onclick="showTab('l2tp')"    id="tab-l2tp">    L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
   <div class="tab"        onclick="showTab('topology')" id="tab-topology">Netzwerkplan</div>
-  <div class="tab"        onclick="showTab('scanner')" id="tab-scanner"> Scanner</div>
-  <div class="tab"        onclick="showTab('lmc')"     id="tab-lmc">     LMC Import</div>
   <div class="tab" style="display:none" onclick="showTab('detail')" id="tab-detail">
     <span id="tab-detail-label">Gerät</span>
   </div>
+  <div class="tab"        onclick="showTab('sdn')"     id="tab-sdn">     SDN</div>
+  <div class="tab"        onclick="showTab('scanner')" id="tab-scanner"> Scanner</div>
+  <div class="tab"        onclick="showTab('lmc')"     id="tab-lmc">     Cloud Sync</div>
   <div class="tab"        onclick="showTab('settings')"id="tab-settings">Einstellungen</div>
 </div>
 
@@ -874,6 +193,38 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
   </div>
 </div>
 
+<!-- ═══ SDN ══════════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-sdn">
+  <div class="sub-tabs">
+    <div class="stab active" onclick="showSdnTab('vlan')" id="sdntab-vlan">VLAN</div>
+  </div>
+
+  <!-- VLAN -->
+  <div class="sub-panel active settings-section" id="sdnpanel-vlan">
+    <div class="toolbar" style="margin-bottom:14px">
+      <button class="btn btn-sm" onclick="addVlan()">+ Hinzufügen</button>
+      <button class="btn btn-sm" onclick="saveVlans()">Speichern</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-title">VLANs</div>
+      <div style="overflow-x:auto">
+        <table id="tbl-vlan">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>VLAN ID</th>
+              <th style="text-align:center">Management VLAN</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="vlan-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="vlan-status" class="status-bar" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+
 <!-- ═══ SCANNER ══════════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-scanner">
   <div class="toolbar">
@@ -904,8 +255,8 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div class="table-title">Gefundene LANCOM-Geräte <span class="cnt" id="cnt-scan"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-scan">
-        <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Beschreibung</th><th></th></tr></thead>
-        <tbody><tr><td colspan="7" class="empty">Noch kein Scan gestartet</td></tr></tbody>
+        <thead><tr><th>IP-Adresse</th><th>Gerätename</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Seriennummer</th><th>Beschreibung</th><th></th></tr></thead>
+        <tbody><tr><td colspan="8" class="empty">Noch kein Scan gestartet</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -913,7 +264,15 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
 
 <!-- ═══ LMC IMPORT ══════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-lmc">
-  <div class="form-card">
+
+  <!-- Verbindungsstatus-Leiste (sichtbar nach Projektauswahl) -->
+  <div id="lmc-conn-bar" style="display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:10px">
+    <span class="dot dot-green"></span>
+    <span id="lmc-conn-text" style="flex:1;font-size:13px"></span>
+    <button class="btn btn-sm btn-ghost" onclick="lmcDisconnect()">Neu verbinden</button>
+  </div>
+
+  <div class="form-card" id="lmc-connect-card">
     <h3>LMC API Verbindung</h3>
     <div class="form-row">
       <span class="form-label">API Token</span>
@@ -933,18 +292,58 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
         <option value="">– bitte wählen –</option>
       </select>
     </div>
-    <button class="btn btn-sm" id="btn-lmc-sync" onclick="lmcSync()" disabled>Geräte synchronisieren</button>
   </div>
 
-  <div id="lmc-status" class="status-bar"></div>
+  <div id="lmc-tabs-wrap" style="display:none">
+    <div class="sub-tabs">
+      <div class="stab active" onclick="showLmcTab('sync')"   id="lmctab-sync">Geräte synchronisieren</div>
+      <div class="stab"        onclick="showLmcTab('addins')" id="lmctab-addins">Add-ins</div>
+    </div>
 
-  <div class="table-wrap" id="lmc-result-wrap" style="display:none">
-    <div class="table-title">Synchronisierte Geräte <span class="cnt" id="cnt-lmc"></span></div>
-    <div style="overflow-x:auto">
-      <table id="tbl-lmc">
-        <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Status</th><th>Import</th></tr></thead>
-        <tbody></tbody>
-      </table>
+    <!-- Tab: Geräte synchronisieren -->
+    <div class="sub-panel active" id="lmcpanel-sync">
+      <div style="padding:12px 0 4px">
+        <button class="btn btn-sm" id="btn-lmc-sync" onclick="lmcSync()">Synchronisieren</button>
+      </div>
+      <div id="lmc-status" class="status-bar"></div>
+      <div class="table-wrap" id="lmc-result-wrap" style="display:none">
+        <div class="table-title" style="display:flex;align-items:center;gap:12px">
+          <span>Gefundene Geräte <span class="cnt" id="cnt-lmc"></span></span>
+          <span id="sep-lmc-save" style="display:none">|</span>
+          <button class="btn btn-sm" id="btn-lmc-save-all" style="display:none" onclick="saveLmcResults()">Alle speichern</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="tbl-lmc">
+            <thead><tr><th>Gerätename</th><th>IP-Adresse</th><th>Modell</th><th>Seriennummer</th><th>Betriebssystem</th><th>Typ</th><th>Standort</th><th>Status</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Add-ins -->
+    <div class="sub-panel" id="lmcpanel-addins">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0 6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="createAddin()">+ Add-in erstellen</button>
+        <button class="btn btn-sm" id="btn-upload-all-addins" onclick="uploadAllAddins()">Alle hochladen</button>
+        <button class="btn btn-sm btn-ghost" onclick="loadAddins()">&#8635; Aktualisieren</button>
+        <span style="font-size:12px;color:var(--text3);margin-left:auto">Add-ins aus <code>addins/&lt;OS&gt;/*.json</code></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap">
+        <input id="addin-search" type="search" placeholder="&#128269; Suchen…" oninput="setAddinSearch(this.value)"
+          style="padding:5px 10px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);width:200px;outline:none">
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">OS:</span>
+        <div id="addin-os-filters" style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-sm addin-os-btn active" onclick="setAddinFilterOs('')">Alle</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS')">LCOS</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS LX')">LCOS LX</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS SX 3')">SX 3</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS SX 4')">SX 4</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS SX 5')">SX 5</button>
+          <button class="btn btn-sm addin-os-btn" onclick="setAddinFilterOs('LCOS FX')">FX</button>
+        </div>
+      </div>
+      <div id="addins-list"></div>
     </div>
   </div>
 </div>
@@ -1017,11 +416,67 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
 
   <!-- Import-Filter -->
   <div class="sub-panel settings-section" id="cfgpanel-import">
-    <div class="settings-grid">
-      <label>Modell-Filter</label>
-      <input class="settings-input" id="cfg-model-filter" type="text" placeholder="leer = alle, z.B. GS-2310, 1780, IAP">
+
+    <!-- Checkboxen -->
+    <div style="display:flex;gap:48px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">Betriebssystem</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-0"> LCOS</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-1"> LCOS LX</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-2"> LCOS SX 3</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-3"> LCOS SX 4</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-4"> LCOS SX 5</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-os-5"> LCOS FX</label>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">Gerätetyp</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label class="checkbox-label"><input type="checkbox" id="cfg-type-0"> Router</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-type-1"> Access Point</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-type-2"> Switch</label>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-type-3"> Firewall</label>
+        </div>
+      </div>
     </div>
-    <p class="settings-hint" style="margin-top:8px">Komma-getrennte Begriffe. Ein Gerät wird importiert wenn sein Modellname einen der Begriffe enthält (Groß/Kleinschreibung egal). Gilt für Scanner und LMC Import. „Alle speichern" überspringt nicht-passende Geräte – einzeln können sie trotzdem gespeichert werden.</p>
+    <p class="settings-hint" style="margin-top:10px">Nichts markiert = keine Einschränkung (alle importieren).</p>
+
+    <!-- Erkennungskriterien -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px">Erkennungskriterien</div>
+      <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Betriebssystem — Reihenfolge beachten, erster Treffer gewinnt</div>
+          <table class="crit-table">
+            <thead><tr>
+              <th style="width:110px">OS-Wert</th>
+              <th>Match-Keywords in sysDescr / fwLabel (kommagetrennt)</th>
+            </tr></thead>
+            <tbody id="os-crit-body"></tbody>
+          </table>
+        </div>
+
+        <div style="flex:1;min-width:320px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Gerätetyp (nur für OS=LCOS) — LCOS LX=AP, LCOS SX=Switch, LCOS FX=Firewall sind fix</div>
+          <table class="crit-table">
+            <thead><tr>
+              <th style="width:110px">Gerätetyp</th>
+              <th>sysDescr-Keywords (kommagetrennt, leer = immer)</th>
+            </tr></thead>
+            <tbody id="type-crit-body"></tbody>
+          </table>
+        </div>
+
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
+        <button class="btn" onclick="saveCriteria()">Kriterien speichern</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetCriteria()">Zurücksetzen</button>
+        <span id="crit-save-lbl" style="font-size:12px;color:var(--green);display:none">✓ Gespeichert</span>
+      </div>
+    </div>
+
   </div>
 
   <!-- RSSI -->
@@ -1065,6 +520,11 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
     <div class="stab"        onclick="showStab('interfaces')"id="stab-interfaces">Interfaces</div>
     <div class="stab"        onclick="showStab('mac')"       id="stab-mac">       Verbundene Geräte</div>
     <div class="stab"        onclick="showStab('wlan')"      id="stab-wlan">      WLAN-Clients</div>
+    <div class="stab"        onclick="showStab('vlan-detail')"id="stab-vlan-detail" style="display:none">VLAN</div>
+    <div class="stab"        onclick="showStab('ports')"     id="stab-ports"      style="display:none">Port Einstellungen</div>
+    <div class="stab"        onclick="showStab('stp')"       id="stab-stp"        style="display:none">STP</div>
+    <div class="stab"        onclick="showStab('poe')"       id="stab-poe"        style="display:none">PoE</div>
+    <div class="stab"        onclick="showStab('loop')"      id="stab-loop"       style="display:none">Loop Protection</div>
     <div class="stab"        onclick="showStab('lldp')"      id="stab-lldp">      LLDP-Nachbarn</div>
   </div>
   <!-- System -->
@@ -1093,8 +553,58 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
   <div class="sub-panel" id="sub-wlan">
     <div class="table-wrap"><div style="overflow-x:auto">
       <table id="tbl-wlan">
-        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th></tr></thead>
+        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th><th>Signal</th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- VLAN (Switch) -->
+  <div class="sub-panel" id="sub-vlan-detail">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-vlan-detail">
+        <thead><tr><th>VLAN ID</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="3" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- Port Einstellungen (Switch) -->
+  <div class="sub-panel" id="sub-ports">
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-ports">
+        <thead><tr><th>Name</th><th>Beschreibung</th><th>Admin</th><th>Status</th><th>Speed</th><th>PVID</th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- STP (Switch) -->
+  <div class="sub-panel" id="sub-stp">
+    <div id="stp-global" class="info-grid" style="margin-bottom:12px"></div>
+    <div id="stp-controls" style="margin-bottom:8px;display:flex;gap:8px;align-items:center"></div>
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-stp">
+        <thead id="thead-stp"><tr><th>Port</th><th>Status</th><th>Priorität</th><th>Pfadkosten</th><th>Wechsel</th><th></th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- PoE (Switch) -->
+  <div class="sub-panel" id="sub-poe">
+    <div id="poe-global" class="info-grid" style="margin-bottom:12px"></div>
+    <div id="poe-controls" style="margin-bottom:8px;display:flex;gap:8px;align-items:center"></div>
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-poe">
+        <thead><tr><th>Port</th><th>Admin</th><th>Status</th><th>Klasse</th><th></th></tr></thead>
         <tbody><tr><td colspan="5" class="empty">Keine Daten</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+  <!-- Loop Protection (Switch) -->
+  <div class="sub-panel" id="sub-loop">
+    <div id="loop-controls" style="margin-bottom:8px;display:flex;gap:8px;align-items:center"></div>
+    <div class="table-wrap"><div style="overflow-x:auto">
+      <table id="tbl-loop">
+        <thead><tr><th>Port</th><th>STP-Status</th><th></th></tr></thead>
+        <tbody><tr><td colspan="3" class="empty">Keine Daten</td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -1111,2084 +621,59 @@ td.mono { font-family: var(--mono); font-size: 11.5px; }
 
 </div><!-- /content -->
 </div><!-- /app-body -->
-<script>
-// ═══════════════════════════════════════════════════════════════════════════════
-// THEME
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function initTheme() {
-  const saved = localStorage.getItem('lancom_theme') || 'light';
-  applyTheme(saved);
-}
-
-function toggleTheme() {
-  const current = document.documentElement.dataset.theme || 'light';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-}
-
-function applyTheme(theme) {
-  if (theme === 'dark') {
-    document.documentElement.dataset.theme = 'dark';
-    document.getElementById('theme-toggle-btn').textContent = '🌙';
-  } else {
-    delete document.documentElement.dataset.theme;
-    document.getElementById('theme-toggle-btn').textContent = '☀️';
-  }
-  localStorage.setItem('lancom_theme', theme);
-  // Re-render topology SVG so theme-aware colours take effect immediately
-  if (document.getElementById('panel-topology')?.classList.contains('active')) {
-    renderTopoSvg();
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function q(id) { return document.getElementById(id); }
-function h(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function fmtBytes(n) {
-  n = Number(n)||0;
-  if (n < 1024)    return n + ' B';
-  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
-  if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
-  return (n/1073741824).toFixed(2) + ' GB';
-}
-function fmtSpeed(mbps, bps) {
-  if (mbps > 0) return mbps >= 1000 ? (mbps/1000)+'Gbit/s' : mbps+'Mbit/s';
-  const b = Number(bps)||0; if (!b) return '—';
-  return b >= 1e9 ? (b/1e9)+'Gbit/s' : b >= 1e6 ? (b/1e6)+'Mbit/s' : (b/1e3)+'kbit/s';
-}
-function fmtUptime(raw) {
-  if (!raw) return '—';
-  const m = raw.match(/\((\d+)\)/); if (!m) return raw;
-  let s = Math.floor(parseInt(m[1])/100);
-  const d=Math.floor(s/86400); s%=86400; const hh=Math.floor(s/3600); s%=3600; const mm=Math.floor(s/60); s%=60;
-  return (d?d+'d ':'')+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-function fmtDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'});
-}
-function statusBadge(val) {
-  const up = val==='1'||String(val).startsWith('up');
-  return up ? `<span class="dot dot-green"></span><span class="badge badge-green">UP</span>`
-             : `<span class="dot dot-red"></span><span class="badge badge-red">DOWN</span>`;
-}
-function setBadge(id, n) { const el=q('badge-'+id); if(el) el.textContent = n>0?n:''; }
-
-const TYPE_LABELS = {
-  'lx-ap':'Access Point','lcos-ap':'Access Point',
-  'switch':'Switch','router':'Router','firewall':'Firewall','unknown':'Unbekannt'
-};
-const TYPE_BADGE = {
-  'lx-ap':'badge-green','lcos-ap':'badge-blue','switch':'badge-yellow',
-  'router':'badge-gray','firewall':'badge-orange','unknown':'badge-gray'
-};
-
-function detectDeviceType(os, sysDescr) {
-  const desc = ((sysDescr||'') + ' ' + (os||'')).toUpperCase();
-  if (os==='LCOS LX') return 'lx-ap';
-  if (os==='LCOS FX') return 'firewall';
-  if (os==='LCOS SX') return 'switch';
-  if (os==='LCOS') {
-    if (/\b(OAP|IAP|WAP|L-\d\d\d|\d{3}VAP)\b/.test(desc)) return 'lcos-ap';
-    if (/GS\d|SWITCH/.test(desc)) return 'switch';
-    return 'router';
-  }
-  return 'unknown';
-}
-function extractModel(sysDescr) {
-  if (!sysDescr) return '';
-  return sysDescr.split(/[\r\n]/)[0].replace(/LCOS\s+\S+/,'').trim().substring(0,50);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// APP STATE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-let appSettings = {};
-let deviceStore  = {};   // keyed by IP, server-side
-let meshData     = [];   // live WDS data
-let l2tpData     = [];   // live L2TP data
-let meshFilter   = 'all';
-let l2tpFilter   = 'all';
-let devFilter    = 'all';
-let devLocFilter  = 'all';
-let meshLocFilter = 'all';
-let l2tpLocFilter = 'all';
-let topoLocFilter = 'all';
-let meshSort     = { col: null, dir: 1 };
-let l2tpSort     = { col: null, dir: 1 };
-let devSort      = { col: 'ip', dir: 1 };
-let scanResults  = [];
-let scanAbort    = null;
-let scanFoundCnt = 0;
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SETTINGS (server-side)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// ── Sortier-Hilfsfunktionen ────────────────────────────────────────────────────
-function mkTh(label, col, sort, clickFn) {
-  const active = sort.col === col;
-  const cls = active ? (sort.dir === 1 ? 'sortable sort-asc' : 'sortable sort-desc') : 'sortable';
-  return `<th class="${cls}" onclick="${clickFn}('${col}')">${label}</th>`;
-}
-function noSortTh(label) { return `<th>${label}</th>`; }
-
-function applySort(arr, sort, keyFn) {
-  if (!sort.col) return arr;
-  return [...arr].sort((a, b) => {
-    const va = keyFn(a, sort.col), vb = keyFn(b, sort.col);
-    if (va === vb) return 0;
-    return (va < vb ? -1 : 1) * sort.dir;
-  });
-}
-
-function clickSort(sort, col, renderFn) {
-  if (sort.col === col) sort.dir *= -1;
-  else { sort.col = col; sort.dir = 1; }
-  renderFn();
-}
-
-function meshSortClick(col)  { clickSort(meshSort, col, renderMesh); }
-function l2tpSortClick(col)  { clickSort(l2tpSort, col, renderL2tp); }
-function devSortClick(col)   { clickSort(devSort,  col, renderDevices); }
-
-function setDevFilter(f) {
-  devFilter = f;
-  ['all','online','offline'].forEach(k => {
-    const el = q('df-'+k); if (el) el.classList.toggle('active', k === f);
-  });
-  renderDevices();
-}
-
-function getLocations() {
-  const locs = new Set();
-  Object.values(deviceStore).forEach(d => { if (d.location) locs.add(d.location); });
-  return [...locs].sort();
-}
-
-function refreshLocationSelects() {
-  const locs = getLocations();
-  const filterOpts = `<option value="all">Alle Standorte</option>` + locs.map(l => `<option value="${h(l)}">${h(l)}</option>`).join('');
-  const scanOpts   = `<option value="">Kein Standort</option>` + locs.map(l => `<option value="${h(l)}">${h(l)}</option>`).join('');
-  [['dev-loc-filter', filterOpts], ['mesh-loc-filter', filterOpts],
-   ['l2tp-loc-filter', filterOpts], ['topo-loc-filter', filterOpts],
-   ['scan-loc-select', scanOpts]].forEach(([id, opts]) => {
-    const el = q(id); if (!el) return;
-    const cur = el.value; el.innerHTML = opts;
-    if (cur) el.value = cur;
-  });
-}
-
-function matchesLocFilter(d) { return devLocFilter === 'all' || (d.location||'') === devLocFilter; }
-function setDevLocFilter(v)  { devLocFilter  = v; renderDevices(); }
-function setMeshLocFilter(v) { meshLocFilter = v; renderMesh(); }
-function setL2tpLocFilter(v) { l2tpLocFilter = v; renderL2tp(); }
-function setTopoLocFilter(v) { topoLocFilter = v; buildTopoFromStore(); }
-
-function showCfgTab(name) {
-  ['snmp','import','rssi'].forEach(t => {
-    q('cfgtab-'+t).classList.toggle('active', t===name);
-    q('cfgpanel-'+t).classList.toggle('active', t===name);
-  });
-}
-
-function onSnmpVersionChange() {
-  const v3 = q('cfg-snmp-version').value === '3';
-  q('cfg-v3-section').style.display = v3 ? '' : 'none';
-  if (v3) onV3LevelChange();
-}
-function onV3LevelChange() {
-  const lvl = q('cfg-v3-seclevel').value;
-  q('cfg-v3-auth-block').style.display = (lvl === 'authNoPriv' || lvl === 'authPriv') ? '' : 'none';
-  q('cfg-v3-priv-block').style.display = (lvl === 'authPriv') ? '' : 'none';
-}
-
-async function loadSettings() {
-  try {
-    const r = await fetch('/api/settings'); appSettings = await r.json();
-  } catch { appSettings = { snmpReadCommunity:'public', snmpWriteCommunity:'private', snmpVersion:'2c', rssiGreen:80, rssiYellow:50, rssiOrange:0 }; }
-  q('cfg-snmp-read').value    = appSettings.snmpReadCommunity  || 'public';
-  q('cfg-snmp-write').value   = appSettings.snmpWriteCommunity || 'private';
-  q('cfg-snmp-version').value = appSettings.snmpVersion        || '2c';
-  q('cfg-rssi-green').value   = appSettings.rssiGreen  ?? 80;
-  q('cfg-rssi-yellow').value  = appSettings.rssiYellow ?? 50;
-  q('cfg-rssi-orange').value  = appSettings.rssiOrange ?? 0;
-  // SNMPv3
-  q('cfg-v3-secname').value   = appSettings.snmpV3SecurityName  || '';
-  q('cfg-v3-seclevel').value  = appSettings.snmpV3SecurityLevel || 'authPriv';
-  q('cfg-v3-authproto').value = appSettings.snmpV3AuthProtocol  || 'SHA';
-  q('cfg-v3-authpass').value  = appSettings.snmpV3AuthPassword  || '';
-  q('cfg-v3-privproto').value = appSettings.snmpV3PrivProtocol  || 'AES';
-  q('cfg-v3-privpass').value  = appSettings.snmpV3PrivPassword  || '';
-  q('cfg-model-filter').value = appSettings.modelFilter || '';
-  onSnmpVersionChange();
-  if (appSettings.lastScanSubnet) q('scan-subnet').value = appSettings.lastScanSubnet;
-}
-
-async function saveSettings() {
-  appSettings = {
-    ...appSettings,
-    snmpReadCommunity:  q('cfg-snmp-read').value.trim(),
-    snmpWriteCommunity: q('cfg-snmp-write').value.trim(),
-    snmpVersion:        q('cfg-snmp-version').value,
-    rssiGreen:  parseInt(q('cfg-rssi-green').value)  ?? 80,
-    rssiYellow: parseInt(q('cfg-rssi-yellow').value) ?? 50,
-    rssiOrange: parseInt(q('cfg-rssi-orange').value) ?? 0,
-    snmpV3SecurityName:  q('cfg-v3-secname').value.trim(),
-    snmpV3SecurityLevel: q('cfg-v3-seclevel').value,
-    snmpV3AuthProtocol:  q('cfg-v3-authproto').value,
-    snmpV3AuthPassword:  q('cfg-v3-authpass').value,
-    snmpV3PrivProtocol:  q('cfg-v3-privproto').value,
-    snmpV3PrivPassword:  q('cfg-v3-privpass').value,
-    modelFilter: q('cfg-model-filter').value.trim(),
-  };
-  await fetch('/api/settings',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(appSettings) });
-  const lbl = q('settings-save-lbl');
-  lbl.style.display=''; setTimeout(()=>{ lbl.style.display='none'; }, 2500);
-  renderMesh();
-  renderL2tp();
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// DEVICE STORE (server-side)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function rebuildCachedData() {
-  meshData = [];
-  l2tpData = [];
-  Object.values(deviceStore).forEach(d => {
-    if (d.wdsLinks?.length)      meshData.push(...d.wdsLinks);
-    if (d.l2tpEndpoints?.length) l2tpData.push(...d.l2tpEndpoints);
-  });
-}
-
-async function loadDevices() {
-  try { const r = await fetch('/api/devices'); deviceStore = await r.json(); }
-  catch { deviceStore = {}; }
-  rebuildCachedData();
-  refreshLocationSelects();
-  renderDevices();
-  renderMesh();
-  renderL2tp();
-  setBadge('devices', Object.keys(deviceStore).length || 0);
-}
-
-async function saveDevice(dev) {
-  deviceStore[dev.ip] = dev;
-  await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ [dev.ip]: dev }) });
-  refreshLocationSelects();
-  renderDevices();
-  setBadge('devices', Object.keys(deviceStore).length);
-}
-
-async function saveDevices(devMap) {
-  Object.assign(deviceStore, devMap);
-  await fetch('/api/devices',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(devMap) });
-  refreshLocationSelects();
-  renderDevices();
-  setBadge('devices', Object.keys(deviceStore).length);
-}
-
-async function deleteDevice(ip) {
-  delete deviceStore[ip];
-  await fetch('/api/devices',{ method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ ip }) });
-  renderDevices();
-  setBadge('devices', Object.keys(deviceStore).length);
-}
-
-async function clearAllDevices() {
-  if (!confirm('Alle Geräte löschen?')) return;
-  deviceStore = {};
-  meshData = [];
-  l2tpData = [];
-  await fetch('/api/devices',{ method:'DELETE', headers:{'Content-Type':'application/json'}, body:'{}' });
-  renderDevices();
-  renderMesh();
-  renderL2tp();
-  setBadge('devices', 0);
-}
-
-function renderDevices() {
-  const srch = (q('dev-search')?.value||'').toLowerCase();
-  const ipNum = ip => ip.split('.').reduce((s,o) => s*256+parseInt(o), 0);
-
-  let devs = Object.values(deviceStore).filter(d => {
-    if (srch && !(d.name||d.ip||'').toLowerCase().includes(srch) && !d.ip.includes(srch)) return false;
-    if (devFilter === 'online'  && d.online !== true)  return false;
-    if (devFilter === 'offline' && d.online !== false) return false;
-    if (devLocFilter !== 'all'  && (d.location||'') !== devLocFilter) return false;
-    return true;
-  });
-
-  // Sortierung
-  const keyFn = (d, col) => {
-    switch (col) {
-      case 'name':     return (d.name||'').toLowerCase();
-      case 'ip':       return ipNum(d.ip||'0.0.0.0');
-      case 'mac':      return (d.mac||'').toLowerCase();
-      case 'macs':     return d.macs?.length ?? -1;
-      case 'lldp':     return d.lldpCount ?? -1;
-      case 'wds':      return d.wdsLinks?.length ?? -1;
-      case 'l2tp':     return d.l2tpEndpoints?.length ?? -1;
-      case 'model':    return (d.model||'').toLowerCase();
-      case 'os':       return (d.os||'').toLowerCase();
-      case 'type':     return (d.type||'').toLowerCase();
-      case 'source':   return (d.source||'').toLowerCase();
-      case 'location': return (d.location||'').toLowerCase();
-      case 'lastSeen': return d.lastSeen||'';
-      default:         return '';
-    }
-  };
-  devs = devSort.col
-    ? applySort(devs, devSort, keyFn)
-    : devs.sort((a,b) => ipNum(a.ip) - ipNum(b.ip));
-
-  const total = Object.keys(deviceStore).length;
-  setBadge('devices', total);
-  q('cnt-devices').textContent = total ? total+' Gerät'+(total!==1?'e':'') : '';
-
-  // Thead
-  q('thead-devices').innerHTML = `<tr>
-    ${mkTh('Gerätename','name',devSort,'devSortClick')}
-    ${mkTh('IP-Adresse','ip',devSort,'devSortClick')}
-    ${mkTh('MAC-Adresse','mac',devSort,'devSortClick')}
-    ${mkTh('MACs','macs',devSort,'devSortClick')}
-    ${mkTh('LLDP','lldp',devSort,'devSortClick')}
-    ${mkTh('WDS','wds',devSort,'devSortClick')}
-    ${mkTh('L2TPv3','l2tp',devSort,'devSortClick')}
-    ${mkTh('Modell','model',devSort,'devSortClick')}
-    ${mkTh('Betriebssystem','os',devSort,'devSortClick')}
-    ${mkTh('Typ','type',devSort,'devSortClick')}
-    ${mkTh('Quelle','source',devSort,'devSortClick')}
-    ${mkTh('Standort','location',devSort,'devSortClick')}
-    ${mkTh('Zuletzt gesehen','lastSeen',devSort,'devSortClick')}
-    ${noSortTh('')}
-  </tr>`;
-
-  const tbody = q('tbl-devices').querySelector('tbody');
-  if (!devs.length) {
-    tbody.innerHTML = `<tr><td colspan="14" class="empty">Keine Geräte ${srch||devFilter!=='all'||devLocFilter!=='all'?'gefunden':'– Scanner oder LMC Import verwenden'}</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = devs.map(dev => {
-    const typLbl = TYPE_LABELS[dev.type]||'Unbekannt';
-    const typCls = TYPE_BADGE[dev.type]||'badge-gray';
-    const srcLbl = dev.source==='lmc' ? '<span class="badge badge-blue">LMC</span>' : '<span class="badge badge-gray">Scanner</span>';
-    return `<tr>
-      <td style="font-weight:600"><span class="dot ${dev.online===true?'dot-green':dev.online===false?'dot-red':'dot-gray'}" title="${dev.online===true?'Online':dev.online===false?'Offline':'Unbekannt'}"></span>${h(dev.name||'—')}</td>
-      <td class="mono">${h(dev.ip)}</td>
-      <td class="mono" style="font-size:12px;color:var(--text2)">${h(dev.mac||'—')}</td>
-      <td style="font-size:12px;text-align:center;color:${dev.macs?.length?'var(--accent)':'var(--text3)'}" title="${dev.macs?.length?dev.macs.join('\n'):'Noch kein MAC-Sync'}">${dev.macs?.length??'—'}</td>
-      <td style="font-size:12px;text-align:center;color:${dev.lldpCount?'var(--accent)':'var(--text3)'}" title="${dev.lldpNeighbors?.length?dev.lldpNeighbors.join('\n'):'Noch kein LLDP Sync'}">${dev.lldpCount??'—'}</td>
-      <td style="font-size:12px;text-align:center;color:${dev.wdsLinks?.length?'var(--orange)':'var(--text3)'}" title="${dev.wdsLinks?.length?dev.wdsLinks.map(l=>l.linkName||l.mac||'?').join('\n'):'Keine WDS-Daten'}">${dev.wdsLinks?.length??'—'}</td>
-      <td style="font-size:12px;text-align:center;color:${dev.l2tpEndpoints?.length?'var(--green)':'var(--text3)'}" title="${dev.l2tpEndpoints?.length?dev.l2tpEndpoints.map(e=>e.endpointName||e.remoteIp||'?').join('\n'):'Keine L2TP-Daten'}">${dev.l2tpEndpoints?.length??'—'}</td>
-      <td style="color:var(--text2);font-size:12px">${h(dev.model||'—')}</td>
-      <td style="font-size:12px;color:var(--text2)">${h(dev.os||'—')}</td>
-      <td><span class="badge ${typCls}">${typLbl}</span></td>
-      <td>${srcLbl}</td>
-      <td style="font-size:12px;color:var(--text2)">${h(dev.location||'—')}</td>
-      <td style="color:var(--text3);font-size:11px">${fmtDate(dev.lastSeen)}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="openDeviceDetail('${h(dev.ip)}')">Details</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteDevice('${h(dev.ip)}')">&#x2715;</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SNMP QUERY HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-async function snmpQ(host, type) {
-  const r = await fetch('/snmp',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host,type}) });
-  const d = await r.json(); if (d.error) throw new Error(d.error); return d;
-}
-
-function devCredentials(ip) {
-  const d = deviceStore[ip];
-  return {
-    community: d?.community || appSettings.snmpReadCommunity || 'public',
-    version:   d?.version   || appSettings.snmpVersion       || '2c',
-  };
-}
-
-function setDeviceOnline(ip, online) {
-  if (!deviceStore[ip]) return;
-  deviceStore[ip].online = online;
-  renderDevices();
-}
-
-async function checkAllDeviceStatus() {
-  const btn  = q('btn-check-status');
-  const st   = q('dev-sync-status');
-  const wrap = q('dev-progress-wrap');
-  const bar  = q('dev-progress-bar');
-  const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore).filter(matchesLocFilter);
-  if (!devList.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine Geräte im Standort „${devLocFilter}".` : 'Keine Geräte vorhanden.'; return;
-  }
-
-  btn.disabled = true; btn.textContent = '…';
-  st.className = ''; st.textContent = '';
-  wrap.style.display = 'block'; bar.style.width = '0%';
-  txt.textContent = `0 / ${devList.length}`;
-
-  let done = 0, online = 0;
-  const total = devList.length;
-
-  try {
-    const CONCURRENCY = 5;
-    async function checkOne(dev) {
-      try {
-        await snmpQ(dev.ip, 'ping');
-        if (deviceStore[dev.ip]) { deviceStore[dev.ip].online = true; online++; }
-      } catch {
-        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
-      }
-      done++;
-      bar.style.width = Math.round(done / total * 100) + '%';
-      txt.textContent = `${done} / ${total}`;
-    }
-    for (let i = 0; i < devList.length; i += CONCURRENCY) {
-      await Promise.all(devList.slice(i, i + CONCURRENCY).map(checkOne));
-      renderDevices();
-    }
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    st.className = 'status-bar ok';
-    st.textContent = `Status aktualisiert – ${online} online, ${total - online} offline.`;
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Status';
-    bar.style.width = '100%';
-    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
-  }
-}
-
-async function syncDeviceMacs() {
-  const btn  = q('btn-mac-sync');
-  const st   = q('dev-sync-status');
-  const wrap = q('dev-progress-wrap');
-  const bar  = q('dev-progress-bar');
-  const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
-  if (!devList.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine Online-Geräte im Standort „${devLocFilter}".` : 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
-  }
-
-  btn.disabled = true; btn.textContent = '…';
-  st.className = ''; st.textContent = '';
-  wrap.style.display = 'block'; bar.style.width = '0%';
-  txt.textContent = `0 / ${devList.length}`;
-
-  let done = 0;
-  const total = devList.length;
-
-  try {
-    const CONCURRENCY = 3;
-    const queue = [...devList];
-    async function worker() {
-      while (queue.length) {
-        const dev = queue.shift();
-        try {
-          const result = await snmpQ(dev.ip, 'ifmacs');
-          if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
-        } catch {}
-        done++;
-        bar.style.width = Math.round(done / total * 100) + '%';
-        txt.textContent = `${done} / ${total}`;
-      }
-    }
-    await Promise.all(Array(Math.min(CONCURRENCY, devList.length)).fill(null).map(worker));
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    renderMesh(); renderDevices();
-    st.className = 'status-bar ok';
-    st.textContent = `MAC-Adressen aktualisiert – ${devList.length} Geräte abgefragt.`;
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'MAC';
-    bar.style.width = '100%';
-    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
-  }
-}
-
-// Gemeinsame LLDP-Kernlogik – onProgress(done, total, dev) optional
-async function lldpSyncCore(devList, onProgress) {
-  const CONCURRENCY = 3;
-  const queue = [...devList];
-  let done = 0;
-  async function worker() {
-    while (queue.length) {
-      const dev = queue.shift();
-      try {
-        const result = await snmpQ(dev.ip, 'lldp');
-        if (deviceStore[dev.ip]) {
-          deviceStore[dev.ip].lldpCount     = result.entries?.length ?? 0;
-          deviceStore[dev.ip].lldpNeighbors = (result.entries||[])
-            .map(e => e.remSysName||e.remPortId||'?').filter(Boolean);
-          deviceStore[dev.ip].lldpData = (result.entries||[]).map(e => ({
-            localPortName: e.localPortName||'',
-            remSysName:    e.remSysName||'',
-            remPortId:     e.remPortId||'',
-            remPortDesc:   e.remPortDesc||'',
-            remMac:        e.remMac||'',
-          }));
-        }
-      } catch { /* Gerät unterstützt LLDP evtl. nicht */ }
-      done++;
-      if (onProgress) onProgress(done, devList.length, dev);
-    }
-  }
-  await Promise.all(Array(Math.min(CONCURRENCY, devList.length || 1)).fill(null).map(worker));
-}
-
-async function syncDeviceLldp() {
-  const btn  = q('btn-lldp-sync');
-  const st   = q('dev-sync-status');
-  const wrap = q('dev-progress-wrap');
-  const bar  = q('dev-progress-bar');
-  const txt  = q('dev-progress-text');
-  const devList = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
-  if (!devList.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine Online-Geräte im Standort „${devLocFilter}".` : 'Keine Online-Geräte – bitte zuerst "Status" ausführen.'; return;
-  }
-
-  btn.disabled = true; btn.textContent = '…';
-  st.className = ''; st.textContent = '';
-  wrap.style.display = 'block'; bar.style.width = '0%';
-  txt.textContent = `0 / ${devList.length}`;
-
-  try {
-    await lldpSyncCore(devList, (done, total) => {
-      bar.style.width = Math.round(done / total * 100) + '%';
-      txt.textContent = `${done} / ${total}`;
-    });
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    renderDevices();
-    st.className = 'status-bar ok';
-    st.textContent = `LLDP aktualisiert – ${devList.length} Geräte abgefragt.`;
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'LLDP';
-    bar.style.width = '100%';
-    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// WIFI MESH
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function rssiStatus(signal, connected) {
-  if (!connected) return 'red';
-  if (signal == null) return 'orange';
-  const pct = Number(signal);
-  if (pct >= (appSettings.rssiGreen  ?? 80)) return 'green';
-  if (pct >= (appSettings.rssiYellow ?? 50)) return 'yellow';
-  if (pct >= (appSettings.rssiOrange ?? 0))  return 'orange';
-  return 'red';
-}
-const RS = {
-  green:  { cls:'dot-green',  bcls:'badge-green',  lbl:'Gut'    },
-  yellow: { cls:'dot-yellow', bcls:'badge-yellow', lbl:'Mittel' },
-  orange: { cls:'dot-orange', bcls:'badge-orange', lbl:'Schwach'},
-  red:    { cls:'dot-red',    bcls:'badge-red',    lbl:'Offline'},
-};
-
-function setMeshFilter(f) {
-  meshFilter = f;
-  ['all','green','yellow','orange','red'].forEach(k => {
-    const el = q('mf-'+k); if (el) el.classList.toggle('active', k===f);
-  });
-  renderMesh();
-}
-
-function resolvePeerDev(mac) {
-  const low = (mac||'').toLowerCase();
-  if (!low) return null;
-  return Object.values(deviceStore).find(d => {
-    if ((d.mac||'').toLowerCase() === low) return true;
-    if (d.macs?.some(m => m.toLowerCase() === low)) return true;
-    return false;
-  }) || null;
-}
-
-function clearMeshData() {
-  if (!confirm('WDS-Verbindungsdaten für alle Geräte löschen?')) return;
-  meshData = [];
-  Object.values(deviceStore).forEach(d => { delete d.wdsLinks; });
-  fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-  renderMesh(); renderDevices();
-}
-
-function renderMesh() {
-  const srch = (q('mesh-search')?.value||'').toLowerCase();
-
-  // Step 1: Resolve peer device for every entry
-  const entries = meshData.map(r => ({ ...r, peerDev: resolvePeerDev(r.mac) }));
-
-  // Step 2a: Merge rows where BOTH sides are known devices (one row per bidirectional link)
-  const processedKeys = new Set();
-  const mergedRows = [];
-  for (const r of entries.filter(e => e.peerDev)) {
-    const key = [r.deviceIp, r.peerDev.ip].sort().join('|');
-    if (processedKeys.has(key)) continue;
-    processedKeys.add(key);
-
-    const other = entries.find(o => o !== r && o.deviceIp === r.peerDev.ip && o.peerDev?.ip === r.deviceIp);
-    if (other) {
-      // Both sides queried → merge; prefer the non-remote (master/AP) side as primary
-      const primary   = !r.isRemote ? r : (!other.isRemote ? other : r);
-      const secondary = primary === r ? other : r;
-      mergedRows.push({ ...primary, peerSignal: secondary.signal, peerConnected: secondary.connected, merged: true });
-    } else {
-      // Peer known but only one side was queried (offline, not an LX AP, etc.)
-      mergedRows.push({ ...r, merged: false });
-    }
-  }
-
-  // Step 2b: Legacy deduplication for entries where peer is unknown (use isRemote flag)
-  const unknownPeerEntries = entries.filter(e => !e.peerDev);
-  const nonRemoteMacs = new Set(unknownPeerEntries.filter(r => !r.isRemote && r.mac).map(r => r.mac));
-  const singleRows = unknownPeerEntries
-    .filter(r => !r.isRemote || !nonRemoteMacs.has(r.mac))
-    .map(r => ({ ...r, merged: false }));
-
-  const allRows = [...mergedRows, ...singleRows];
-
-  // Step 3: Filter
-  const rows = allRows.filter(r => {
-    const st = rssiStatus(r.signal, r.connected);
-    if (meshFilter !== 'all' && st !== meshFilter) return false;
-    if (meshLocFilter !== 'all' && (deviceStore[r.deviceIp]?.location||'') !== meshLocFilter) return false;
-    if (srch) {
-      const peer = r.peerDev?.name || r.peerDev?.ip || '';
-      if (!r.deviceName.toLowerCase().includes(srch) &&
-          !r.deviceIp.includes(srch) &&
-          !(r.mac||'').toLowerCase().includes(srch) &&
-          !peer.toLowerCase().includes(srch)) return false;
-    }
-    return true;
-  });
-
-  // Step 3b: Sort
-  const meshKeyFn = (r, col) => {
-    switch (col) {
-      case 'deviceName': return r.deviceName.toLowerCase();
-      case 'deviceIp':   return r.deviceIp.split('.').reduce((s,o)=>s*256+parseInt(o),0);
-      case 'linkName':   return r.linkName.toLowerCase();
-      case 'peer':       return (r.peerDev?.name||r.peerDev?.ip||r.mac||'').toLowerCase();
-      case 'band':       return r.band||'';
-      case 'signal':     return r.signal??-1;
-      case 'txRate':     return r.txRate??-1;
-      case 'rxRate':     return r.rxRate??-1;
-      case 'status':     return rssiStatus(r.signal, r.connected);
-      case 'loc':        return (deviceStore[r.deviceIp]?.location||'').toLowerCase();
-      default:           return '';
-    }
-  };
-  const sortedRows = applySort(rows, meshSort, meshKeyFn);
-
-  setBadge('mesh', allRows.length);
-  q('cnt-mesh').textContent = allRows.length ? allRows.length+' Link'+(allRows.length!==1?'s':'') : '';
-
-  // Thead
-  q('thead-mesh').innerHTML = `<tr>
-    ${mkTh('Gerätename','deviceName',meshSort,'meshSortClick')}
-    ${mkTh('Gerät-IP','deviceIp',meshSort,'meshSortClick')}
-    ${mkTh('WDS-Link','linkName',meshSort,'meshSortClick')}
-    ${mkTh('Gegenstelle','peer',meshSort,'meshSortClick')}
-    ${mkTh('Band','band',meshSort,'meshSortClick')}
-    ${mkTh('RSSI','signal',meshSort,'meshSortClick')}
-    ${mkTh('Eff.-Tx-Rate','txRate',meshSort,'meshSortClick')}
-    ${mkTh('Eff.-Rx-Rate','rxRate',meshSort,'meshSortClick')}
-    ${mkTh('Status','status',meshSort,'meshSortClick')}
-    ${mkTh('Standort','loc',meshSort,'meshSortClick')}
-    ${noSortTh('')}
-  </tr>`;
-
-  const tbody = q('tbl-mesh').querySelector('tbody');
-  if (!sortedRows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="empty">${meshData.length ? 'Kein Treffer für aktiven Filter' : 'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = sortedRows.map(r => {
-    const st = rssiStatus(r.signal, r.connected);
-    const s  = RS[st];
-
-    const peerLabel = r.peerDev
-      ? `<span title="${h(r.mac)}" style="font-weight:600">${h(r.peerDev.name||r.peerDev.ip)}</span><br><span class="mono" style="font-size:11px;color:var(--text3)">${h(r.mac)}</span>`
-      : `<span class="mono">${h(r.mac||'—')}</span>`;
-
-    const rssiColor = st => `var(--${st})`;
-    const localSt   = rssiStatus(r.signal, r.connected);
-    const localRssi = r.connected && r.signal != null ? r.signal+'%' : '—';
-    let rssiCell;
-    if (r.merged) {
-      const peerSt  = rssiStatus(r.peerSignal, r.peerConnected);
-      const peerVal = r.peerConnected && r.peerSignal != null ? r.peerSignal+'%' : '—';
-      rssiCell = `<span style="font-weight:700;color:${rssiColor(localSt)}">${localRssi}</span>`+
-                 `<span style="color:var(--text3);font-size:11px"> / </span>`+
-                 `<span style="font-weight:700;color:${rssiColor(peerSt)}">${peerVal}</span>`;
-    } else {
-      rssiCell = `<span style="font-weight:700;color:${rssiColor(localSt)}">${localRssi}</span>`;
-    }
-
-    const syncBtns = r.merged && r.peerDev
-      ? `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')" title="Sync ${h(r.deviceName)}">&#x21BB;</button>`+
-        `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.peerDev.ip)}')" title="Sync ${h(r.peerDev.name||r.peerDev.ip)}">&#x21BB;</button>`
-      : `<button class="btn btn-sm btn-ghost" onclick="syncMeshDevice('${h(r.deviceIp)}')">&#x21BB;</button>`;
-
-    return `<tr>
-      <td style="font-weight:600">${h(r.deviceName)}</td>
-      <td class="mono">${h(r.deviceIp)}</td>
-      <td style="font-weight:500">${h(r.linkName)}</td>
-      <td>${peerLabel}</td>
-      <td style="color:var(--text2)">${r.band||'—'}</td>
-      <td>${rssiCell}</td>
-      <td style="color:var(--text2)">${r.txRate!=null?r.txRate+' Mbps':'—'}</td>
-      <td style="color:var(--text2)">${r.rxRate!=null?r.rxRate+' Mbps':'—'}</td>
-      <td><span class="dot ${s.cls}"></span><span class="badge ${s.bcls}">${s.lbl}</span></td>
-      <td style="font-size:12px;color:var(--text2)">${h(deviceStore[r.deviceIp]?.location||'—')}</td>
-      <td><div style="display:flex;gap:4px">${syncBtns}</div></td>
-    </tr>`;
-  }).join('');
-}
-
-async function syncMeshDevice(ip) {
-  const dev = deviceStore[ip];
-  if (!dev) return;
-  const name = dev.name||dev.sysName||ip;
-  const st = q('dev-sync-status');
-  st.className = 'status-bar loading';
-  st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
-  try {
-    const result = await snmpQ(ip, 'wds');
-    setDeviceOnline(ip, true);
-    meshData = meshData.filter(r => r.deviceIp !== ip);
-    if (result.configured) mergeMeshResult(ip, name, result);
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    renderMesh();
-    const cnt = meshData.filter(r => r.deviceIp === ip).length;
-    st.className = 'status-bar ok';
-    st.textContent = `${name}: ${cnt} WDS-Link${cnt!==1?'s':''} aktualisiert`;
-  } catch {
-    setDeviceOnline(ip, false);
-    st.className = 'status-bar error';
-    st.textContent = `${name}: SNMP nicht erreichbar`;
-  }
-}
-
-function mergeMeshResult(ip, name, result) {
-  const linkMap = {};
-  (result.configLinks||[]).forEach(cl => { linkMap[cl.linkName] = {...cl}; });
-  (result.statusEntries||[]).forEach(se => {
-    if (!linkMap[se.linkName]) linkMap[se.linkName]={};
-    Object.assign(linkMap[se.linkName], se);
-  });
-  const stored = [];
-  Object.values(linkMap).forEach(l => {
-    const entry = {
-      deviceName: name, deviceIp: ip,
-      linkName:   l.linkName||'—',
-      band:       l.radio===1?'2.4 GHz':l.radio===2?'5 GHz':'—',
-      signal:     l.signal??null,
-      connected:  !!l.connected,
-      mac:        l.mac||'',
-      txRate:     l.txRate??null, rxRate: l.rxRate??null, wpaVersion: l.wpaVersion,
-      isRemote:   !!l.remote,
-    };
-    meshData.push(entry);
-    stored.push(entry);
-  });
-  if (deviceStore[ip]) deviceStore[ip].wdsLinks = stored;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// L2TPv3
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function setL2tpFilter(f) {
-  l2tpFilter = f;
-  ['all','up','down'].forEach(k => { const el=q('lf-'+k); if(el) el.classList.toggle('active',k===f); });
-  renderL2tp();
-}
-
-function clearL2tpData() {
-  if (!confirm('L2TPv3-Endpunktdaten für alle Geräte löschen?')) return;
-  l2tpData = [];
-  Object.values(deviceStore).forEach(d => { delete d.l2tpEndpoints; });
-  fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-  renderL2tp(); renderDevices();
-}
-
-function renderL2tp() {
-  const srch = (q('l2tp-search')?.value||'').toLowerCase();
-  const filtered = l2tpData.filter(r => {
-    const up = r.state==='UP';
-    if (l2tpFilter==='up' && !up) return false;
-    if (l2tpFilter==='down' && up) return false;
-    if (l2tpLocFilter !== 'all' && (deviceStore[r.deviceIp]?.location||'') !== l2tpLocFilter) return false;
-    if (srch && !r.deviceName.toLowerCase().includes(srch) && !r.deviceIp.includes(srch)) return false;
-    return true;
-  });
-
-  const l2tpKeyFn = (r, col) => {
-    switch (col) {
-      case 'deviceName':   return r.deviceName.toLowerCase();
-      case 'deviceIp':     return r.deviceIp.split('.').reduce((s,o)=>s*256+parseInt(o),0);
-      case 'endpointName': return (r.endpointName||'').toLowerCase();
-      case 'remoteEnd':    return (r.remoteEnd||'').toLowerCase();
-      case 'remoteIp':     return (r.remoteIp||'').split('.').reduce((s,o)=>s*256+parseInt(o||'0'),0);
-      case 'state':        return r.state||'';
-      case 'loc':          return (deviceStore[r.deviceIp]?.location||'').toLowerCase();
-      default:             return '';
-    }
-  };
-  const rows = applySort(filtered, l2tpSort, l2tpKeyFn);
-
-  setBadge('l2tp', l2tpData.length);
-  q('cnt-l2tp').textContent = l2tpData.length ? l2tpData.length+' Endpunkt'+(l2tpData.length!==1?'e':'') : '';
-
-  q('thead-l2tp').innerHTML = `<tr>
-    ${mkTh('Gerätename','deviceName',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Gerät-IP','deviceIp',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Endpoint','endpointName',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Gegenstelle','remoteEnd',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Remote-IP','remoteIp',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Status','state',l2tpSort,'l2tpSortClick')}
-    ${mkTh('Standort','loc',l2tpSort,'l2tpSortClick')}
-    ${noSortTh('')}
-  </tr>`;
-
-  const tbody = q('tbl-l2tp').querySelector('tbody');
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty">${l2tpData.length?'Kein Treffer für aktiven Filter':'Sync starten – nur LX Access Points werden abgefragt'}</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = rows.map(r => {
-    const up = r.state==='UP';
-    return `<tr>
-      <td style="font-weight:600">${h(r.deviceName)}</td>
-      <td class="mono">${h(r.deviceIp)}</td>
-      <td style="font-weight:500">${h(r.endpointName||'—')}</td>
-      <td>${h(r.remoteEnd||'—')}</td>
-      <td class="mono" style="color:var(--text2)">${h(r.remoteIp||'—')}</td>
-      <td><span class="dot ${up?'dot-green':'dot-red'}"></span><span class="badge ${up?'badge-green':'badge-red'}">${h(r.state||'—')}</span></td>
-      <td style="font-size:12px;color:var(--text2)">${h(deviceStore[r.deviceIp]?.location||'—')}</td>
-      <td><button class="btn btn-sm btn-ghost" onclick="syncL2tpDevice('${h(r.deviceIp)}')">&#x21BB;</button></td>
-    </tr>`;
-  }).join('');
-}
-
-async function syncL2tpDevice(ip) {
-  const dev = deviceStore[ip]; if (!dev) return;
-  const name = dev.name||dev.ip;
-  const st = q('dev-sync-status');
-  st.className = 'status-bar loading';
-  st.innerHTML = `<span class="spinner"></span> Sync ${h(name)}…`;
-  try {
-    const result = await snmpQ(ip, 'l2tp');
-    setDeviceOnline(ip, true);
-    l2tpData = l2tpData.filter(r => r.deviceIp!==ip);
-    if (result.configured) mergeL2tpResult(ip, name, result);
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    renderL2tp();
-    const cnt = l2tpData.filter(r => r.deviceIp===ip).length;
-    st.className = 'status-bar ok';
-    st.textContent = `${name}: ${cnt} Endpunkt${cnt!==1?'e':''} aktualisiert`;
-  } catch {
-    setDeviceOnline(ip, false);
-    st.className = 'status-bar error';
-    st.textContent = `${name}: SNMP nicht erreichbar`;
-  }
-}
-
-function mergeL2tpResult(ip, name, result) {
-  const epMap = {};
-  (result.configEndpoints||[]).forEach(ep => { epMap[ep.name]={...ep}; });
-  (result.statusEntries||[]).forEach(se => {
-    const k=se.endpointName||se.remoteEnd; if(!epMap[k])epMap[k]={};
-    Object.assign(epMap[k],se);
-  });
-  const stored = [];
-  Object.values(epMap).forEach(ep => {
-    const entry = {
-      deviceName:name, deviceIp:ip, endpointName:ep.name||ep.endpointName||'—',
-      remoteEnd:ep.remoteEnd||'—', remoteIp:ep.remoteIp||'—', port:ep.port,
-      state:ep.state||'—', iface:ep.iface||'—', connStartTime:ep.connStartTime||'',
-    };
-    l2tpData.push(entry);
-    stored.push(entry);
-  });
-  if (deviceStore[ip]) deviceStore[ip].l2tpEndpoints = stored;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SCANNER
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function setScanStatus(msg,type='') { const el=q('scan-status'); el.className='status-bar'+(type?' '+type:''); el.innerHTML=type==='loading'?`<span class="spinner"></span> ${msg}`:msg; }
-
-async function startScan() {
-  const subnet = q('scan-subnet').value.trim();
-  if (!subnet) { setScanStatus('Bitte Subnetz eingeben.','error'); return; }
-
-  // Save last subnet (fire and forget — not critical for scan start)
-  appSettings.lastScanSubnet = subnet;
-  fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...appSettings})}).catch(()=>{});
-
-  if (scanAbort) { scanAbort.abort(); scanAbort=null; }
-  scanAbort = new AbortController();
-  scanFoundCnt=0; scanResults=[];
-
-  q('btn-scan').disabled=true;
-  q('btn-scan-stop').style.display='';
-  q('btn-save-all').style.display='none';
-  q('sep-save-all').style.display='none';
-  q('scan-progress-wrap').style.display='';
-  q('scan-bar').style.width='0%';
-  q('scan-scanned').textContent='0'; q('scan-total').textContent='?'; q('scan-found-lbl').textContent='';
-  q('tbl-scan').querySelector('tbody').innerHTML=''; q('cnt-scan').textContent='';
-  setScanStatus('Scan läuft…','loading');
-
-  try {
-    const resp = await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subnet}),signal:scanAbort.signal});
-    if (!resp.ok) { const e=await resp.json().catch(()=>({error:resp.statusText})); throw new Error(e.error||'Serverfehler'); }
-    const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
-    while (true) {
-      const {done,value}=await reader.read(); if(done) break;
-      buf+=dec.decode(value,{stream:true}); const lines=buf.split('\n'); buf=lines.pop();
-      for (const line of lines) { if(!line.startsWith('data: ')) continue; try{handleScanEvent(JSON.parse(line.slice(6)));}catch{} }
-    }
-  } catch(err) {
-    if(err.name!=='AbortError') setScanStatus('Fehler: '+err.message,'error');
-    else setScanStatus('Scan abgebrochen.','');
-  }
-  q('btn-scan').disabled=false; q('btn-scan-stop').style.display='none'; scanAbort=null;
-}
-
-function stopScan() { if(scanAbort){scanAbort.abort();scanAbort=null;} }
-
-function handleScanEvent(ev) {
-  if (ev.type==='start') {
-    q('scan-total').textContent=ev.total;
-  } else if (ev.type==='progress'||ev.type==='found') {
-    const pct=ev.total>0?Math.round(ev.scanned/ev.total*100):0;
-    q('scan-bar').style.width=pct+'%';
-    q('scan-scanned').textContent=ev.scanned; q('scan-total').textContent=ev.total;
-    if(ev.found>0) q('scan-found-lbl').textContent=`${ev.found} Gerät${ev.found!==1?'e':''} gefunden`;
-    if(ev.type==='found') appendScanRow(ev.device);
-    setScanStatus(`Scanne ${ev.scanned} / ${ev.total}…`,'loading');
-  } else if (ev.type==='done') {
-    q('scan-bar').style.width='100%';
-    setScanStatus(ev.found>0?`Scan abgeschlossen — ${ev.found} Gerät${ev.found!==1?'e':''} gefunden`:`Scan abgeschlossen — keine LANCOM-Geräte gefunden`, ev.found>0?'ok':'');
-    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="7" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
-    setBadge('scanner',ev.found||0);
-    if(ev.found>0){ q('btn-save-all').style.display=''; q('sep-save-all').style.display=''; q('btn-save-all').textContent=`Alle ${ev.found} speichern`; }
-  }
-}
-
-function matchesModelFilter(model) {
-  const filter = (appSettings.modelFilter || '').trim();
-  if (!filter) return true;
-  const terms = filter.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
-  if (!terms.length) return true;
-  return terms.some(t => (model || '').toLowerCase().includes(t));
-}
-
-function appendScanRow(dev) {
-  scanResults.push(dev);
-  const tbody=q('tbl-scan').querySelector('tbody');
-  const ph=tbody.querySelector('td[colspan]'); if(ph) ph.closest('tr').remove();
-  scanFoundCnt++;
-  q('cnt-scan').textContent=scanFoundCnt+' Gerät'+(scanFoundCnt!==1?'e':'');
-  const osC={'LCOS LX':'badge-green','LCOS FX':'badge-yellow','LCOS SX':'badge-yellow','LCOS':'badge-gray','LANCOM':'badge-gray'};
-  const devType = detectDeviceType(dev.os, dev.sysDescr);
-  const model = extractModel(dev.sysDescr);
-  const filtered = !matchesModelFilter(model);
-  const tr=document.createElement('tr');
-  if (filtered) tr.style.opacity = '0.4';
-  tr.title = filtered ? 'Kein Treffer im Modell-Filter – wird bei „Alle speichern" übersprungen' : '';
-  tr.innerHTML=`
-    <td class="mono">${h(dev.ip)}</td>
-    <td style="font-weight:600">${h(dev.sysName||'—')}</td>
-    <td><span class="badge ${osC[dev.os]||'badge-gray'}">${h(dev.os)}</span></td>
-    <td><span class="badge ${TYPE_BADGE[devType]||'badge-gray'}">${h(TYPE_LABELS[devType]||devType)}</span></td>
-    <td style="color:var(--text2)">${h(dev.sysLocation||'—')}</td>
-    <td class="mono" style="color:var(--text3);font-size:11px">${h((dev.sysDescr||'').split(/[\r\n]/)[0].substring(0,55))}</td>
-    <td style="display:flex;gap:6px">
-      <button class="btn btn-sm" onclick="openDeviceDetail('${dev.ip}')">Details</button>
-      <button class="btn btn-sm btn-ghost" onclick="saveScanDevice('${h(dev.ip)}')">Speichern</button>
-    </td>`;
-  tbody.appendChild(tr);
-}
-
-async function saveScanDevice(ip) {
-  const dev = scanResults.find(d => d.ip === ip);
-  if (!dev) return;
-  if (deviceStore[ip]) {
-    setScanStatus(`${ip} ist bereits unter Geräte gespeichert – nicht übernommen.`, 'error');
-    return;
-  }
-  await saveDevice(buildScanDeviceEntry(dev));
-  setScanStatus(`${dev.sysName||ip} gespeichert.`, 'ok');
-}
-
-async function saveScanResults() {
-  if (!scanResults.length) return;
-  const patch = {};
-  const skipped = [];
-  const filtered = [];
-  scanResults.forEach(dev => {
-    if (deviceStore[dev.ip]) { skipped.push(dev.ip); return; }
-    const model = extractModel(dev.sysDescr);
-    if (!matchesModelFilter(model)) { filtered.push(dev.ip); return; }
-    patch[dev.ip] = buildScanDeviceEntry(dev);
-  });
-  const n = Object.keys(patch).length;
-  if (n) await saveDevices(patch);
-  let msg = n ? `${n} Gerät${n!==1?'e':''} gespeichert` : 'Keine neuen Geräte';
-  if (skipped.length)  msg += ` – ${skipped.length} bereits vorhanden`;
-  if (filtered.length) msg += ` – ${filtered.length} durch Modell-Filter übersprungen`;
-  setScanStatus(msg, !n ? 'error' : 'ok');
-}
-
-function getScanLocation() {
-  const newLoc = (q('scan-loc-new')?.value||'').trim();
-  if (newLoc) return newLoc;
-  return q('scan-loc-select')?.value || '';
-}
-
-function buildScanDeviceEntry(dev) {
-  const type = detectDeviceType(dev.os, dev.sysDescr);
-  return {
-    ip: dev.ip, name: dev.sysName||dev.ip, model: extractModel(dev.sysDescr),
-    os: dev.os, type, mac: dev.mac||'', sysDescr: dev.sysDescr,
-    sysLocation: dev.sysLocation, location: getScanLocation(),
-    source: 'scanner', online: true, lastSeen: new Date().toISOString(),
-  };
-}
-
-document.addEventListener('keydown', e => { if(e.key==='Enter'&&e.target.id==='scan-subnet') startScan(); });
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// LMC IMPORT
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function setLmcStatus(msg,type='') { const el=q('lmc-status'); el.className='status-bar'+(type?' '+type:''); el.innerHTML=type==='loading'?`<span class="spinner"></span> ${msg}`:msg; }
-
-function lmcGetToken() { return q('lmc-token').value.trim(); }
-
-function lmcToggleSave() {
-  if (q('lmc-save-token').checked) localStorage.setItem('lmc_token', lmcGetToken());
-  else localStorage.removeItem('lmc_token');
-}
-
-async function lmcCall(service, apiPath, method='GET', body=null) {
-  const token = lmcGetToken(); if (!token) throw new Error('Kein API Token eingegeben');
-  const r = await fetch('/api/lmc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,path:apiPath,method,token,body})});
-  let d;
-  try { d = await r.json(); } catch { throw new Error(`Server-Antwort ist kein gültiges JSON (HTTP ${r.status}) – prüfe API Token`); }
-  if (!r.ok || d.error) throw new Error(d.message||d.error||`HTTP ${r.status}`);
-  return d;
-}
-
-async function lmcTest() {
-  if (!lmcGetToken()) { setLmcStatus('Bitte API Token eingeben.','error'); return; }
-  setLmcStatus('Verbindung wird getestet…','loading');
-  try {
-    const accounts = await lmcCall('auth','/accounts');
-    const list = Array.isArray(accounts)?accounts:(accounts?.accounts||accounts?.content||[]);
-    if (!list.length) throw new Error('Keine Accounts gefunden');
-
-    const sel = q('lmc-account-select');
-    sel.innerHTML='<option value="">– bitte wählen –</option>';
-    list.forEach(a => {
-      const name = a.name||a.identifier||a.id;
-      const opt  = document.createElement('option'); opt.value=a.id||a.identifier; opt.textContent=name;
-      sel.appendChild(opt);
-    });
-    if (list.length===1) { sel.value=list[0].id||list[0].identifier; q('btn-lmc-sync').disabled=false; }
-    q('lmc-project-card').style.display='';
-    setLmcStatus(`Verbindung erfolgreich – ${list.length} Account${list.length!==1?'s':''} gefunden`,'ok');
-    if (q('lmc-save-token').checked) localStorage.setItem('lmc_token', lmcGetToken());
-  } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }
-}
-
-q('lmc-account-select').addEventListener('change', e => { q('btn-lmc-sync').disabled = !e.target.value; });
-
-async function lmcSync() {
-  const accountId = q('lmc-account-select').value;
-  if (!accountId) { setLmcStatus('Bitte Projekt auswählen.','error'); return; }
-  setLmcStatus('Geräte werden synchronisiert…','loading');
-  try {
-    const resp = await lmcCall('devices', `/accounts/${accountId}/devices`);
-    const devs = Array.isArray(resp)?resp:(resp?.devices||resp?.content||[]);
-
-    const patch = {};
-    devs.forEach(d => {
-      const ip   = d.status?.ip||d.status?.ipAddress||d.ipAddress||'';
-      if (!ip) return;
-      const name    = d.name||d.label||d.status?.deviceLabel||d.status?.name||ip;
-      const model   = d.status?.model||d.model||'';
-      const fwLabel = (d.status?.fwLabel||d.fwLabel||'').toUpperCase();
-      const devType = (d.status?.type||'').toUpperCase(); // ROUTER|ACCESS_POINT|SWITCH|FIREWALL
-      const modelUp = model.toUpperCase();
-      let os='LCOS';
-      if     (fwLabel.includes('LCOS-LX')||fwLabel.includes('LCOS LX')) os='LCOS LX';
-      else if(fwLabel.includes('LCOS-FX')||fwLabel.includes('LCOS FX')) os='LCOS FX';
-      else if(fwLabel.includes('LCOS-SX')||fwLabel.includes('LCOS SX')) os='LCOS SX';
-      else if(fwLabel.includes('LCOS')) os='LCOS';
-      else if(devType==='SWITCH')   os='LCOS SX';
-      else if(devType==='FIREWALL') os='LCOS FX';
-      else if(/\b(OAP|LAP|WAP-LX)\b/.test(modelUp)) os='LCOS LX';
-      else if(/LANCOM (LX|LW|OX|OW)\b/.test(modelUp)) os='LCOS LX';
-      const type=detectDeviceType(os,model);
-      const mac = (d.status?.mac||d.status?.ethMac||d.mac||'').toLowerCase();
-      const location = d.siteName||d.location?.name||d.locationName||d.site?.name||d.status?.location?.name||d.status?.locationName||d.status?.location||'';
-      patch[ip]={ ip, name, model, os, type, mac, location, source:'lmc', lmcId:d.id||'',
-        lastSeen:new Date().toISOString() };
-    });
-
-    // Bereits vorhandene und durch Filter ausgeschlossene Geräte überspringen
-    const skipped  = Object.keys(patch).filter(ip => deviceStore[ip]);
-    const filtered = Object.keys(patch).filter(ip => !skipped.includes(ip) && !matchesModelFilter(patch[ip].model));
-    skipped.forEach(ip => delete patch[ip]);
-    filtered.forEach(ip => delete patch[ip]);
-    const n = Object.keys(patch).length;
-    if (n) await saveDevices(patch);
-
-    let msg = n ? `${n} Gerät${n!==1?'e':''} importiert` : 'Keine neuen Geräte';
-    if (skipped.length)  msg += ` – ${skipped.length} bereits vorhanden`;
-    if (filtered.length) msg += ` – ${filtered.length} durch Modell-Filter übersprungen`;
-    setLmcStatus(msg, !n ? 'error' : 'ok');
-
-    // Show result table (alle aus LMC, inkl. übersprungener)
-    const allPatch = {...patch};
-    skipped.forEach(ip => { allPatch[ip] = deviceStore[ip]; });
-    q('lmc-result-wrap').style.display='';
-    const total = Object.keys(allPatch).length;
-    q('cnt-lmc').textContent = total+' Gerät'+(total!==1?'e':'');
-    const tbody=q('tbl-lmc').querySelector('tbody');
-    tbody.innerHTML=Object.values(allPatch).map(dev => {
-      const online = devs.find(d=>(d.status?.ip||d.status?.ipAddress)===dev.ip);
-      const isOn = online?.heartbeatState?.toUpperCase()==='ACTIVE'||online?.status?.heartbeatState?.toUpperCase()==='ACTIVE';
-      const typCls=TYPE_BADGE[dev.type]||'badge-gray'; const typLbl=TYPE_LABELS[dev.type]||'—';
-      const wasSkipped  = skipped.includes(dev.ip);
-      const wasFiltered = filtered.includes(dev.ip);
-      const rowStyle = wasFiltered ? ' style="opacity:0.4"' : '';
-      const rowTitle = wasFiltered ? ' title="Kein Treffer im Modell-Filter – nicht importiert"' : '';
-      const badge = wasSkipped  ? '<span class="badge badge-yellow">Vorhanden</span>'
-                  : wasFiltered ? '<span class="badge badge-gray">Gefiltert</span>'
-                  :               '<span class="badge badge-green">Neu</span>';
-      return `<tr${rowStyle}${rowTitle}>
-        <td style="font-weight:600">${h(dev.name)}</td>
-        <td class="mono">${h(dev.ip)}</td>
-        <td style="font-size:12px;color:var(--text2)">${h(dev.model||'—')}</td>
-        <td style="font-size:12px">${h(dev.os||'—')}</td>
-        <td><span class="badge ${typCls}">${typLbl}</span></td>
-        <td style="font-size:12px;color:var(--text2)">${h(dev.location||'—')}</td>
-        <td><span class="dot ${isOn?'dot-green':'dot-red'}"></span>${isOn?'Online':'Offline'}</td>
-        <td>${badge}</td>
-      </tr>`;
-    }).join('');
-  } catch(err) { setLmcStatus('Fehler: '+err.message,'error'); }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// DEVICE DETAIL VIEW
-// ═══════════════════════════════════════════════════════════════════════════════
-
-let selectedDevice = null;
-
-function openDeviceDetail(ip) {
-  const dev = deviceStore[ip] || { ip, community: appSettings.snmpReadCommunity||'public', version: appSettings.snmpVersion||'2c' };
-  selectedDevice = dev;
-  q('detail-ip').textContent = ip;
-  q('detail-community').value = dev.community || appSettings.snmpReadCommunity || 'public';
-  q('detail-version').value   = dev.version   || appSettings.snmpVersion       || '2c';
-  q('detail-badge').textContent = '↩ ' + (dev.name||ip);
-  q('detail-badge').style.display = '';
-  showTab('detail');
-  queryDetail();
-}
-
-function showStab(name) {
-  document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
-  q('sub-'+name).classList.add('active');
-  q('stab-'+name).classList.add('active');
-}
-
-async function queryDetail() {
-  const ip        = q('detail-ip').textContent.trim();
-  const community = q('detail-community').value.trim()||'public';
-  const version   = q('detail-version').value;
-  if (!ip) return;
-
-  q('detail-main-status').className='status-bar loading';
-  q('detail-main-status').innerHTML='<span class="spinner"></span> Abfrage läuft…';
-
-  const t0=Date.now();
-  const [sys,ifaces,mac,wlan,lldp] = await Promise.allSettled([
-    snmpQ(ip,'system'),
-    snmpQ(ip,'interfaces'),
-    snmpQ(ip,'mac'),
-    snmpQ(ip,'wlan'),
-    snmpQ(ip,'lldp'),
-  ]);
-
-  if(sys.status==='fulfilled') renderDetailSystem(sys.value);
-  if(ifaces.status==='fulfilled') renderDetailIfaces(ifaces.value);
-  if(mac.status==='fulfilled') renderDetailMac(mac.value);
-  if(wlan.status==='fulfilled') renderDetailWlan(wlan.value);
-  if(lldp.status==='fulfilled') renderDetailLldp(lldp.value);
-
-  q('detail-main-status').className='status-bar ok';
-  q('detail-main-status').textContent=`Abfrage erfolgreich (${((Date.now()-t0)/1000).toFixed(1)}s)`;
-}
-
-function renderDetailSystem(d) {
-  q('sys-cards').innerHTML=[
-    {label:'Gerätename',value:d.sysName||'—'},
-    {label:'Beschreibung',value:d.sysDescr||'—',mono:true},
-    {label:'Standort',value:d.sysLocation||'—'},
-    {label:'Kontakt',value:d.sysContact||'—'},
-    {label:'Uptime',value:fmtUptime(d.sysUpTime)},
-  ].map(c=>`<div class="info-card"><div class="label">${c.label}</div><div class="value${c.mono?' mono':''}">${h(c.value)}</div></div>`).join('');
-}
-
-function renderDetailIfaces(data) {
-  const tbody=q('tbl-ifaces').querySelector('tbody');
-  if(!data.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">Keine Interfaces</td></tr>`;return;}
-  tbody.innerHTML=data.map(i=>`<tr>
-    <td style="font-weight:600">${h(i.name||i.descr||'If'+i.idx)}</td>
-    <td class="mono" style="color:var(--text2)">${i.name&&i.descr!==i.name?h(i.descr):''}</td>
-    <td>${statusBadge(i.operStatus)}</td>
-    <td style="color:var(--text2)">${fmtSpeed(i.highSpeed,i.speed)}</td>
-    <td class="mono">${fmtBytes(i.inOctets)}</td>
-    <td class="mono">${fmtBytes(i.outOctets)}</td>
-  </tr>`).join('');
-}
-
-function renderDetailMac(data) {
-  const tbody=q('tbl-mac').querySelector('tbody');
-  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="3" class="empty">Keine Einträge</td></tr>`;return;}
-  tbody.innerHTML=data.entries.map(e=>`<tr>
-    <td class="mono">${h(e.mac)}</td>
-    <td class="mono" style="color:var(--text2)">${e.ip?h(e.ip):'<span style="color:var(--text3)">—</span>'}</td>
-    <td>${h(e.port)}</td>
-  </tr>`).join('');
-}
-
-function renderDetailWlan(data) {
-  const tbody=q('tbl-wlan').querySelector('tbody');
-  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">Keine WLAN-Clients</td></tr>`;return;}
-  tbody.innerHTML=data.entries.map(e=>`<tr>
-    <td class="mono">${h(e.mac)}</td>
-    <td class="mono" style="color:var(--text2)">${e.ip?h(e.ip):'—'}</td>
-    <td>${h(e.ssid)||'—'}</td>
-    <td>${e.band?`<span class="badge badge-gray">${h(e.band)}</span>`:'—'}</td>
-    <td style="color:var(--text2)">${e.channel?'CH '+e.channel:'—'}</td>
-  </tr>`).join('');
-}
-
-function renderDetailLldp(data) {
-  const tbody=q('tbl-lldp').querySelector('tbody');
-  if(!data.entries.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">Keine LLDP-Nachbarn</td></tr>`;return;}
-  tbody.innerHTML=data.entries.map(e=>`<tr>
-    <td style="font-weight:600">${h(e.localPortName)}</td>
-    <td>${h(e.remSysName||'—')}</td>
-    <td class="mono" style="color:var(--text2)">${h(e.remPortDesc||e.remPortId||'—')}</td>
-    <td style="color:var(--text2);font-size:12px">${h((e.remSysDesc||'').split('\n')[0]||'—')}</td>
-  </tr>`).join('');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// NETZWERKPLAN (LLDP TOPOLOGY)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-let topoNodes = {}; // id → {id,name,type,os,model,online,x,y,ghost,fixed}
-let topoEdges = []; // {id,src,tgt,srcPort,dstPort}
-let topoLldpMap = {}; // ip → full lldp entries (from sync)
-let topoTx = 0, topoTy = 0, topoScale = 1;
-let topoDragNode = null, topoPan = null, topoWasDrag = false;
-let topoRootId = '', topoDetailId = null;
-
-const NW = 190, NH = 72, HG = 230, VG = 140;
-const TOPO_TYPE_BADGE = {
-  switch:   {label:'SW', bg:'rgba(170,218,247,.15)', color:'#aadaf7'},
-  'lx-ap':  {label:'AP', bg:'rgba(249,115,22,.15)',  color:'#f97316'},
-  'lcos-ap':{label:'AP', bg:'rgba(249,115,22,.15)',  color:'#f97316'},
-  router:   {label:'GW', bg:'rgba(37,99,235,.15)',   color:'#7b9fff'},
-  firewall: {label:'FW', bg:'rgba(239,68,68,.15)',   color:'#ef4444'},
-};
-
-// ── Nachbar-Matching ──────────────────────────────────────────────────────────
-function resolveTopoNeighbor(entry) {
-  const sysName = (entry.remSysName||'').toLowerCase();
-  const remMac  = (entry.remMac||'').toLowerCase();
-  for (const d of Object.values(deviceStore)) {
-    if (sysName && (d.name||'').toLowerCase() === sysName) return d.ip;
-    if (remMac) {
-      if ((d.mac||'').toLowerCase() === remMac) return d.ip;
-      if (d.macs?.some(m => m.toLowerCase() === remMac)) return d.ip;
-    }
-  }
-  if (sysName) {
-    for (const d of Object.values(deviceStore)) {
-      const dn = (d.name||'').toLowerCase();
-      if (dn && (dn.includes(sysName) || sysName.includes(dn))) return d.ip;
-    }
-  }
-  return null;
-}
-
-// ── Graph aufbauen ────────────────────────────────────────────────────────────
-function buildTopoGraph(lldpMap) {
-  topoNodes = {}; topoEdges = [];
-
-  Object.values(deviceStore).filter(d => {
-    if (d.online === false) return false;
-    if (topoLocFilter !== 'all' && (d.location||'') !== topoLocFilter) return false;
-    return true;
-  }).forEach(d => {
-    topoNodes[d.ip] = {
-      id: d.ip, name: d.name||d.ip, type: d.type||'unknown',
-      os: d.os||'', model: d.model||'', location: d.location||'', online: d.online, ghost: false,
-      x: 0, y: 0, fixed: false,
-    };
-  });
-
-  const edgeSet = new Set();
-  Object.entries(lldpMap).forEach(([srcIp, entries]) => {
-    entries.forEach(e => {
-      const tgtIp = resolveTopoNeighbor(e);
-      let tgtId = tgtIp;
-      if (!tgtIp) {
-        tgtId = 'ghost_' + (e.remSysName || e.remMac || 'unknown').replace(/[^a-z0-9]/gi,'_');
-        if (!topoNodes[tgtId]) {
-          topoNodes[tgtId] = {
-            id: tgtId, name: e.remSysName||e.remPortId||'Unbekannt', type:'unknown',
-            os:'', model:'', online: undefined, ghost: true, x: 0, y: 0, fixed: false,
-          };
-        }
-      }
-      const edgeKey = [srcIp, tgtId].sort().join('||');
-      if (edgeSet.has(edgeKey)) {
-        const ex = topoEdges.find(ed => ed.id === edgeKey);
-        if (ex && ex.src === tgtId && !ex.dstPort) ex.dstPort = e.localPortName;
-        if (ex && ex.src === srcIp && !ex.dstPort) ex.dstPort = e.remPortId||e.remPortDesc||'';
-      } else {
-        edgeSet.add(edgeKey);
-        topoEdges.push({ id:edgeKey, src:srcIp, tgt:tgtId,
-          srcPort: e.localPortName||'', dstPort: e.remPortId||e.remPortDesc||'' });
-      }
-    });
-  });
-}
-
-// ── BFS Tree Layout ───────────────────────────────────────────────────────────
-function layoutTopo(rootId) {
-  const ids = Object.keys(topoNodes);
-  if (!ids.length) return {};
-
-  const adj = {};
-  ids.forEach(id => { adj[id] = []; });
-  topoEdges.forEach(e => {
-    if (adj[e.src] !== undefined && topoNodes[e.tgt]) adj[e.src].push(e.tgt);
-    if (adj[e.tgt] !== undefined && topoNodes[e.src]) adj[e.tgt].push(e.src);
-  });
-
-  let root = ids.includes(rootId) ? rootId : '';
-  if (!root) {
-    const deg = {};
-    ids.forEach(id => { deg[id] = (adj[id]||[]).length; });
-    root = [...ids].sort((a,b) => deg[b]-deg[a])[0] || ids[0];
-    topoRootId = root;
-  }
-
-  const level = {}, byLevel = {};
-  const queue = [root]; let head = 0;
-  level[root] = 0; byLevel[0] = [root];
-  while (head < queue.length) {
-    const curr = queue[head++];
-    (adj[curr]||[]).forEach(next => {
-      if (level[next] === undefined) {
-        level[next] = level[curr] + 1;
-        if (!byLevel[level[next]]) byLevel[level[next]] = [];
-        byLevel[level[next]].push(next);
-        queue.push(next);
-      }
-    });
-  }
-
-  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
-  levels.forEach(lvl => {
-    const group = byLevel[lvl];
-    const totalW = (group.length - 1) * HG;
-    group.forEach((id,i) => { topoNodes[id].x = i*HG - totalW/2; topoNodes[id].y = lvl*VG; });
-  });
-
-  const unconnected = ids.filter(id => level[id] === undefined);
-  const maxLvl = levels.length ? Math.max(...levels) : 0;
-  const unconnY = (maxLvl + 2) * VG;
-  const totalUW = (unconnected.length - 1) * HG;
-  unconnected.forEach((id,i) => { topoNodes[id].x = i*HG - totalUW/2; topoNodes[id].y = unconnY; });
-
-  return { level, byLevel, unconnected, maxLvl };
-}
-
-// ── Root selector ─────────────────────────────────────────────────────────────
-function buildTopoSelector() {
-  const devIds = Object.keys(topoNodes).filter(id => !topoNodes[id].ghost);
-  if (!devIds.length) return;
-  if (!devIds.includes(topoRootId)) {
-    const deg = {};
-    devIds.forEach(id => { deg[id] = 0; });
-    topoEdges.forEach(e => { if (deg[e.src]!==undefined) deg[e.src]++; if (deg[e.tgt]!==undefined) deg[e.tgt]++; });
-    topoRootId = [...devIds].sort((a,b) => deg[b]-deg[a])[0] || devIds[0];
-  }
-  const sorted = [...devIds].sort((a,b) => (topoNodes[a].name||'').localeCompare(topoNodes[b].name||''));
-  const sel = q('topo-root-select');
-  sel.innerHTML = sorted.map(id =>
-    `<option value="${h(id)}"${id===topoRootId?' selected':''}>${h(topoNodes[id].name)}</option>`
-  ).join('');
-}
-
-function topoChangeRoot() {
-  topoRootId = q('topo-root-select').value;
-  layoutTopo(topoRootId);
-  renderTopoSvg();
-  setTimeout(topoFit, 50);
-}
-
-// ── Theme-aware SVG colours ───────────────────────────────────────────────────
-function topoTheme() {
-  const dark = document.documentElement.dataset.theme === 'dark';
-  return {
-    // Node text — matches --text / --text2 from CSS variables
-    nodeText:      dark ? '#e8f0f8'             : 'rgba(15,30,55,.92)',
-    nodeSub:       dark ? '#7ea8c8'             : 'rgba(74,100,120,.75)',
-    nodePort:      dark ? 'rgba(200,225,248,.9)': 'rgba(30,50,80,.88)',
-    portStroke:    dark ? 'rgba(10,22,40,.95)'  : 'rgba(240,244,248,.95)',
-    // Node backgrounds
-    bgOnline:      dark ? 'rgba(52,217,123,.06)': 'rgba(26,138,62,.05)',
-    bgOffline:     dark ? 'rgba(240,85,104,.06)': 'rgba(211,47,47,.05)',
-    bgUnknown:     dark ? 'rgba(77,166,255,.04)': 'rgba(100,116,139,.05)',
-    // Node border + dot colours (new dark palette)
-    borderOnline:  dark ? 'rgba(52,217,123,.6)' : 'rgba(26,138,62,.55)',
-    borderOffline: dark ? 'rgba(240,85,104,.5)' : 'rgba(211,47,47,.4)',
-    borderUnknown: dark ? 'rgba(77,166,255,.3)' : 'rgba(100,116,139,.4)',
-    dotOnline:     dark ? '#2dd4a0'             : '#1a8a3e',
-    dotOffline:    dark ? '#f05568'             : '#d32f2f',
-    dotUnknown:    dark ? 'rgba(126,168,200,.6)': 'rgba(100,116,139,.6)',
-    // Ghost nodes
-    ghostBg:       dark ? 'rgba(22,40,68,.8)'   : 'rgba(220,230,240,.85)',
-    ghostText:     dark ? '#a8c8e8'             : 'rgba(74,100,120,.85)',
-    ghostSub:      dark ? '#5e8aaa'             : 'rgba(120,140,160,.75)',
-    ghostBorder:   dark ? 'rgba(77,166,255,.25)': 'rgba(100,116,139,.35)',
-    // Separator line / label
-    sepStroke:     dark ? 'rgba(77,166,255,.1)' : 'rgba(0,40,85,.1)',
-    sepText:       dark ? 'rgba(126,168,200,.4)': 'rgba(100,116,139,.4)',
-  };
-}
-
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderTopoSvg() {
-  const nodes = Object.values(topoNodes);
-  q('topo-empty').style.display = nodes.length ? 'none' : '';
-  if (!nodes.length) { q('topo-g').innerHTML = ''; return; }
-
-  const hw = NW/2, hh = NH/2;
-
-  function borderPt(cx, cy, tx, ty) {
-    const dx = tx-cx, dy = ty-cy;
-    if (!dx && !dy) return {x:cx, y:cy+hh};
-    const sX = dx ? hw/Math.abs(dx) : Infinity;
-    const sY = dy ? hh/Math.abs(dy) : Infinity;
-    const s = Math.min(sX, sY);
-    return {x: cx+dx*s, y: cy+dy*s};
-  }
-  const LOFF = 14;
-  function labelPt(cx, cy, bx, by) {
-    if (Math.abs(Math.abs(by-cy)-hh) < 0.5) {
-      return {x:bx, y:cy+Math.sign(by-cy)*(hh+LOFF), anchor:'middle'};
-    }
-    return {x:cx+Math.sign(bx-cx)*(hw+LOFF), y:by, anchor:bx>cx?'start':'end'};
-  }
-
-  let svg = '';
-
-  // Separator for unconnected nodes
-  const connectedIds = new Set(topoEdges.flatMap(e => [e.src, e.tgt]));
-  const unconn = nodes.filter(n => !connectedIds.has(n.id));
-  const conn   = nodes.filter(n =>  connectedIds.has(n.id));
-  if (unconn.length && conn.length) {
-    const uy = Math.min(...unconn.map(n=>n.y));
-    const xs = unconn.map(n=>n.x);
-    const x1 = Math.min(...xs)-hw-30, x2 = Math.max(...xs)+hw+30;
-    svg += `<line x1="${x1}" y1="${uy-55}" x2="${x2}" y2="${uy-55}" stroke="${tt.sepStroke}" stroke-width="1" stroke-dasharray="6,5"/>`;
-    svg += `<text x="${(x1+x2)/2}" y="${uy-64}" text-anchor="middle" font-size="9" font-weight="600" fill="${tt.sepText}" font-family="system-ui,sans-serif" letter-spacing="0.1em">KEINE VERBINDUNG</text>`;
-  }
-
-  // Count edges per node pair so we can offset parallel edges
-  const pairCount = {}, pairSeen = {};
-  topoEdges.forEach(e => {
-    const k = [e.src, e.tgt].sort().join('||');
-    pairCount[k] = (pairCount[k]||0) + 1;
-    pairSeen[k]  = 0;
-  });
-
-  const tt = topoTheme();
-
-  // Edge type colors
-  function edgeColor(e, bothOnline, ghost) {
-    if (ghost) return 'rgba(100,116,139,.4)';
-    if (e.type === 'wds')  return bothOnline ? 'rgba(249,115,22,.7)'  : 'rgba(249,115,22,.3)';
-    if (e.type === 'l2tp') return bothOnline ? 'rgba(34,197,94,.7)'   : 'rgba(34,197,94,.3)';
-    return bothOnline ? 'rgba(37,99,235,.6)' : 'rgba(37,99,235,.25)';
-  }
-
-  // Edges
-  topoEdges.forEach(e => {
-    const f = topoNodes[e.src], t = topoNodes[e.tgt];
-    if (!f || !t) return;
-    const bothOnline = f.online===true && t.online===true;
-    const ghost = f.ghost || t.ghost;
-
-    // Offset parallel edges between same pair
-    const pairKey = [e.src, e.tgt].sort().join('||');
-    const total = pairCount[pairKey] || 1;
-    const idx   = pairSeen[pairKey]++;
-    const offset = (idx - (total - 1) / 2) * 44;
-
-    const midY = (f.y + t.y) / 2 + offset;
-    const midX = (f.x + t.x) / 2 + (f.y === t.y ? offset : 0);
-    const fs = borderPt(f.x, f.y, t.x, t.y);
-    const te = borderPt(t.x, t.y, f.x, f.y);
-
-    const color = edgeColor(e, bothOnline, ghost);
-    const w = ghost ? 1.5 : 2;
-    const disconnected = e.type ? e.connected === false : !bothOnline;
-    const dash = (ghost || disconnected) ? ' stroke-dasharray="5,4"' : '';
-    svg += `<path d="M${fs.x.toFixed(1)},${fs.y.toFixed(1)} C${fs.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${midY} ${te.x.toFixed(1)},${te.y.toFixed(1)}" stroke="${color}" stroke-width="${w}" fill="none"${dash}/>`;
-
-    const ts = `font-size="10" font-weight="600" fill="${tt.nodePort}" font-family="system-ui,sans-serif" paint-order="stroke" stroke="${tt.portStroke}" stroke-width="4" stroke-linejoin="round" dominant-baseline="middle"`;
-    if (e.srcPort) { const lp=labelPt(f.x,f.y,fs.x,fs.y); svg+=`<text x="${lp.x.toFixed(1)}" y="${(lp.y+offset*0.3).toFixed(1)}" text-anchor="${lp.anchor}" ${ts} fill="${color}">${h(e.srcPort)}</text>`; }
-    if (e.dstPort) { const rp=labelPt(t.x,t.y,te.x,te.y); svg+=`<text x="${rp.x.toFixed(1)}" y="${(rp.y+offset*0.3).toFixed(1)}" text-anchor="${rp.anchor}" ${ts} fill="${color}">${h(e.dstPort)}</text>`; }
-  });
-
-  // Nodes
-  nodes.forEach(node => {
-    const {x, y} = node;
-    const rx = x-hw, ry = y-hh;
-    const isRoot = node.id === topoRootId;
-
-    if (node.ghost) {
-      const dn = node.name.length>22 ? node.name.slice(0,21)+'…' : node.name;
-      svg += `<g opacity="0.65" onclick="topoNodeClick('${h(node.id)}')">
-        <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${tt.ghostBg}" stroke="${tt.ghostBorder}" stroke-width="1.5" stroke-dasharray="6,4"/>
-        <text x="${rx+NW/2}" y="${ry+25}" text-anchor="middle" font-size="12" font-weight="600" fill="${tt.ghostText}" font-family="system-ui,sans-serif">${h(dn)}</text>
-        <text x="${rx+NW/2}" y="${ry+42}" text-anchor="middle" font-size="9" fill="${tt.ghostSub}" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
-      </g>`;
-      return;
-    }
-
-    const dotColor    = node.online===true ? tt.dotOnline    : node.online===false ? tt.dotOffline    : tt.dotUnknown;
-    const borderColor = node.online===true ? tt.borderOnline : node.online===false ? tt.borderOffline : tt.borderUnknown;
-    const bgFill      = node.online===true ? tt.bgOnline : node.online===false ? tt.bgOffline : tt.bgUnknown;
-    const glow        = isRoot ? ' filter="url(#topo-glow)"' : '';
-    const badge       = TOPO_TYPE_BADGE[node.type];
-    const badgeLabel  = badge?.label || '?';
-    const badgeBg     = badge?.bg    || 'rgba(100,116,139,.15)';
-    const badgeColor  = badge?.color || 'rgba(148,163,184,.9)';
-    const dname       = node.name.length>21 ? node.name.slice(0,20)+'…' : node.name;
-    const dsub        = (node.model||node.os||'').slice(0,26);
-    const dloc        = (node.location||'').slice(0,28);
-
-    svg += `<g class="topo-node" onmousedown="topoNodeDragStart(event,'${h(node.id)}',event)" onclick="topoNodeClick('${h(node.id)}');"${glow}>
-      <rect class="topo-node-rect" x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="8" fill="${bgFill}" stroke="${borderColor}" stroke-width="${isRoot?2.5:1.5}"/>
-      ${isRoot?`<rect x="${rx-2}" y="${ry-2}" width="${NW+4}" height="${NH+4}" rx="10" fill="none" stroke="${borderColor}" stroke-width="0.5" opacity="0.4"/>`:''}
-      <circle cx="${rx+14}" cy="${y}" r="5" fill="${dotColor}"${node.online===true?' filter="url(#topo-glow)"':''}/>
-      <rect x="${rx+NW-34}" y="${ry+6}" width="26" height="14" rx="4" fill="${badgeBg}"/>
-      <text x="${rx+NW-21}" y="${ry+16}" text-anchor="middle" font-size="9" font-weight="800" fill="${badgeColor}" font-family="system-ui,sans-serif">${h(badgeLabel)}</text>
-      <text x="${rx+26}" y="${ry+26}" font-size="12" font-weight="700" fill="${tt.nodeText}" font-family="system-ui,sans-serif">${h(dname)}</text>
-      <text x="${rx+26}" y="${ry+43}" font-size="10" fill="${tt.nodeSub}" font-family="system-ui,sans-serif">${h(dsub||'–')}</text>
-      ${dloc?`<text x="${rx+26}" y="${ry+59}" font-size="9" fill="${tt.nodeSub}" font-family="system-ui,sans-serif" opacity="0.7">&#128205; ${h(dloc)}</text>`:''}
-    </g>`;
-  });
-
-  q('topo-g').innerHTML = svg;
-}
-
-// ── Detail panel ──────────────────────────────────────────────────────────────
-function topoNodeClick(id) {
-  if (topoWasDrag) { topoWasDrag = false; return; }
-  topoOpenDetail(id);
-}
-
-function topoOpenDetail(id) {
-  const node = topoNodes[id]; if (!node) return;
-  topoDetailId = id;
-  const dotColor = node.online===true ? '#a0ed3a' : node.online===false ? '#ff004d' : 'rgba(100,116,139,.6)';
-  q('topo-detail-dot').style.background = dotColor;
-  q('topo-detail-name').textContent = node.name;
-  const subParts = [node.model, node.os, node.ghost ? null : node.id].filter(Boolean);
-  q('topo-detail-sub').textContent = subParts.join(' · ') || '–';
-  const locEl = q('topo-detail-location');
-  if (locEl) { locEl.textContent = node.location || ''; locEl.style.display = node.location ? '' : 'none'; }
-  q('topo-detail-setroot').style.display = node.ghost ? 'none' : '';
-
-  const entries = topoLldpMap[id] || [];
-  let html = '';
-
-  if (entries.length) {
-    html += `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">LLDP Nachbarn (${entries.length})</div>`;
-    html += `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--text3);font-size:10px">
-      <th style="text-align:left;padding:0 6px 4px 0;font-weight:600">Port</th>
-      <th style="text-align:left;padding:0 6px 4px 0;font-weight:600">Nachbar</th>
-      <th style="text-align:left;padding:0 0 4px 0;font-weight:600">Gegenstelle</th>
-    </tr></thead><tbody>`;
-    entries.forEach(e => {
-      html += `<tr style="border-top:1px solid var(--border)">
-        <td style="padding:5px 6px 5px 0;color:#60a5fa;font-weight:600">${h(e.localPortName||'–')}</td>
-        <td style="padding:5px 6px 5px 0;font-weight:600">${h(e.remSysName||e.remPortId||'?')}</td>
-        <td style="padding:5px 0;color:var(--text3);font-size:11px">${h(e.remPortDesc||e.remPortId||'–')}</td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-  }
-
-  // Edges connecting to this node
-  const links = topoEdges.filter(e => e.tgt===id || e.src===id);
-  if (links.length) {
-    const typeColor = { wds:'var(--orange)', l2tp:'var(--green)' };
-    const typeLabel = { wds:'WDS', l2tp:'L2TP', undefined:'LLDP' };
-    html += `<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">Verbindungen (${links.length})</div>`;
-    links.forEach(e => {
-      const otherId = e.src===id ? e.tgt : e.src;
-      const other = topoNodes[otherId];
-      if (!other) return;
-      const myPort = e.src===id ? e.srcPort : e.dstPort;
-      const theirPort = e.src===id ? e.dstPort : e.srcPort;
-      const tcolor = typeColor[e.type] || '#60a5fa';
-      const tlabel = typeLabel[e.type] || 'LLDP';
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg2);border-radius:6px;font-size:12px;margin-bottom:4px">
-        <span style="font-weight:600">${h(other.name)}</span>
-        <span style="display:flex;gap:6px;align-items:center">
-          <span style="font-size:10px;color:${tcolor};font-weight:700">${tlabel}</span>
-          <span style="color:var(--text3);font-size:11px">${h([myPort,theirPort].filter(Boolean).join(' → '))}</span>
-        </span>
-      </div>`;
-    });
-  }
-
-  if (!html) html = `<p style="color:var(--text3);font-size:12px">Keine LLDP-Daten verfügbar.<br>LLDP Sync starten um Verbindungen zu laden.</p>`;
-  q('topo-detail-content').innerHTML = html;
-  q('topo-detail').style.display = 'flex';
-}
-
-function topoCloseDetail() { q('topo-detail').style.display='none'; topoDetailId=null; }
-
-function topoSetRootFromDetail() {
-  if (!topoDetailId || topoNodes[topoDetailId]?.ghost) return;
-  topoRootId = topoDetailId;
-  q('topo-root-select').value = topoRootId;
-  layoutTopo(topoRootId);
-  renderTopoSvg();
-  setTimeout(topoFit, 50);
-}
-
-// ── Pan / Zoom / Drag ─────────────────────────────────────────────────────────
-function topoSvgPt(e) {
-  const r = q('topo-svg').getBoundingClientRect();
-  return { x:(e.clientX-r.left-topoTx)/topoScale, y:(e.clientY-r.top-topoTy)/topoScale };
-}
-function topoNodeDragStart(e, id) {
-  e.stopPropagation();
-  const pt = topoSvgPt(e), n = topoNodes[id];
-  if (!n) return;
-  topoDragNode = { id, ox:pt.x-n.x, oy:pt.y-n.y };
-  topoWasDrag = false;
-}
-function topoBgDragStart(e) {
-  if (topoDragNode) return;
-  topoPan = { sx:e.clientX, sy:e.clientY, tx:topoTx, ty:topoTy };
-}
-function topoMouseMove(e) {
-  if (topoDragNode) {
-    const pt = topoSvgPt(e), n = topoNodes[topoDragNode.id];
-    if (!n) return;
-    n.x = pt.x - topoDragNode.ox;
-    n.y = pt.y - topoDragNode.oy;
-    topoWasDrag = true;
-    renderTopoSvg();
-  } else if (topoPan) {
-    topoTx = topoPan.tx + (e.clientX - topoPan.sx);
-    topoTy = topoPan.ty + (e.clientY - topoPan.sy);
-    const g = document.getElementById('topo-g');
-    if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
-  }
-}
-function topoMouseUp()  { topoDragNode = null; topoPan = null; }
-function topoWheel(e) {
-  e.preventDefault();
-  const svgEl = q('topo-svg');
-  const r = svgEl.getBoundingClientRect();
-  const mx = e.clientX - r.left, my = e.clientY - r.top;
-  const factor = e.deltaY < 0 ? 1.1 : 0.9;
-  const newScale = Math.max(0.1, Math.min(5, topoScale * factor));
-  topoTx = mx - (mx - topoTx) * (newScale / topoScale);
-  topoTy = my - (my - topoTy) * (newScale / topoScale);
-  topoScale = newScale;
-  const g = document.getElementById('topo-g');
-  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
-}
-function topoZoom(factor) {
-  topoScale = Math.max(0.1, Math.min(5, topoScale * factor));
-  const g = document.getElementById('topo-g');
-  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
-}
-function topoFit() {
-  const svgEl = q('topo-svg');
-  const W = svgEl.clientWidth || 900, H = svgEl.clientHeight || 620;
-  const nodes = Object.values(topoNodes);
-  if (!nodes.length) return;
-  const xs = nodes.map(n=>n.x), ys = nodes.map(n=>n.y);
-  const minX=Math.min(...xs)-NW/2-20, maxX=Math.max(...xs)+NW/2+20;
-  const minY=Math.min(...ys)-NH/2-20, maxY=Math.max(...ys)+NH/2+20;
-  const sw=maxX-minX, sh=maxY-minY;
-  topoScale = Math.min(W/sw, H/sh, 1.5);
-  topoTx = W/2 - (minX+maxX)/2 * topoScale;
-  topoTy = H/2 - (minY+maxY)/2 * topoScale;
-  const g = document.getElementById('topo-g');
-  if (g) g.setAttribute('transform', `translate(${topoTx},${topoTy}) scale(${topoScale})`);
-}
-
-// ── WDS Sync (Geräte-Tab) ─────────────────────────────────────────────────────
-async function syncWdsAll() {
-  const btn = q('btn-wds-sync');
-  const st  = q('dev-sync-status');
-  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false && matchesLocFilter(d));
-  if (!lxDevs.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine online LX APs im Standort „${devLocFilter}".` : 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
-  }
-  btn.disabled = true;
-  st.className = 'status-bar loading';
-  meshData = [];
-  let done = 0;
-  try {
-    for (let i = 0; i < lxDevs.length; i += 4) {
-      await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
-        try {
-          const result = await snmpQ(dev.ip, 'wds');
-          if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
-        } catch {}
-        done++;
-        st.innerHTML = `<span class="spinner"></span> WDS – ${done} / ${lxDevs.length} – ${h(dev.name||dev.ip)}`;
-      }));
-    }
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    st.className = 'status-bar ok';
-    st.textContent = `WDS abgeschlossen – ${meshData.length} Verbindungen.`;
-    renderDevices(); renderMesh();
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'WDS';
-  }
-}
-
-// ── L2TPv3 Sync (Geräte-Tab) ──────────────────────────────────────────────────
-async function syncL2tpAll() {
-  const btn = q('btn-l2tp-sync2');
-  const st  = q('dev-sync-status');
-  const lxDevs = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online !== false && matchesLocFilter(d));
-  if (!lxDevs.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine online LX APs im Standort „${devLocFilter}".` : 'Keine online LX Access Points – bitte zuerst "Status" ausführen.'; return;
-  }
-  btn.disabled = true;
-  st.className = 'status-bar loading';
-  l2tpData = [];
-  let done = 0;
-  try {
-    for (let i = 0; i < lxDevs.length; i += 4) {
-      await Promise.all(lxDevs.slice(i, i + 4).map(async dev => {
-        try {
-          const result = await snmpQ(dev.ip, 'l2tp');
-          if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
-        } catch {}
-        done++;
-        st.innerHTML = `<span class="spinner"></span> L2TPv3 – ${done} / ${lxDevs.length} – ${h(dev.name||dev.ip)}`;
-      }));
-    }
-    await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    st.className = 'status-bar ok';
-    st.textContent = `L2TPv3 abgeschlossen – ${l2tpData.length} Endpunkte.`;
-    renderDevices(); renderL2tp();
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'L2TPv3';
-  }
-}
-
-// ── All-in-one sync for Netzwerkplan ─────────────────────────────────────────
-async function syncTopologyAll() {
-  const btn = q('btn-topo-sync-all');
-  const st  = q('dev-sync-status');
-  const allDevs = Object.values(deviceStore).filter(matchesLocFilter);
-  if (!allDevs.length) {
-    st.className = 'status-bar error';
-    st.textContent = devLocFilter !== 'all' ? `Keine Geräte im Standort „${devLocFilter}".` : 'Keine Geräte gespeichert – bitte zuerst Geräte importieren.';
-    return;
-  }
-
-  btn.disabled = true; btn.textContent = '⟳ Läuft…';
-  st.className = 'status-bar loading';
-
-  try {
-    // ── Phase 1: Online/Offline-Status für alle Geräte prüfen ────────────────
-    st.innerHTML = `<span class="spinner"></span> Phase 1/5: Status prüfen – 0 / ${allDevs.length}`;
-    let done = 0;
-
-    async function checkStatus(dev) {
-      try {
-        await snmpQ(dev.ip, 'ping');
-        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = true;
-      } catch {
-        if (deviceStore[dev.ip]) deviceStore[dev.ip].online = false;
-      }
-      done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 1/5: Status prüfen – ${done} / ${allDevs.length} – ${h(dev.name||dev.ip)}`;
-      renderDevices();
-    }
-    const CONC_STATUS = 5;
-    for (let i = 0; i < allDevs.length; i += CONC_STATUS) {
-      await Promise.all(allDevs.slice(i, i + CONC_STATUS).map(checkStatus));
-    }
-
-    // ── Phase 2: WiFi Mesh (nur lx-ap, nur online) ───────────────────────────
-    const lxOnline = Object.values(deviceStore).filter(d => d.type === 'lx-ap' && d.online === true && matchesLocFilter(d));
-    meshData = [];
-    done = 0;
-    st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – 0 / ${lxOnline.length}`;
-
-    async function syncWds(dev) {
-      try {
-        const result = await snmpQ(dev.ip, 'wds');
-        if (result.configured) mergeMeshResult(dev.ip, dev.name||dev.ip, result);
-      } catch {}
-      done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 2/5: WiFi Mesh – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
-    }
-    const CONC_WDS = 4;
-    for (let i = 0; i < lxOnline.length; i += CONC_WDS) {
-      await Promise.all(lxOnline.slice(i, i + CONC_WDS).map(syncWds));
-    }
-
-    // ── Phase 3: L2TPv3 (nur lx-ap, nur online) ─────────────────────────────
-    l2tpData = [];
-    done = 0;
-    st.innerHTML = `<span class="spinner"></span> Phase 3/5: L2TPv3 – 0 / ${lxOnline.length}`;
-
-    async function syncL2tpDev(dev) {
-      try {
-        const result = await snmpQ(dev.ip, 'l2tp');
-        if (result.configured) mergeL2tpResult(dev.ip, dev.name||dev.ip, result);
-      } catch {}
-      done++;
-      st.innerHTML = `<span class="spinner"></span> Phase 3/5: L2TPv3 – ${done} / ${lxOnline.length} – ${h(dev.name||dev.ip)}`;
-    }
-    const CONC_L2TP = 4;
-    for (let i = 0; i < lxOnline.length; i += CONC_L2TP) {
-      await Promise.all(lxOnline.slice(i, i + CONC_L2TP).map(syncL2tpDev));
-    }
-
-    // ── Phase 4: LLDP – identisch mit "LLDP Sync" unter Geräte ──────────────
-    const onlineDevs = Object.values(deviceStore).filter(d => d.online !== false && matchesLocFilter(d));
-    st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – 0 / ${onlineDevs.length}`;
-    await lldpSyncCore(onlineDevs, (d, total, dev) => {
-      st.innerHTML = `<span class="spinner"></span> Phase 4/5: LLDP – ${d} / ${total} – ${h(dev.name||dev.ip)}`;
-    });
-
-    // ── Phase 5: MAC-Adressen ─────────────────────────────────────────────────
-    done = 0;
-    st.innerHTML = `<span class="spinner"></span> Phase 5/5: MAC-Adressen – 0 / ${onlineDevs.length}`;
-    const macQueue = [...onlineDevs];
-    async function macWorker() {
-      while (macQueue.length) {
-        const dev = macQueue.shift();
-        try {
-          const result = await snmpQ(dev.ip, 'ifmacs');
-          if (deviceStore[dev.ip] && result.macs?.length) deviceStore[dev.ip].macs = result.macs;
-        } catch {}
-        done++;
-        st.innerHTML = `<span class="spinner"></span> Phase 5/5: MAC-Adressen – ${done} / ${onlineDevs.length} – ${h(dev.name||dev.ip)}`;
-      }
-    }
-    await Promise.all(Array(Math.min(3, onlineDevs.length || 1)).fill(null).map(macWorker));
-
-    // ── Speichern ────────────────────────────────────────────────────────────
-    st.innerHTML = `<span class="spinner"></span> Daten werden gespeichert…`;
-    try {
-      await fetch('/api/devices', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(deviceStore) });
-    } catch (e) {
-      console.error('Fehler beim Speichern:', e);
-    }
-
-    st.className = 'status-bar ok';
-    st.textContent = 'Sync abgeschlossen.';
-    renderDevices();
-    renderMesh();
-    renderL2tp();
-    buildTopoFromStore();
-
-  } catch (e) {
-    st.className = 'status-bar error';
-    st.textContent = `Fehler: ${e.message}`;
-    console.error('syncTopologyAll:', e);
-  } finally {
-    btn.disabled = false; btn.textContent = '⟳ Daten Abrufen';
-  }
-}
-
-// ── Build topology from stored device data ────────────────────────────────────
-function buildTopoFromStore() {
-  // LLDP edges
-  topoLldpMap = {};
-  Object.values(deviceStore).forEach(dev => {
-    if (dev.lldpData?.length) topoLldpMap[dev.ip] = dev.lldpData;
-  });
-  buildTopoGraph(topoLldpMap); // builds nodes + LLDP edges
-
-  // Track all existing edge pairs (both directions)
-  const existingPairs = new Set(topoEdges.map(e => [e.src, e.tgt].sort().join('||')));
-
-  // WDS / Mesh edges
-  const edgeIdSet = new Set(topoEdges.map(e => e.id));
-  let wdsCnt = 0;
-  Object.values(deviceStore).forEach(dev => {
-    (dev.wdsLinks||[]).forEach(link => {
-      if (!link.mac) return;
-      const peerDev = resolvePeerDev(link.mac);
-      if (!peerDev || peerDev.ip === dev.ip) return;
-      // Ensure peer node exists even when offline (offline devices are excluded from buildTopoGraph)
-      if (!topoNodes[peerDev.ip]) {
-        topoNodes[peerDev.ip] = {
-          id: peerDev.ip, name: peerDev.name||peerDev.ip,
-          type: peerDev.type||'unknown', os: peerDev.os||'', model: peerDev.model||'',
-          location: peerDev.location||'', online: peerDev.online, ghost: false, x: 0, y: 0, fixed: false,
-        };
-      }
-      const edgeId = 'wds:' + [dev.ip, peerDev.ip].sort().join('||');
-      if (edgeIdSet.has(edgeId)) return;
-      edgeIdSet.add(edgeId);
-      topoEdges.push({ id: edgeId, src: dev.ip, tgt: peerDev.ip,
-        srcPort: link.linkName||'WDS', dstPort: '',
-        type: 'wds', label: link.band||'WDS', connected: link.connected });
-      wdsCnt++;
-    });
-  });
-
-  // L2TP edges – Ziel wird auch dann als Knoten ergänzt wenn es offline ist
-  let l2tpCnt = 0;
-  Object.values(deviceStore).forEach(dev => {
-    (dev.l2tpEndpoints||[]).forEach(ep => {
-      const remoteIp = ep.remoteIp;
-      if (!remoteIp || remoteIp === dev.ip) return;
-      if (!topoNodes[remoteIp]) {
-        const rd = deviceStore[remoteIp];
-        topoNodes[remoteIp] = {
-          id: remoteIp, name: rd ? (rd.name||remoteIp) : remoteIp,
-          type: rd?.type||'unknown', os: rd?.os||'', model: rd?.model||'',
-          location: rd?.location||'', online: rd ? rd.online : false, ghost: !rd, x: 0, y: 0, fixed: false,
-        };
-      }
-      const edgeId = 'l2tp:' + [dev.ip, remoteIp].sort().join('||');
-      if (edgeIdSet.has(edgeId)) return;
-      edgeIdSet.add(edgeId);
-      topoEdges.push({ id: edgeId, src: dev.ip, tgt: remoteIp,
-        srcPort: ep.endpointName||'L2TP', dstPort: '',
-        type: 'l2tp', label: 'L2TP', connected: ep.state==='connected' });
-      l2tpCnt++;
-    });
-  });
-
-  buildTopoSelector();
-  layoutTopo(topoRootId);
-  renderTopoSvg();
-  setTimeout(topoFit, 60);
-
-  const nc = Object.keys(topoNodes).length;
-  const ec = topoEdges.length;
-  const devWithLldp = Object.values(deviceStore).filter(d => d.lldpData?.length).length;
-  const st = q('topo-status');
-
-  if (!devWithLldp && !wdsCnt && !l2tpCnt) {
-    st.className = 'status-bar error';
-    st.textContent = 'Keine Verbindungsdaten gespeichert – bitte LLDP Sync, Mesh Sync oder L2TP Sync unter den jeweiligen Tabs ausführen.';
-  } else {
-    const parts = [];
-    if (devWithLldp) parts.push(`LLDP: ${devWithLldp} Gerät${devWithLldp!==1?'e':''}`);
-    if (wdsCnt)      parts.push(`WDS: ${wdsCnt} Link${wdsCnt!==1?'s':''}`);
-    if (l2tpCnt)     parts.push(`L2TP: ${l2tpCnt} Verbindung${l2tpCnt!==1?'en':''}`);
-    st.className = 'status-bar ok';
-    st.textContent = `${nc} Knoten, ${ec} Kante${ec!==1?'n':''} – ${parts.join(' · ')}`;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// TAB NAVIGATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const tab=q('tab-'+name); if(tab) tab.classList.add('active');
-  const panel=q('panel-'+name); if(panel) panel.classList.add('active');
-  if(name !== 'detail') { q('detail-badge').style.display='none'; }
-  if(name==='devices')  renderDevices();
-  if(name==='topology') buildTopoFromStore();
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════════════════════
-
-(async function init() {
-  initTheme();
-  await loadSettings();
-  await loadDevices();
-  // Restore LMC token if saved
-  const savedToken = localStorage.getItem('lmc_token');
-  if (savedToken) { q('lmc-token').value=savedToken; q('lmc-save-token').checked=true; }
-  // URL params
-  const p = new URLSearchParams(location.search);
-  if (p.get('host')) openDeviceDetail(p.get('host'));
-})();
-</script>
+<script src="/app.js" defer></script>
+
+<!-- ═══ ADD-IN EDITOR MODAL ══════════════════════════════════════════════════ -->
+<div id="addin-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddinEditor()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="addin-modal-title">Add-in bearbeiten</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closeAddinEditor()">&#x2715; Schließen</button>
+    </div>
+    <div class="modal-body">
+      <!-- Metadaten -->
+      <div class="modal-meta">
+        <div>
+          <label>Name</label>
+          <input type="text" id="edit-name" placeholder="Add-in Name">
+        </div>
+        <div>
+          <label>Beschreibung</label>
+          <input type="text" id="edit-desc" placeholder="Kurzbeschreibung">
+        </div>
+        <div>
+          <label>Betriebssystem</label>
+          <div class="os-flags">
+            <label><input type="radio" name="ef-os" value="LCOS">      LCOS</label>
+            <label><input type="radio" name="ef-os" value="LCOS LX">   LCOS LX</label>
+            <label><input type="radio" name="ef-os" value="LCOS SX 3"> LCOS SX 3</label>
+            <label><input type="radio" name="ef-os" value="LCOS SX 4"> LCOS SX 4</label>
+            <label><input type="radio" name="ef-os" value="LCOS SX 5"> LCOS SX 5</label>
+            <label><input type="radio" name="ef-os" value="LCOS FX">   LCOS FX</label>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.5">
+          Datei: <span id="edit-filepath" style="font-family:var(--mono)"></span>
+        </div>
+      </div>
+      <!-- Code Editor -->
+      <div class="modal-editor">
+        <div class="editor-toolbar">
+          <span>JavaScript</span>
+          <span style="opacity:.4">·</span>
+          <span>Tab = 4 Leerzeichen</span>
+        </div>
+        <textarea class="code-area" id="edit-script" spellcheck="false" wrap="off"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div id="addin-editor-status" style="font-size:12px"></div>
+      <div class="spacer"></div>
+      <button class="btn btn-sm btn-ghost" onclick="closeAddinEditor()">Abbrechen</button>
+      <button class="btn btn-sm" onclick="saveAddin()">Speichern</button>
+      <button class="btn btn-sm" onclick="saveAndUploadAddin()">Speichern &amp; Hochladen</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -1,0 +1,24 @@
+{
+  "vlans": [
+    {
+      "name": "Management",
+      "vlanId": 1,
+      "isManagement": false
+    },
+    {
+      "name": "Gast",
+      "vlanId": 100,
+      "isManagement": false
+    },
+    {
+      "name": "Server",
+      "vlanId": 200,
+      "isManagement": true
+    },
+    {
+      "name": "Haustechnik",
+      "vlanId": 300,
+      "isManagement": false
+    }
+  ]
+}

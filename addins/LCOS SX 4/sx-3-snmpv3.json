@@ -1,0 +1,12 @@
+{
+  "name": "SX-4 SNMPv3",
+  "description": "IMPORT OnSite",
+  "lcos": false,
+  "lcosLx": false,
+  "swos": false,
+  "lcosSxSdk4": true,
+  "lcosSxXs": false,
+  "lcosFx": false,
+  "script": "/**\n * @param {Config} config\n * @param {Context} context\n * Do not edit this comment or parameter types. Required for code suggestions\n*/\nexports.main = function (config, context) {\n    config.addScriptLine( \"enable\" );\n    config.addScriptLine( \"configure\" );\n    //Activate SNMP\n    config.addScriptLine( \"snmp-server\" );\n    //Create SNMPv3User\n    config.addScriptLine( \"snmp-server user snmpclient sha REDACTED priv aes REDACTED\" ); // USERNAME = SNMP Username ;  PASSWORD = Password of Choice\n    //Create SNMPv3Group\n    config.addScriptLine( \"snmp-server security-to-group model v3 name snmpclient group snmpv3\" ); // USERNAME = SNMP Username; GROUPNAME = SNMP Group Name\n    //Create SNMPv3View\n    config.addScriptLine( \"snmp-server view snmpview .1 include \" ); // VIEWNAME = Name of SNMP VIEW ; OID = OID Subtree (e.g. .1 for all) ; VIEWTYPE = included or excluded\n    //Create SNMPv3Access\n    config.addScriptLine( \"snmp-server access snmpv3 model v3 level priv read snmpview write snmpview\" ); // GROUPNAME = SNMP Group Name ; VIEWNAME = Name of SNMP VIEW\n\n\n\n\n    config.addScriptLine( \"exit\" );\n\n};",
+  "os": "LCOS SX 4"
+}
