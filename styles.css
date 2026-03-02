@@ -56,7 +56,7 @@
 }
 
 [data-theme="dark"] {
-  /* Deep navy — darkened from LANCOM brand #002855 */
+  /* Deep navy #002855 */
   --bg:      #0a1628;
   --bg2:     #0f1f38;
   --bg3:     #162844;
@@ -64,7 +64,7 @@
   --border:  rgba(255,255,255,.1);
   --border2: rgba(255,255,255,.055);
 
-  /* LANCOM blue adapted for dark backgrounds */
+  /* Blue adapted for dark backgrounds */
   --cyan:    #4da6ff;
   --cyan2:   #2e8fe8;
   --green:   #34d97b;

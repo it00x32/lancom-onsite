@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function initTheme() {
-  const saved = localStorage.getItem('lancom_theme') || 'light';
+  const saved = localStorage.getItem('onsite_theme') || 'light';
   applyTheme(saved);
 }
 
@@ -20,7 +20,7 @@ function applyTheme(theme) {
     delete document.documentElement.dataset.theme;
     document.getElementById('theme-toggle-btn').textContent = '☀️';
   }
-  localStorage.setItem('lancom_theme', theme);
+  localStorage.setItem('onsite_theme', theme);
   // Re-render topology SVG so theme-aware colours take effect immediately
   if (document.getElementById('panel-topology')?.classList.contains('active')) {
     renderTopoSvg();
@@ -1197,8 +1197,8 @@ function handleScanEvent(ev) {
     setScanStatus(`Scanne ${ev.scanned} / ${ev.total}…`,'loading');
   } else if (ev.type==='done') {
     q('scan-bar').style.width='100%';
-    setScanStatus(ev.found>0?`Scan abgeschlossen — ${ev.found} Gerät${ev.found!==1?'e':''} gefunden`:`Scan abgeschlossen — keine LANCOM-Geräte gefunden`, ev.found>0?'ok':'');
-    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="8" class="empty">Keine LANCOM-Geräte gefunden</td></tr>`;
+    setScanStatus(ev.found>0?`Scan abgeschlossen — ${ev.found} Gerät${ev.found!==1?'e':''} gefunden`:`Scan abgeschlossen — keine Geräte gefunden`, ev.found>0?'ok':'');
+    if(ev.found===0) q('tbl-scan').querySelector('tbody').innerHTML=`<tr><td colspan="8" class="empty">Keine Geräte gefunden</td></tr>`;
     setBadge('scanner',ev.found||0);
     if(ev.found>0){ q('btn-save-all').style.display=''; q('sep-save-all').style.display=''; q('btn-save-all').textContent=`Alle ${ev.found} speichern`; }
   }

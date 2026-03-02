@@ -1,6 +1,6 @@
-# LANCOM OnSite
+# OnSite
 
-Lokales SNMP-Dashboard für LANCOM-Netzwerkgeräte. Kein Cloud-Zugang erforderlich – alle Abfragen laufen direkt per SNMP gegen die Geräte im lokalen Netz.
+Lokales SNMP-Dashboard für Netzwerkgeräte. Kein Cloud-Zugang erforderlich – alle Abfragen laufen direkt per SNMP gegen die Geräte im lokalen Netz.
 
 Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
@@ -93,19 +93,19 @@ sudo ufw reload
 
 ```bash
 # 1. Projektverzeichnis einrichten
-sudo cp -r lancom-onsite /opt/lancom-onsite
-sudo chown -R www-data:www-data /opt/lancom-onsite
+sudo cp -r lancom-onsite /opt/onsite
+sudo chown -R www-data:www-data /opt/onsite
 
 # 2. systemd-Service anlegen
-sudo tee /etc/systemd/system/lancom-onsite.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/onsite.service > /dev/null <<EOF
 [Unit]
-Description=LANCOM OnSite SNMP Web Server
+Description=OnSite SNMP Web Server
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/lancom-onsite
+WorkingDirectory=/opt/onsite
 ExecStart=/usr/bin/node server.js 3002
 Restart=on-failure
 RestartSec=5
@@ -117,10 +117,10 @@ EOF
 
 # 3. Dienst aktivieren und starten
 sudo systemctl daemon-reload
-sudo systemctl enable --now lancom-onsite
+sudo systemctl enable --now onsite
 
 # Status prüfen
-sudo systemctl status lancom-onsite
+sudo systemctl status onsite
 ```
 
 > **Hinweis:** Den Pfad in `WorkingDirectory` und `ExecStart` an den tatsächlichen Ablageort des Projekts anpassen.
@@ -165,8 +165,6 @@ sudo systemctl status lancom-onsite
 ### Design & Bedienung
 
 - **Tag/Nacht-Modus:** Umschalter (☀️ / 🌙) in der Kopfzeile – Einstellung wird lokal gespeichert.
-  - **Hell:** LANCOM Corporate Design (Navy, DM Sans)
-  - **Dunkel:** LANCOM Corporate Dark (Deep Navy, helle Texte)
 
 ---
 
@@ -183,7 +181,7 @@ sudo systemctl status lancom-onsite
 
 ---
 
-## SNMP am LANCOM-Gerät aktivieren
+## SNMP am Gerät aktivieren
 
 | Betriebssystem | Pfad |
 |----------------|------|
@@ -202,7 +200,7 @@ LANCOM-Geräte verwenden den **IEEE-802.1AB-Pfad** (`1.0.8802.1.1.2`) für LLDP,
 
 ### Netzwerk-Scanner
 
-Der Scanner nutzt **Server-Sent Events (SSE)** für Echtzeit-Rückmeldung. Es werden bis zu 20 Hosts gleichzeitig per SNMP geprüft (2 Sekunden Timeout pro Host). Nur Geräte, die als LANCOM erkannt werden (anhand `sysDescr` / `sysObjectID`), erscheinen in der Ergebnisliste.
+Der Scanner nutzt **Server-Sent Events (SSE)** für Echtzeit-Rückmeldung. Es werden bis zu 20 Hosts gleichzeitig per SNMP geprüft (2 Sekunden Timeout pro Host). Nur unterstützte Geräte (anhand `sysDescr` / `sysObjectID`) erscheinen in der Ergebnisliste.
 
 ### Datenpersistenz
 
