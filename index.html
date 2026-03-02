@@ -351,9 +351,10 @@
 <!-- ═══ EINSTELLUNGEN ════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-settings">
   <div class="sub-tabs">
-    <div class="stab active" onclick="showCfgTab('snmp')"   id="cfgtab-snmp">SNMP</div>
-    <div class="stab"        onclick="showCfgTab('import')" id="cfgtab-import">Import-Filter</div>
-    <div class="stab"        onclick="showCfgTab('rssi')"   id="cfgtab-rssi">WiFi / RSSI</div>
+    <div class="stab active" onclick="showCfgTab('snmp')"    id="cfgtab-snmp">SNMP</div>
+    <div class="stab"        onclick="showCfgTab('import')"  id="cfgtab-import">Import-Filter</div>
+    <div class="stab"        onclick="showCfgTab('rssi')"    id="cfgtab-rssi">WiFi / RSSI</div>
+    <div class="stab"        onclick="showCfgTab('license')" id="cfgtab-license">Lizenz</div>
   </div>
 
   <!-- SNMP -->
@@ -490,6 +491,24 @@
       <input class="settings-input" id="cfg-rssi-orange" type="number" min="0" max="100">
     </div>
     <p class="settings-hint" style="margin-top:10px">Bereiche: <span class="dot dot-green"></span>Grün ≥ Grün-Wert &nbsp;·&nbsp; <span class="dot dot-yellow"></span>Gelb ≥ Gelb-Wert &nbsp;·&nbsp; <span class="dot dot-orange"></span>Orange ≥ Orange-Wert &nbsp;·&nbsp; <span class="dot dot-red"></span>Rot = Offline. Änderungen werden sofort auf der WiFi-Mesh-Seite übernommen.</p>
+  </div>
+
+  <!-- Lizenz -->
+  <div class="sub-panel settings-section" id="cfgpanel-license">
+    <div id="license-status-box" style="border-radius:8px;padding:18px 20px;margin-bottom:20px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span id="license-badge" style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.5px">–</span>
+        <span id="license-customer" style="font-size:14px;font-weight:600;color:var(--text1)"></span>
+      </div>
+      <div id="license-details" style="font-size:12px;color:var(--text3);display:flex;flex-direction:column;gap:4px"></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Lizenz-Datei einfügen (JSON)</div>
+    <textarea id="license-input" rows="8" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg2);color:var(--text1);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical" placeholder='{ "customer": "...", "email": "...", "issuedAt": "...", "expiresAt": "...", "signature": "..." }'></textarea>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+      <button class="btn" onclick="activateLicense()">Lizenz aktivieren</button>
+      <button class="btn btn-ghost btn-sm" onclick="removeLicense()">Lizenz entfernen</button>
+      <span id="license-msg" style="font-size:12px;display:none"></span>
+    </div>
   </div>
 
   <div style="margin-top:20px">

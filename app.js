@@ -379,10 +379,80 @@ async function loadVlans() {
 }
 
 function showCfgTab(name) {
-  ['snmp','import','rssi'].forEach(t => {
+  ['snmp','import','rssi','license'].forEach(t => {
     q('cfgtab-'+t).classList.toggle('active', t===name);
     q('cfgpanel-'+t).classList.toggle('active', t===name);
   });
+  if (name === 'license') loadLicense();
+}
+
+// ── Lizenz ────────────────────────────────────────────────────────────────────
+
+function renderLicenseStatus(lic) {
+  const badge   = q('license-badge');
+  const cust    = q('license-customer');
+  const details = q('license-details');
+  const box     = q('license-status-box');
+
+  const cfg = {
+    active:        { label:'Aktiv',           bg:'var(--green)',  text:'#fff' },
+    trial:         { label:'Trial',           bg:'var(--yellow)', text:'#1a1a00' },
+    trial_expired: { label:'Trial abgelaufen',bg:'var(--red)',    text:'#fff' },
+    expired:       { label:'Abgelaufen',      bg:'var(--red)',    text:'#fff' },
+    invalid:       { label:'Ungültig',        bg:'var(--red)',    text:'#fff' },
+  }[lic.status] || { label: lic.status, bg:'var(--border)', text:'var(--text1)' };
+
+  badge.textContent        = cfg.label;
+  badge.style.background   = cfg.bg;
+  badge.style.color        = cfg.text;
+  box.style.borderColor    = cfg.bg;
+
+  if (lic.status === 'active') {
+    cust.textContent = lic.customer;
+    details.innerHTML = `
+      <span>E-Mail: ${lic.email}</span>
+      <span>Ausgestellt: ${lic.issuedAt}</span>
+      <span>Gültig bis: <strong>${lic.expiresAt}</strong> (noch ${lic.daysLeft} Tag${lic.daysLeft!==1?'e':''})</span>`;
+  } else if (lic.status === 'trial') {
+    cust.textContent = 'Testversion';
+    details.innerHTML = `<span>${lic.message}</span><span>Trial-Start: ${new Date(lic.trialStart).toLocaleDateString('de-DE')}</span>`;
+  } else {
+    cust.textContent = '';
+    details.innerHTML = `<span>${lic.message || ''}</span>`;
+  }
+}
+
+async function loadLicense() {
+  try {
+    const r = await fetch('/api/license');
+    renderLicenseStatus(await r.json());
+  } catch {}
+}
+
+async function activateLicense() {
+  const input = q('license-input').value.trim();
+  const msg   = q('license-msg');
+  if (!input) return;
+  try {
+    const lic = JSON.parse(input);
+    const r   = await fetch('/api/license', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(lic) });
+    const data = await r.json();
+    renderLicenseStatus(data);
+    msg.style.color   = data.status === 'active' ? 'var(--green)' : 'var(--red)';
+    msg.textContent   = data.status === 'active' ? '✓ Lizenz erfolgreich aktiviert' : ('Fehler: ' + (data.message || 'Unbekannt'));
+    msg.style.display = '';
+    if (data.status === 'active') q('license-input').value = '';
+  } catch {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Fehler: Ungültiges JSON-Format';
+    msg.style.display = '';
+  }
+  setTimeout(() => { msg.style.display = 'none'; }, 4000);
+}
+
+async function removeLicense() {
+  await fetch('/api/license', { method:'DELETE' });
+  await loadLicense();
 }
 
 function onSnmpVersionChange() {
@@ -2979,6 +3049,7 @@ function showTab(name) {
 (async function init() {
   initTheme();
   fetch('/api/version').then(r=>r.json()).then(d=>{ const el=q('version-tag'); if(el) el.textContent=d.version; }).catch(()=>{});
+  fetch('/api/license').then(r=>r.json()).then(renderLicenseStatus).catch(()=>{});
   await loadSettings();
   await loadCriteria();
   await loadVlans();
