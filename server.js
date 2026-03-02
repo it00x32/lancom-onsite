@@ -12,7 +12,8 @@ const path   = require('path');
 const urlMod = require('url');
 const { spawn } = require('child_process');
 
-const PORT = parseInt(process.argv[2] || process.env.PORT || '3002', 10);
+const PORT        = parseInt(process.argv[2] || process.env.PORT || '3002', 10);
+const APP_VERSION = '0.7-beta';
 
 // ── Statische Assets ──────────────────────────────────────────────────────────
 
@@ -1149,18 +1150,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url === '/api/version') {
-    const proc = spawn('git', ['describe', '--tags', '--always'], { cwd: __dirname });
-    let out = '';
-    proc.stdout.on('data', d => (out += d));
-    proc.on('close', () => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ version: out.trim() || 'unknown' }));
-    });
-    proc.on('error', () => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ version: 'unknown' }));
-    });
-    return;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ version: APP_VERSION })); return;
   }
 
   if (req.url === '/api/criteria') {
