@@ -1,0 +1,12 @@
+{
+  "name": "SX-5 SNMPv3",
+  "description": "IMPORT OnSite",
+  "lcos": false,
+  "lcosLx": false,
+  "swos": false,
+  "lcosSxSdk4": false,
+  "lcosSxXs": true,
+  "lcosFx": false,
+  "script": "exports.main = function (config, context) {\n    // Dein Code hier\n};",
+  "os": "LCOS SX 5"
+}

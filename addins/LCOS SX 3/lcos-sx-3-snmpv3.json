@@ -1,0 +1,12 @@
+{
+  "name": "SX-3 SNMPv3",
+  "description": "IMPORT OnSite",
+  "lcos": false,
+  "lcosLx": false,
+  "swos": true,
+  "lcosSxSdk4": false,
+  "lcosSxXs": false,
+  "lcosFx": false,
+  "script": "exports.main = function (config, context) {\n    config.addScriptLine( \"snmp\" );\n    config.addScriptLine( \"user snmpclient AuthPriv SHA 6850Dorn AES 6850Dorn\" );\n    config.addScriptLine( \"group snmpclient usm snmpv3\" );\n    config.addScriptLine( \"view super included .1\" );\n    config.addScriptLine( \"access snmpv3 any AuthPriv super super\" );\n    //config.addScriptLine( \"trap 1 v3 ipv4 10.20.0.81 162 6 public AuthPriv MD5 macmon123 DES macmon123\" );\n    //config.addScriptLine( \"getcommunity enable\" );\n    config.addScriptLine( \"exit\" );\n};",
+  "os": "LCOS SX 3"
+}

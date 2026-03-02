@@ -1,0 +1,61 @@
+{
+  "snmpReadCommunity": "public",
+  "snmpWriteCommunity": "private",
+  "snmpVersion": "3",
+  "rssiGreen": 80,
+  "rssiYellow": 50,
+  "rssiOrange": 0,
+  "lastScanSubnet": "172.16.17.131/23",
+  "snmpV3SecurityName": "snmpclient",
+  "snmpV3SecurityLevel": "authPriv",
+  "snmpV3AuthProtocol": "SHA",
+  "snmpV3AuthPassword": "6850Dorn",
+  "snmpV3PrivProtocol": "AES",
+  "snmpV3PrivPassword": "6850Dorn",
+  "filterOS": [],
+  "filterType": [],
+  "filterOSOptions": [
+    {
+      "v": "LCOS",
+      "on": false
+    },
+    {
+      "v": "LCOS LX",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 3",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 4",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 5",
+      "on": false
+    },
+    {
+      "v": "LCOS FX",
+      "on": false
+    }
+  ],
+  "filterTypeOptions": [
+    {
+      "v": "Router",
+      "on": false
+    },
+    {
+      "v": "Access Point",
+      "on": false
+    },
+    {
+      "v": "Switch",
+      "on": false
+    },
+    {
+      "v": "Firewall",
+      "on": false
+    }
+  ]
+}

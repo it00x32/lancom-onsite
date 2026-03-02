@@ -14,12 +14,48 @@ const { spawn } = require('child_process');
 
 const PORT = parseInt(process.argv[2] || process.env.PORT || '3002', 10);
 
+// ── Statische Assets ──────────────────────────────────────────────────────────
+
+const STATIC_FILES = {
+  '/styles.css': { file: path.join(__dirname, 'styles.css'), mime: 'text/css; charset=utf-8' },
+  '/app.js':     { file: path.join(__dirname, 'app.js'),     mime: 'application/javascript; charset=utf-8' },
+  '/index.html': { file: path.join(__dirname, 'index.html'), mime: 'text/html; charset=utf-8' },
+};
+
+function sendJson(req, res, statusCode, obj) {
+  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(obj));
+}
+
 // ── Datenpersistenz ───────────────────────────────────────────────────────────
 
-const DATA_DIR      = path.join(__dirname, 'data');
-const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
-const DEVICES_FILE  = path.join(DATA_DIR, 'devices.json');
+const DATA_DIR       = path.join(__dirname, 'data');
+const SETTINGS_FILE  = path.join(DATA_DIR, 'settings.json');
+const DEVICES_FILE   = path.join(DATA_DIR, 'devices.json');
+const CRITERIA_FILE  = path.join(DATA_DIR, 'criteria.json');
+const SDN_FILE       = path.join(DATA_DIR, 'sdn.json');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const DEFAULT_SDN = {
+  vlans: [{ name: 'Management', vlanId: 1, isManagement: true }],
+};
+function readSdn()      { try { return JSON.parse(fs.readFileSync(SDN_FILE,'utf8')); } catch { return JSON.parse(JSON.stringify(DEFAULT_SDN)); } }
+function writeSdn(data) { fs.writeFileSync(SDN_FILE, JSON.stringify(data, null, 2)); }
+
+const DEFAULT_CRITERIA = {
+  osCriteria: [
+    { os: 'LCOS LX',   match: ['LCOS LX', 'LCOS-LX', 'LX-', 'LW-', 'OW-', 'OX-'] },
+    { os: 'LCOS FX',   match: ['LCOS FX', 'LCOS-FX'] },
+    { os: 'LCOS SX 3', match: ['LCOS SX 3.', 'LCOS-SX 3.', 'GS-2'] },
+    { os: 'LCOS SX 4', match: ['LCOS SX 4.', 'LCOS-SX 4.', 'GS-3'] },
+    { os: 'LCOS SX 5', match: ['LCOS SX 5.', 'LCOS-SX 5.'] },
+    { os: 'LCOS',      match: ['LCOS'] },
+  ],
+  typeCriteria: [
+    { type: 'Access Point', keywords: ['OAP', 'IAP', 'LN'] },
+    { type: 'Router',       keywords: [] },
+  ],
+};
 
 const DEFAULT_SETTINGS = {
   snmpReadCommunity:  'public',
@@ -35,11 +71,24 @@ const DEFAULT_SETTINGS = {
   snmpV3AuthPassword:  '',
   snmpV3PrivProtocol:  'AES',
   snmpV3PrivPassword:  '',
-  modelFilter: '',
+  filterOS:   [],
+  filterType: [],
 };
 
-let _settingsCache = null;
-let _deviceCache   = null;
+let _settingsCache  = null;
+let _deviceCache    = null;
+let _criteriaCache  = null;
+
+function readCriteria() {
+  if (_criteriaCache) return _criteriaCache;
+  try { _criteriaCache = JSON.parse(fs.readFileSync(CRITERIA_FILE, 'utf8')); }
+  catch { _criteriaCache = JSON.parse(JSON.stringify(DEFAULT_CRITERIA)); }
+  return _criteriaCache;
+}
+function writeCriteria(data) {
+  _criteriaCache = data;
+  fs.writeFileSync(CRITERIA_FILE, JSON.stringify(data, null, 2));
+}
 
 function readSettings() {
   if (_settingsCache) return _settingsCache;
@@ -65,8 +114,9 @@ function writeDevices(data) {
 // ── LMC-Proxy ─────────────────────────────────────────────────────────────────
 
 const LMC_SERVICES = {
-  auth:    'https://cloud.lancom.de/cloud-service-auth',
-  devices: 'https://cloud.lancom.de/cloud-service-devices',
+  auth:              'https://cloud.lancom.de/cloud-service-auth',
+  devices:           'https://cloud.lancom.de/cloud-service-devices',
+  configapplication: 'https://cloud.lancom.de/cloud-service-config',
 };
 
 function lmcProxy(service, apiPath, method, token, body) {
@@ -562,6 +612,326 @@ async function snmpWlan(host, community, version) {
   return { entries, count: entries.length };
 }
 
+// ── VLAN (Q-BRIDGE-MIB, IEEE 802.1Q) ─────────────────────────────────────────
+// LCOS SX:   dot1qVlanStaticName (1.3.6.1.2.1.17.7.1.4.3.1.1) — vollständig unterstützt
+// LCOS LX:   Q-BRIDGE-MIB unterstützt (802.1Q VLAN-Tagging per SSID/Bridge-Interface)
+// LCOS/FX:   Q-BRIDGE-MIB ggf. teilweise unterstützt
+
+async function snmpVlan(host, community, version, os, devType) {
+  const [nameOut, statusOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.7.1.4.3.1.1'), // dot1qVlanStaticName
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.7.1.4.3.1.5'), // dot1qVlanStaticRowStatus
+  ]);
+
+  const names = {};
+  nameOut.split('\n').forEach(line => {
+    const m = line.match(/17\.7\.1\.4\.3\.1\.1\.(\d+)\s*=\s*(.*)/);
+    if (m) names[m[1]] = snmpVal(m[2]);
+  });
+
+  const statuses = {};
+  statusOut.split('\n').forEach(line => {
+    const m = line.match(/17\.7\.1\.4\.3\.1\.5\.(\d+)\s*=\s*(.*)/);
+    if (m) statuses[m[1]] = snmpVal(m[2]);
+  });
+
+  const entries = Object.keys(names).map(id => {
+    const st = statuses[id] || '';
+    const active = st === '1' || st.startsWith('active');
+    return { vlanId: parseInt(id), name: names[id] || '', active };
+  });
+  entries.sort((a, b) => a.vlanId - b.vlanId);
+  return { entries, count: entries.length };
+}
+
+// ── Port-Einstellungen ────────────────────────────────────────────────────────
+
+async function snmpPortSettings(host, community, version) {
+  const [ifOut, ifxOut, pvidOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.2.2.1'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.7.1.4.5.1.1'), // dot1qPvid
+  ]);
+  const ports = {};
+  ifOut.split('\n').forEach(line => {
+    const m = line.match(/\.2\.2\.1\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1]), idx = m[2], val = snmpVal(m[3]);
+    if (!ports[idx]) ports[idx] = { idx };
+    if (col === 2) ports[idx].descr       = val;
+    if (col === 5) ports[idx].speed       = parseInt(val) || 0;
+    if (col === 7) ports[idx].adminStatus = val;
+    if (col === 8) ports[idx].operStatus  = val;
+  });
+  ifxOut.split('\n').forEach(line => {
+    const m = line.match(/\.31\.1\.1\.1\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1]), idx = m[2], val = snmpVal(m[3]);
+    if (!ports[idx]) ports[idx] = { idx };
+    if (col === 1)  ports[idx].name      = val;
+    if (col === 15) ports[idx].highSpeed = parseInt(val) || 0;
+  });
+  pvidOut.split('\n').forEach(line => {
+    const m = line.match(/17\.7\.1\.4\.5\.1\.1\.(\d+)\s*=\s*(.*)/);
+    if (m) { const idx = m[1]; if (!ports[idx]) ports[idx] = { idx }; ports[idx].pvid = parseInt(snmpVal(m[2])) || 0; }
+  });
+  const entries = Object.values(ports).filter(p => p.descr || p.name)
+    .sort((a, b) => parseInt(a.idx) - parseInt(b.idx));
+  return { entries };
+}
+
+// ── STP (IEEE 802.1D/RSTP) ────────────────────────────────────────────────────
+
+async function snmpStpPrivate(host, community, version) {
+  // LANCOM private MIB für LCOS SX 4+ (Vitesse-Chipset, kein Standard-dot1dStp)
+  const PFX = '1.3.6.1.4.1.2356.14.2.18';
+  const [globalOut, statusOut, portCfgOut, ifNameOut] = await Promise.all([
+    runSnmpWalk(host, community, version, `${PFX}.1`),        // global config
+    runSnmpWalk(host, community, version, `${PFX}.2`),        // CIST status (bridge MAC, root cost)
+    runSnmpWalk(host, community, version, `${PFX}.5.10.1`),   // port config table (cols 2-10)
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+  ]);
+  const STP_MODE = { '0':'Disabled', '1':'STP', '2':'RSTP', '3':'MSTP' };
+  const global = {};
+  globalOut.split('\n').forEach(line => {
+    const m = line.match(/14\.2\.18\.1\.(\d+)\.0\s*=\s*(.*)/);
+    if (!m) return;
+    const v = snmpVal(m[2]);
+    switch (parseInt(m[1])) {
+      case 1:  global.mode      = v; global.modeLabel = STP_MODE[v]||v; break;
+      case 2:  global.priority  = v; break;
+      case 3:  global.fwdDelay  = v; break;  // fwdDelay (15s standard)
+      case 4:  global.maxAge    = v; break;  // maxAge (20s standard)
+      case 10: global.helloTime = v; break;  // helloTime (2s standard)
+    }
+  });
+  statusOut.split('\n').forEach(line => {
+    const m = line.match(/14\.2\.18\.2\.(\d+)\.0\s*=\s*(.*)/);
+    if (!m) return;
+    const v = snmpVal(m[2]);
+    switch (parseInt(m[1])) {
+      case 1: global.bridgeMac = v; break;  // own bridge MAC "00-a0-57-xx-xx-xx"
+      case 2: global.rootCost  = v; break;  // root path cost (0 = this IS root)
+    }
+  });
+  // Designated root = priority + bridge MAC (since rootCost=0 means this switch IS root)
+  if (global.bridgeMac) {
+    const prio = parseInt(global.priority || '32768');
+    global.designatedRoot = `${prio} / ${global.bridgeMac}`;
+    global.rootPort = global.rootCost === '0' ? '— (Root)' : '—';
+  }
+  const ifNames = {};
+  ifNameOut.split('\n').forEach(line => {
+    const m = line.match(/31\.1\.1\.1\.1\.(\d+)\s*=\s*(?:STRING:\s*)?"?([^"\n]+?)"?\s*$/);
+    if (m) ifNames[m[1]] = m[2].trim();
+  });
+  const ports = {};
+  portCfgOut.split('\n').forEach(line => {
+    // 18.5.10.1.{col}.{port}
+    const m = line.match(/18\.5\.10\.1\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1]), port = m[2], v = snmpVal(m[3]);
+    if (!ports[port]) ports[port] = { port };
+    switch (col) {
+      case 2: ports[port].portEnabled = (v === '1'); break; // 1=on 0=off
+      case 3: ports[port].edgeAdmin   = v; break;           // 0=no 1=yes
+      case 4: ports[port].priority    = v; break;           // 128 default
+      case 5: ports[port].pathCost    = v === '0' ? 'Auto' : v; break; // 0=auto
+    }
+  });
+  const portEntries = Object.values(ports).map(p => ({
+    ...p,
+    portName: ifNames[p.port] || 'Port ' + p.port,
+  })).sort((a, b) => parseInt(a.port) - parseInt(b.port));
+  return {
+    global, portEntries,
+    _meta: {
+      mibType: 'private',
+      oidBase: `${PFX}.5.10.1.2`, enableValue: 1, disableValue: 0,
+      globalOid: `${PFX}.1.1.0`,
+      modes: [
+        { label: 'RSTP', value: 2 },
+        { label: 'MSTP', value: 3 },
+      ],
+    },
+  };
+}
+
+async function snmpStp(host, community, version) {
+  // Prüfen ob Standard-Bridge-MIB verfügbar (LCOS SX 3, LCOS)
+  const probe = await runSnmpGet(host, community, version, ['1.3.6.1.2.1.17.2.1.0'], 3000);
+  if (!probe.includes('INTEGER') || probe.includes('No Such Object')) {
+    return await snmpStpPrivate(host, community, version);
+  }
+  const [globalOut, portOut, bpIfOut, ifNameOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.2'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.2.15.1'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.1.4.1.2'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+  ]);
+  const global = {};
+  globalOut.split('\n').forEach(line => {
+    const m = line.match(/17\.2\.(\d+)\.0\s*=\s*(.*)/);
+    if (!m) return;
+    const v = snmpVal(m[2]);
+    switch (parseInt(m[1])) {
+      case 2:  global.priority   = v; break;
+      case 3:  global.timeSince  = v; break;
+      case 4:  global.topChanges = v; break;
+      case 5:  global.designatedRoot = m[2].trim(); break;
+      case 6:  global.rootCost   = v; break;
+      case 7:  global.rootPort   = v; break;
+      case 8:  global.maxAge     = v; break;
+      case 9:  global.helloTime  = v; break;
+      case 15: global.fwdDelay   = v; break;
+    }
+  });
+  const bpToIf = {};
+  bpIfOut.split('\n').forEach(line => {
+    const m = line.match(/17\.1\.4\.1\.2\.(\d+)\s*=\s*INTEGER:\s*(\d+)/);
+    if (m) bpToIf[m[1]] = m[2];
+  });
+  const ifNames = {};
+  ifNameOut.split('\n').forEach(line => {
+    const m = line.match(/31\.1\.1\.1\.1\.(\d+)\s*=\s*(?:STRING:\s*)?"?([^"\n]+?)"?\s*$/);
+    if (m) ifNames[m[1]] = m[2].trim();
+  });
+  const ports = {};
+  portOut.split('\n').forEach(line => {
+    const m = line.match(/17\.2\.15\.1\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1]), port = m[2], v = snmpVal(m[3]);
+    if (!ports[port]) ports[port] = { port };
+    if (col === 2)  ports[port].priority   = v;
+    if (col === 3)  ports[port].state      = v;
+    if (col === 4)  ports[port].portEnabled = (v !== '2');  // 1=en, 2=dis
+    if (col === 5)  ports[port].pathCost   = v;
+    if (col === 10) ports[port].fwdTrans   = v;
+  });
+  const portEntries = Object.values(ports).map(p => {
+    const ifIdx = bpToIf[p.port];
+    return { ...p, portName: ifIdx ? (ifNames[ifIdx] || 'If'+ifIdx) : 'Port '+p.port };
+  }).sort((a, b) => parseInt(a.port) - parseInt(b.port));
+  return {
+    global, portEntries,
+    _meta: { mibType: 'standard', oidBase: '1.3.6.1.2.1.17.2.15.1.4', enableValue: 1, disableValue: 2, globalOid: null, modes: [] },
+  };
+}
+
+// ── PoE (POWER-ETHERNET-MIB, RFC 3621) ───────────────────────────────────────
+
+async function snmpPoe(host, community, version) {
+  const [portOut, mainOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.105.1.1.1'), // pethPsePortTable
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.105.1.3.1'), // pethMainPseTable
+  ]);
+  const main = {};
+  mainOut.split('\n').forEach(line => {
+    const m = line.match(/105\.1\.3\.1\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const v = snmpVal(m[3]);
+    if (m[1] === '2') main.power       = parseInt(v) || 0;
+    if (m[1] === '3') main.operStatus  = v;
+    if (m[1] === '4') main.consumption = parseInt(v) || 0;
+  });
+  const ports = {};
+  portOut.split('\n').forEach(line => {
+    const m = line.match(/105\.1\.1\.1\.(\d+)\.(\d+)\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = m[1], group = m[2], port = m[3], key = `${group}.${port}`;
+    if (!ports[key]) ports[key] = { group: parseInt(group), port: parseInt(port) };
+    const v = snmpVal(m[4]);
+    if (col === '3') ports[key].adminEnable     = v;
+    if (col === '6') ports[key].detectionStatus = v;
+    if (col === '7') ports[key].powerClass      = v;
+  });
+  const portEntries = Object.values(ports).sort((a, b) =>
+    a.group !== b.group ? a.group - b.group : a.port - b.port);
+  return { main, portEntries };
+}
+
+// ── Loop-Protection (STP-Portzustände als Indikator) ─────────────────────────
+// LCOS SX: Loop Protection via STP-Blocking (dot1dStpPortState) + RSTP port roles
+// dot1dStpPortState: 1=disabled 2=blocking 3=listening 4=learning 5=forwarding 6=broken
+
+async function snmpLoopProtection(host, community, version) {
+  // Prüfen ob Standard-Bridge-MIB verfügbar
+  const probe = await runSnmpGet(host, community, version, ['1.3.6.1.2.1.17.2.1.0'], 3000);
+  if (!probe.includes('INTEGER') || probe.includes('No Such Object')) {
+    // LCOS SX 4+: private MIB, selbe OIDs wie snmpStpPrivate
+    const PFX = '1.3.6.1.4.1.2356.14.2.18';
+    const [enableOut, stateOut, ifNameOut] = await Promise.all([
+      runSnmpWalk(host, community, version, `${PFX}.5.10.1.2`),
+      runSnmpWalk(host, community, version, `${PFX}.6.2.1.3.1`),
+      runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+    ]);
+    const ifNames = {};
+    ifNameOut.split('\n').forEach(line => {
+      const m = line.match(/31\.1\.1\.1\.1\.(\d+)\s*=\s*(?:STRING:\s*)?"?([^"\n]+?)"?\s*$/);
+      if (m) ifNames[m[1]] = m[2].trim();
+    });
+    const portMap = {};
+    enableOut.split('\n').forEach(line => {
+      const m = line.match(/18\.5\.10\.1\.2\.(\d+)\s*=\s*(.*)/);
+      if (!m) return;
+      const port = m[1];
+      if (!portMap[port]) portMap[port] = { port };
+      portMap[port].portEnabled = snmpVal(m[2]) === '1';
+    });
+    stateOut.split('\n').forEach(line => {
+      const m = line.match(/18\.6\.2\.1\.3\.1\.(\d+)\s*=\s*(.*)/);
+      if (!m) return;
+      const port = m[1];
+      if (!portMap[port]) portMap[port] = { port };
+      const sv = snmpVal(m[2]);
+      const stateMap = { '0':'2', '1':'4', '2':'5' };
+      portMap[port].state = stateMap[sv] || '1';
+    });
+    const ports = Object.values(portMap).map(p => ({
+      ...p, portName: ifNames[p.port] || 'Port ' + p.port,
+    })).sort((a, b) => parseInt(a.port) - parseInt(b.port));
+    return { ports, _meta: { oidBase: `${PFX}.5.10.1.2`, enableValue: 1, disableValue: 0 } };
+  }
+
+  // Standard-MIB (LCOS SX 3, LCOS)
+  const [stpOut, enableOut, bpIfOut, ifNameOut] = await Promise.all([
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.2.15.1.3'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.2.15.1.4'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.1.4.1.2'),
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'),
+  ]);
+  const bpToIf = {};
+  bpIfOut.split('\n').forEach(line => {
+    const m = line.match(/17\.1\.4\.1\.2\.(\d+)\s*=\s*INTEGER:\s*(\d+)/);
+    if (m) bpToIf[m[1]] = m[2];
+  });
+  const ifNames = {};
+  ifNameOut.split('\n').forEach(line => {
+    const m = line.match(/31\.1\.1\.1\.1\.(\d+)\s*=\s*(?:STRING:\s*)?"?([^"\n]+?)"?\s*$/);
+    if (m) ifNames[m[1]] = m[2].trim();
+  });
+  const portMap = {};
+  stpOut.split('\n').forEach(line => {
+    const m = line.match(/17\.2\.15\.1\.3\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const port = m[1];
+    if (!portMap[port]) portMap[port] = { port };
+    portMap[port].state = snmpVal(m[2]);
+  });
+  enableOut.split('\n').forEach(line => {
+    const m = line.match(/17\.2\.15\.1\.4\.(\d+)\s*=\s*(.*)/);
+    if (!m) return;
+    const port = m[1];
+    if (!portMap[port]) portMap[port] = { port };
+    portMap[port].portEnabled = snmpVal(m[2]) !== '2'; // 1=en, 2=dis
+  });
+  const ports = Object.values(portMap).map(p => {
+    const ifIdx = bpToIf[p.port];
+    return { ...p, portName: ifIdx ? (ifNames[ifIdx] || 'If'+ifIdx) : 'Port '+p.port };
+  }).sort((a, b) => parseInt(a.port) - parseInt(b.port));
+  return { ports, _meta: { oidBase: '1.3.6.1.2.1.17.2.15.1.4', enableValue: 1, disableValue: 2 } };
+}
+
 // ── Netzwerk-Scanner ──────────────────────────────────────────────────────────
 
 function subnetToHosts(input) {
@@ -607,28 +977,44 @@ function runSnmpGet(host, community, version, oids, timeout = 2000) {
   });
 }
 
+function runSnmpSet(host, community, version, oid, type, value, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const args = [...buildSnmpAuthArgs(version, community), '-t', '5', '-r', '1', host, oid, type, String(value)];
+    const proc = spawn('snmpset', args);
+    let out = '', err = '';
+    proc.stdout.on('data', d => (out += d));
+    proc.stderr.on('data', d => (err += d));
+    const timer = setTimeout(() => { try { proc.kill(); } catch {} reject(new Error('Timeout')); }, timeout);
+    proc.on('close', code => { clearTimeout(timer); if (code === 0) resolve(out.trim()); else reject(new Error(err.trim() || `Exit ${code}`)); });
+    proc.on('error', e => { clearTimeout(timer); reject(e); });
+  });
+}
+
 function detectLancomOs(sysDescr, sysObjectId) {
   const desc = (sysDescr || '').toUpperCase();
-  if (desc.includes('LCOS-LX') || desc.includes('LCOS LX')) return 'LCOS LX';
-  if (desc.includes('LCOS-SX') || desc.includes('LCOS SX')) return 'LCOS SX';
-  if (desc.includes('LCOS-FX') || desc.includes('LCOS FX')) return 'LCOS FX';
-  if (desc.includes('GS-2'))    return 'LCOS SX';
-  if (desc.includes('LCOS'))    return 'LCOS';
+  const { osCriteria } = readCriteria();
+  for (const rule of osCriteria) {
+    if (rule.match.some(kw => desc.includes(kw.toUpperCase()))) return rule.os;
+  }
   if ((sysObjectId || '').includes('.2356.')) return 'LANCOM';
   return null;
 }
 
 async function scanHost(host, community, version) {
   const out = await runSnmpGet(host, community, version, [
-    '1.3.6.1.2.1.1.1.0',  // sysDescr
-    '1.3.6.1.2.1.1.2.0',  // sysObjectID
-    '1.3.6.1.2.1.1.5.0',  // sysName
-    '1.3.6.1.2.1.1.6.0',  // sysLocation
-    '1.3.6.1.2.1.2.2.1.6.1', // ifPhysAddress.1 (Management-MAC, Interface 1)
+    '1.3.6.1.2.1.1.1.0',        // sysDescr
+    '1.3.6.1.2.1.1.2.0',        // sysObjectID
+    '1.3.6.1.2.1.1.5.0',        // sysName
+    '1.3.6.1.2.1.1.6.0',        // sysLocation
+    '1.3.6.1.2.1.2.2.1.6.1',    // ifPhysAddress.1 (Management-MAC, Interface 1)
+    '1.3.6.1.2.1.47.1.1.1.1.11.1',    // entPhysicalSerialNum.1 (FX)
+    '1.3.6.1.4.1.2356.11.1.47.7.0',   // LANCOM LCOS Seriennummer (Status/Hardware-Info)
+    '1.3.6.1.4.1.2356.13.1.47.7.0',   // LANCOM LCOS LX Seriennummer
+    '1.3.6.1.4.1.2356.14.1.1.1.13.0', // LANCOM LCOS SX Seriennummer
   ]);
   if (!out.trim()) return null;
 
-  let sysDescr = '', sysObjectId = '', sysName = '', sysLocation = '', mac = '';
+  let sysDescr = '', sysObjectId = '', sysName = '', sysLocation = '', mac = '', serial = '';
   out.split('\n').forEach(line => {
     if (/\.2\.1\.1\.1\.0\s*=/.test(line))  sysDescr    = snmpVal(line.split('=').slice(1).join('='));
     if (/\.2\.1\.1\.2\.0\s*=/.test(line))  sysObjectId = (line.match(/OID:\s*(.+)/) || [])[1]?.trim() || '';
@@ -638,12 +1024,16 @@ async function scanHost(host, community, version) {
       const hx = line.match(/(?:Hex-STRING|STRING):\s*([\da-fA-F: ]+)/i);
       if (hx) mac = macFromHexStr(hx[1].trim()) || '';
     }
+    if (/\.47\.1\.1\.1\.1\.11\.1\s*=/.test(line))    { const v = snmpVal(line.split('=').slice(1).join('=')); if (v && !v.includes('No Such')) serial = v; }
+    if (/\.2356\.11\.1\.47\.7\.0\s*=/.test(line))    { const v = snmpVal(line.split('=').slice(1).join('=')); if (v && !v.includes('No Such')) serial = v; }
+    if (/\.2356\.13\.1\.47\.7\.0\s*=/.test(line))    { const v = snmpVal(line.split('=').slice(1).join('=')); if (v && !v.includes('No Such')) serial = v; }
+    if (/\.2356\.14\.1\.1\.1\.13\.0\s*=/.test(line)) { const v = snmpVal(line.split('=').slice(1).join('=')); if (v && !v.includes('No Such')) serial = v; }
   });
 
   const os = detectLancomOs(sysDescr, sysObjectId);
   if (!os) return null;
 
-  return { ip: host, sysName, sysDescr, sysLocation, os, mac };
+  return { ip: host, sysName, sysDescr, sysLocation, os, mac, serial };
 }
 
 // ── HTTP Server ───────────────────────────────────────────────────────────────
@@ -656,6 +1046,49 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
   // ── REST-API: Settings & Devices & LMC ────────────────────────────────────
+
+  if (req.url === '/api/sdn') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(readSdn())); return;
+    }
+    if (req.method === 'POST') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try { writeSdn(JSON.parse(b)); res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
+        catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+      }); return;
+    }
+  }
+
+  if (req.url === '/api/version') {
+    const proc = spawn('git', ['describe', '--tags', '--always'], { cwd: __dirname });
+    let out = '';
+    proc.stdout.on('data', d => (out += d));
+    proc.on('close', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ version: out.trim() || 'unknown' }));
+    });
+    proc.on('error', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ version: 'unknown' }));
+    });
+    return;
+  }
+
+  if (req.url === '/api/criteria') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(readCriteria())); return;
+    }
+    if (req.method === 'POST') {
+      let b = ''; req.on('data', d => (b += d));
+      req.on('end', () => {
+        try { writeCriteria(JSON.parse(b)); res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
+        catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+      }); return;
+    }
+  }
 
   if (req.url === '/api/settings') {
     if (req.method === 'GET') {
@@ -673,8 +1106,7 @@ const server = http.createServer(async (req, res) => {
 
   if (req.url === '/api/devices') {
     if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(readDevices())); return;
+      sendJson(req, res, 200, readDevices()); return;
     }
     if (req.method === 'POST') {
       let b = ''; req.on('data', d => (b += d));
@@ -700,6 +1132,77 @@ const server = http.createServer(async (req, res) => {
         } catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
       }); return;
     }
+  }
+
+  // Einzelnes Add-in lesen
+  if (req.method === 'GET' && req.url.startsWith('/api/addin?')) {
+    const qs   = new urlMod.URL('http://x' + req.url).searchParams;
+    const os   = qs.get('os') || '';
+    const file = qs.get('file') || '';
+    if (!os || !file || file.includes('..') || os.includes('..')) {
+      res.writeHead(400); res.end(JSON.stringify({ error: 'Ungültige Parameter' })); return;
+    }
+    const filePath = path.join(__dirname, 'addins', os, file);
+    try {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      sendJson(req, res, 200, data);
+    } catch { res.writeHead(404); res.end(JSON.stringify({ error: 'Nicht gefunden' })); }
+    return;
+  }
+
+  // Einzelnes Add-in speichern (mit optionalem OS-Wechsel → Datei verschieben)
+  if (req.method === 'DELETE' && req.url.startsWith('/api/addin?')) {
+    try {
+      const params = new URLSearchParams(req.url.slice(req.url.indexOf('?')));
+      const os  = params.get('os');
+      const file = params.get('file');
+      if (!os || !file) return sendJson(req, res, 400, { error: 'os und file erforderlich' });
+      const target = path.join(__dirname, 'addins', os, file);
+      if (!target.startsWith(path.join(__dirname, 'addins'))) return sendJson(req, res, 400, { error: 'Ungültiger Pfad' });
+      fs.unlinkSync(target);
+      return sendJson(req, res, 200, { ok: true });
+    } catch(e) { return sendJson(req, res, 500, { error: e.message }); }
+  }
+
+  if (req.method === 'POST' && req.url === '/api/addin') {
+    let b = ''; req.on('data', d => (b += d));
+    req.on('end', () => {
+      try {
+        const { originalOs, os, filename, ...data } = JSON.parse(b);
+        if (!os || !filename || filename.includes('..') || os.includes('..') || (originalOs||'').includes('..'))
+          throw new Error('Ungültige Parameter');
+        if (!filename.endsWith('.json')) throw new Error('Nur .json Dateien erlaubt');
+        const targetDir  = path.join(__dirname, 'addins', os);
+        const targetFile = path.join(__dirname, 'addins', os, filename);
+        fs.mkdirSync(targetDir, { recursive: true });
+        // Bei OS-Wechsel: alte Datei löschen
+        if (originalOs && originalOs !== os) {
+          const sourceFile = path.join(__dirname, 'addins', originalOs, filename);
+          try { fs.unlinkSync(sourceFile); } catch { /* ignorieren falls nicht vorhanden */ }
+        }
+        fs.writeFileSync(targetFile, JSON.stringify({ ...data, os }, null, 2), 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}');
+      } catch(e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: e.message })); }
+    }); return;
+  }
+
+  if (req.method === 'GET' && req.url === '/api/addins') {
+    const addinsDir = path.join(__dirname, 'addins');
+    const osFolders = ['LCOS', 'LCOS LX', 'LCOS SX 3', 'LCOS SX 4', 'LCOS SX 5', 'LCOS FX'];
+    const result = [];
+    for (const os of osFolders) {
+      const dir = path.join(addinsDir, os);
+      let files = [];
+      try { files = fs.readdirSync(dir).filter(f => f.endsWith('.json')); } catch { continue; }
+      for (const file of files) {
+        try {
+          const data = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
+          result.push({ os, filename: file, ...data });
+        } catch { /* ungültige JSON-Datei überspringen */ }
+      }
+    }
+    sendJson(req, res, 200, result);
+    return;
   }
 
   if (req.method === 'POST' && req.url === '/api/lmc') {
@@ -789,7 +1292,8 @@ const server = http.createServer(async (req, res) => {
     req.on('data', d => (body += d));
     req.on('end', async () => {
       try {
-        const { host, type } = JSON.parse(body);
+        const parsed = JSON.parse(body);
+        const { host, type } = parsed;
         if (!host) throw new Error('host fehlt');
         const _s = readSettings();
         const community = _s.snmpReadCommunity || 'public';
@@ -802,6 +1306,11 @@ const server = http.createServer(async (req, res) => {
           case 'mac':        result = await snmpMac(host, community, version);        break;
           case 'lldp':       result = await snmpLldp(host, community, version);       break;
           case 'wlan':       result = await snmpWlan(host, community, version);       break;
+          case 'vlan':       result = await snmpVlan(host, community, version, parsed.os||'', parsed.devType||''); break;
+          case 'ports':      result = await snmpPortSettings(host, community, version); break;
+          case 'stp':        result = await snmpStp(host, community, version);         break;
+          case 'poe':        result = await snmpPoe(host, community, version);         break;
+          case 'loop':       result = await snmpLoopProtection(host, community, version); break;
           case 'wds':        result = await snmpWds(host, community, version);        break;
           case 'l2tp':       result = await snmpL2tp(host, community, version);       break;
           case 'ping': {
@@ -840,26 +1349,51 @@ const server = http.createServer(async (req, res) => {
           default:           throw new Error(`Unbekannter Typ: ${type}`);
         }
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
+        sendJson(req, res, 200, result);
       } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
+        sendJson(req, res, 400, { error: err.message });
       }
     });
     return;
   }
 
-  // Static file serving (nur index.html)
+  // SNMP SET endpoint
+  if (req.method === 'POST' && req.url === '/snmpset') {
+    let body = '';
+    req.on('data', d => (body += d));
+    req.on('end', async () => {
+      try {
+        const { host, oid, type, value } = JSON.parse(body);
+        if (!host || !oid) throw new Error('host/oid fehlt');
+        const _s = readSettings();
+        const community = _s.snmpWriteCommunity || _s.snmpReadCommunity || 'public';
+        const version   = _s.snmpVersion || '2c';
+        const result = await runSnmpSet(host, community, version, oid, type || 'i', value);
+        sendJson(req, res, 200, { ok: true, result });
+      } catch (err) {
+        sendJson(req, res, 400, { error: err.message });
+      }
+    });
+    return;
+  }
+
+  // Static file serving
   if (req.method === 'GET') {
-    const file = path.join(__dirname, 'index.html');
-    try {
-      const data = fs.readFileSync(file);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-      res.end(data);
-    } catch {
-      res.writeHead(404); res.end('Not found');
+    const urlPath = req.url.split('?')[0];
+    const asset = STATIC_FILES[urlPath] || (urlPath === '/' ? STATIC_FILES['/index.html'] : null);
+    if (asset) {
+      try {
+        const content = fs.readFileSync(asset.file);
+        res.writeHead(200, { 'Content-Type': asset.mime, 'Cache-Control': 'no-cache' });
+        res.end(content);
+      } catch { res.writeHead(404); res.end('Not found'); }
+      return;
     }
+
+    if (false) { // placeholder to keep structure
+    }
+
+    res.writeHead(404); res.end('Not found');
     return;
   }
 
