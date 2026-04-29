@@ -4,7 +4,7 @@ Lokales SNMP-Dashboard für Netzwerkgeräte. Kein Cloud-Zugang erforderlich – 
 
 Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
-**Deployment, getrennte Daten, Updates:** [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md) — optional Umgebungsvariable **`ONSITE_DATA_DIR`** (absolute Pfadangabe), damit die App aktualisiert werden kann, ohne `./data` im Installationsordner zu überschreiben.
+**Deployment, getrennte Daten, Updates:** [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md) — optional Umgebungsvariable **`ONSITE_DATA_DIR`** (absolute Pfadangabe), damit die App aktualisiert werden kann, ohne `./data` im Installationsordner zu überschreiben. **Aktualisieren aus GitHub:** siehe [Update über GitHub](#update-über-github) unten.
 
 **GitHub:** **`https://github.com/it00x32/lancom-onsite`**. Umbenennung & Remote-Umstellung: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md).
 
@@ -122,6 +122,72 @@ sudo ufw allow 1620/udp
 sudo ufw allow 1514/udp
 sudo ufw reload
 ```
+
+---
+
+## Update über GitHub
+
+Voraussetzung: OnSite wurde wie unter [Installation (Ubuntu / Debian)](#installation-ubuntu--debian) eingerichtet; der Quellcode liegt in einem lokalen Klon (z. B. `git clone https://github.com/it00x32/lancom-onsite.git …`). Remote-Repository: **`https://github.com/it00x32/lancom-onsite`**.
+
+**Daten beim Update schützen:** Laufzeitdaten liegen standardmäßig unter `./data` im Installationsordner — bei `git pull` werden sie normalerweise **nicht** überschrieben, solange sie nicht ins Repo committed sind. Für klare Trennung von Programm und Daten empfiehlt sich **`ONSITE_DATA_DIR`** (siehe [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md)).
+
+### Schrittfolge (üblich mit systemd-Dienst `onsite`)
+
+1. **Dienst anhalten** (damit keine Dateien während des Updates gesperrt sind und ein sauberer Neustart folgt):
+
+   ```bash
+   sudo systemctl stop onsite
+   ```
+
+2. **Ins Installationsverzeichnis wechseln** (Repo-Root: dort liegen `server.js`, `package.json`):
+
+   ```bash
+   cd /pfad/zum/onsite
+   ```
+
+3. **Neuesten Stand von GitHub holen** — zuerst sicherstellen, dass ihr auf dem gewünschten Branch seid (im Repo typisch **`master`**; andere Branches z. B. `beta`, `stable` nur nach Absprache):
+
+   ```bash
+   git fetch origin
+   git status
+   git pull origin master
+   ```
+
+   *(Wenn euer lokaler Branch bereits `origin/master` trackt, reicht oft **`git pull`**.)*
+
+   **Hinweis:** Lokale Änderungen an getrackten Dateien können zu Merge-Konflikten führen — vorher mit `git status` prüfen; eigene Anpassungen ggf. committen, stashen oder sichern.
+
+4. **Abhängigkeiten und Frontend-Build:** `npm install` zieht auch **esbuild** (devDependency), das für den Build nötig ist. **`npm run build`** erzeugt das gebündelte **`app.js`** aus `ui/`. Nach jedem Update zur Sicherheit ausführen (auch wenn sich nur das Backend geändert hat — schadet nicht):
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+5. **Rechte** (nur falls der Dienst nicht als euer Benutzer läuft, z. B. `www-data`):
+
+   ```bash
+   sudo chown -R www-data:www-data /pfad/zum/onsite
+   ```
+
+   *(Pfad anpassen; bei `--omit=dev` nur nötig, wenn neue Dateien als root angelegt wurden.)*
+
+6. **Dienst wieder starten:**
+
+   ```bash
+   sudo systemctl start onsite
+   ```
+
+   Prüfen: `sudo systemctl status onsite` — danach die Web-UI im Browser neu laden.
+
+### Ohne systemd (manueller `node server.js`)
+
+Schritte 2–4 gleich; statt stop/start: Serverprozess beenden (`Ctrl+C` oder `kill`), nach dem Build **`node server.js …`** bzw. euer Startskript unter `scripte/` wieder starten.
+
+### Siehe auch
+
+- Ausführliche Checkliste zu Datenpfaden und Produkt-Deploy: [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md)
+- Repository-Umzug oder Remote-Umbenennung: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md)
 
 ---
 
