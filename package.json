@@ -1,6 +1,6 @@
 {
   "name": "onsite",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "OnSite – lokales SNMP-Dashboard",
   "main": "server.js",
   "bin": {

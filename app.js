@@ -17,6 +17,14 @@
     meshLocFilter: "all",
     l2tpLocFilter: "all",
     topoLocFilter: "all",
+    /** Netzwerkplan: lx-ap / lcos-ap aus dem Graphen ausblenden */
+    topoHideAccessPoints: (() => {
+      try {
+        return localStorage.getItem("onsite_topo_hide_ap") === "1";
+      } catch (e) {
+        return false;
+      }
+    })(),
     meshSort: { col: null, dir: 1 },
     l2tpSort: { col: null, dir: 1 },
     roamSort: { col: null, dir: 1 },
@@ -6122,6 +6130,15 @@ Fehler: ${e.message}`;
     router: { label: "GW", bg: "rgba(37,99,235,.15)", color: "#7b9fff" },
     firewall: { label: "FW", bg: "rgba(239,68,68,.15)", color: "#ef4444" }
   };
+  function isTopoAccessPointType(type) {
+    const t = type || "";
+    return t === "lx-ap" || t === "lcos-ap";
+  }
+  function topoIsHiddenApIp(ip) {
+    if (!state_default.topoHideAccessPoints || !ip) return false;
+    const d = state_default.deviceStore[ip];
+    return !!(d && isTopoAccessPointType(d.type));
+  }
   function resolveTopoNeighbor(entry, srcIp) {
     const sysName = (entry.remSysName || "").toLowerCase();
     const remMac = (entry.remMac || "").replace(/[:\-\. ]/g, "").toLowerCase();
@@ -6196,6 +6213,7 @@ Fehler: ${e.message}`;
     Object.values(state_default.deviceStore).filter((d) => {
       if (d.online === false) return false;
       if (state_default.topoLocFilter !== "all" && (d.location || "") !== state_default.topoLocFilter) return false;
+      if (state_default.topoHideAccessPoints && isTopoAccessPointType(d.type)) return false;
       return true;
     }).forEach((d) => {
       topoNodes[d.ip] = {
@@ -6214,9 +6232,11 @@ Fehler: ${e.message}`;
     });
     const edgeSet = /* @__PURE__ */ new Set();
     Object.entries(lldpMap).forEach(([srcIp, entries]) => {
+      if (topoIsHiddenApIp(srcIp)) return;
       entries.forEach((e) => {
         e._srcIp = srcIp;
         const tgtIp = resolveTopoNeighbor(e, srcIp);
+        if (topoIsHiddenApIp(tgtIp)) return;
         let tgtId = tgtIp;
         if (!tgtIp) {
           tgtId = "ghost_" + (e.remSysName || e.remMac || "unknown").replace(/[^a-z0-9]/gi, "_");
@@ -7609,6 +7629,8 @@ Fehler: ${e.message}`;
     }
   }
   function buildTopoFromStore() {
+    const hideApCb = q("topo-hide-ap");
+    if (hideApCb) hideApCb.checked = !!state_default.topoHideAccessPoints;
     topoLldpMap = {};
     Object.values(state_default.deviceStore).forEach((dev) => {
       if (dev.lldpData?.length) topoLldpMap[dev.ip] = dev.lldpData;
@@ -7618,10 +7640,12 @@ Fehler: ${e.message}`;
     const edgeIdSet = new Set(topoEdges.map((e) => e.id));
     let wdsCnt = 0;
     Object.values(state_default.deviceStore).forEach((dev) => {
+      if (topoIsHiddenApIp(dev.ip)) return;
       (dev.wdsLinks || []).forEach((link) => {
         if (!link.mac) return;
         const peerDev = resolvePeerDev(link.mac);
         if (!peerDev || peerDev.ip === dev.ip) return;
+        if (topoIsHiddenApIp(peerDev.ip)) return;
         if (!topoNodes[peerDev.ip]) {
           topoNodes[peerDev.ip] = {
             id: peerDev.ip,
@@ -7655,9 +7679,11 @@ Fehler: ${e.message}`;
     });
     let l2tpCnt = 0;
     Object.values(state_default.deviceStore).forEach((dev) => {
+      if (topoIsHiddenApIp(dev.ip)) return;
       (dev.l2tpEndpoints || []).forEach((ep) => {
         const remoteIp = ep.remoteIp;
         if (!remoteIp || remoteIp === dev.ip) return;
+        if (topoIsHiddenApIp(remoteIp)) return;
         if (!topoNodes[remoteIp]) {
           const rd = state_default.deviceStore[remoteIp];
           topoNodes[remoteIp] = {
@@ -11567,6 +11593,14 @@ Fortfahren?`)) return;
     state_default.topoLocFilter = v;
     buildTopoFromStore();
   }
+  function setTopoHideAccessPoints(on) {
+    state_default.topoHideAccessPoints = !!on;
+    try {
+      localStorage.setItem("onsite_topo_hide_ap", on ? "1" : "0");
+    } catch (e) {
+    }
+    buildTopoFromStore();
+  }
   window.S = state_default;
   window.toggleTheme = toggleTheme;
   window.showTab = showTab;
@@ -11684,6 +11718,7 @@ Fortfahren?`)) return;
   window.toggleTopoMode = toggleTopoMode;
   window.toggleTraffic = toggleTraffic;
   window.setTopoLocFilter = setTopoLocFilter;
+  window.setTopoHideAccessPoints = setTopoHideAccessPoints;
   window.searchTopoMac = searchTopoMac;
   window.clearTopoMacSearch = clearTopoMacSearch;
   window.topoBgDragStart = topoBgDragStart;

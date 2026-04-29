@@ -505,6 +505,10 @@
     <select id="topo-loc-filter" class="search-input" onchange="setTopoLocFilter(this.value)" style="width:150px" title="Standort filtern">
       <option value="all">Alle Standorte</option>
     </select>
+    <label class="topo-toolbar-checkbox" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none" title="LANCOM Access Points (Typ lx-ap / lcos-ap) aus dem Graphen ausblenden">
+      <input type="checkbox" id="topo-hide-ap" onchange="setTopoHideAccessPoints(this.checked)" style="cursor:pointer;margin:0">
+      APs ausblenden
+    </label>
     <div style="position:relative;display:flex;align-items:center">
       <input id="topo-mac-search" class="search-input" placeholder="MAC / IP suchen…" oninput="searchTopoMac(this.value)" style="width:170px;padding-right:24px" title="MAC-Adresse oder IP im Netzwerkplan suchen">
       <span id="topo-mac-clear" onclick="clearTopoMacSearch()" style="display:none;position:absolute;right:6px;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="Suche löschen">✕</span>

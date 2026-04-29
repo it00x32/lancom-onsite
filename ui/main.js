@@ -73,6 +73,11 @@ import {
 } from './tabs/freeradius.js';
 
 function setTopoLocFilter(v) { S.topoLocFilter = v; buildTopoFromStore(); }
+function setTopoHideAccessPoints(on) {
+  S.topoHideAccessPoints = !!on;
+  try { localStorage.setItem('onsite_topo_hide_ap', on ? '1' : '0'); } catch (e) {}
+  buildTopoFromStore();
+}
 
 // Expose state object for inline handlers that reference vlans[i] etc.
 window.S = S;
@@ -195,6 +200,7 @@ window.topoFit = topoFit;
 window.toggleTopoMode = toggleTopoMode;
 window.toggleTraffic = toggleTraffic;
 window.setTopoLocFilter = setTopoLocFilter;
+window.setTopoHideAccessPoints = setTopoHideAccessPoints;
 window.searchTopoMac = searchTopoMac;
 window.clearTopoMacSearch = clearTopoMacSearch;
 window.topoBgDragStart = topoBgDragStart;

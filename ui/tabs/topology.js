@@ -31,6 +31,17 @@ const TOPO_TYPE_BADGE = {
   firewall: {label:'FW', bg:'rgba(239,68,68,.15)',   color:'#ef4444'},
 };
 
+function isTopoAccessPointType(type) {
+  const t = type || '';
+  return t === 'lx-ap' || t === 'lcos-ap';
+}
+/** Gerät ist AP und soll laut Filter nicht im Netzwerkplan erscheinen */
+function topoIsHiddenApIp(ip) {
+  if (!S.topoHideAccessPoints || !ip) return false;
+  const d = S.deviceStore[ip];
+  return !!(d && isTopoAccessPointType(d.type));
+}
+
 // ── Nachbar-Matching ──────────────────────────────────────────────────────────
 export function resolveTopoNeighbor(entry, srcIp) {
   const sysName     = (entry.remSysName||'').toLowerCase();
@@ -114,6 +125,7 @@ export function buildTopoGraph(lldpMap) {
   Object.values(S.deviceStore).filter(d => {
     if (d.online === false) return false;
     if (S.topoLocFilter !== 'all' && (d.location||'') !== S.topoLocFilter) return false;
+    if (S.topoHideAccessPoints && isTopoAccessPointType(d.type)) return false;
     return true;
   }).forEach(d => {
     topoNodes[d.ip] = {
@@ -125,9 +137,11 @@ export function buildTopoGraph(lldpMap) {
 
   const edgeSet = new Set();
   Object.entries(lldpMap).forEach(([srcIp, entries]) => {
+    if (topoIsHiddenApIp(srcIp)) return;
     entries.forEach(e => {
       e._srcIp = srcIp;
       const tgtIp = resolveTopoNeighbor(e, srcIp);
+      if (topoIsHiddenApIp(tgtIp)) return;
       let tgtId = tgtIp;
       if (!tgtIp) {
         tgtId = 'ghost_' + (e.remSysName || e.remMac || 'unknown').replace(/[^a-z0-9]/gi,'_');
@@ -1586,6 +1600,9 @@ export async function syncTopologyAll() {
 
 // ── Build topology from stored device data ────────────────────────────────────
 export function buildTopoFromStore() {
+  const hideApCb = q('topo-hide-ap');
+  if (hideApCb) hideApCb.checked = !!S.topoHideAccessPoints;
+
   // LLDP edges
   topoLldpMap = {};
   Object.values(S.deviceStore).forEach(dev => {
@@ -1600,10 +1617,12 @@ export function buildTopoFromStore() {
   const edgeIdSet = new Set(topoEdges.map(e => e.id));
   let wdsCnt = 0;
   Object.values(S.deviceStore).forEach(dev => {
+    if (topoIsHiddenApIp(dev.ip)) return;
     (dev.wdsLinks||[]).forEach(link => {
       if (!link.mac) return;
       const peerDev = resolvePeerDev(link.mac);
       if (!peerDev || peerDev.ip === dev.ip) return;
+      if (topoIsHiddenApIp(peerDev.ip)) return;
       // Ensure peer node exists even when offline (offline devices are excluded from buildTopoGraph)
       if (!topoNodes[peerDev.ip]) {
         topoNodes[peerDev.ip] = {
@@ -1625,9 +1644,11 @@ export function buildTopoFromStore() {
   // L2TP edges – Ziel wird auch dann als Knoten ergänzt wenn es offline ist
   let l2tpCnt = 0;
   Object.values(S.deviceStore).forEach(dev => {
+    if (topoIsHiddenApIp(dev.ip)) return;
     (dev.l2tpEndpoints||[]).forEach(ep => {
       const remoteIp = ep.remoteIp;
       if (!remoteIp || remoteIp === dev.ip) return;
+      if (topoIsHiddenApIp(remoteIp)) return;
       if (!topoNodes[remoteIp]) {
         const rd = S.deviceStore[remoteIp];
         topoNodes[remoteIp] = {

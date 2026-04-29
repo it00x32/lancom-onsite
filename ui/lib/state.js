@@ -15,6 +15,10 @@ const S = {
   meshLocFilter: 'all',
   l2tpLocFilter: 'all',
   topoLocFilter: 'all',
+  /** Netzwerkplan: lx-ap / lcos-ap aus dem Graphen ausblenden */
+  topoHideAccessPoints: (() => {
+    try { return localStorage.getItem('onsite_topo_hide_ap') === '1'; } catch (e) { return false; }
+  })(),
   meshSort: { col: null, dir: 1 },
   l2tpSort: { col: null, dir: 1 },
   roamSort: { col: null, dir: 1 },
