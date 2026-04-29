@@ -1,0 +1,11 @@
+{
+  "name": "WDS Links Anzeigen",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "ls /Status/WLAN/WDS/Links"
+  ],
+  "_os": "LCOS LX"
+}

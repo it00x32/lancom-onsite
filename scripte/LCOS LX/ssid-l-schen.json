@@ -1,0 +1,13 @@
+{
+  "name": "SSID löschen",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "cd /Setup/WLAN/Network/",
+    "del *",
+    "flash yes"
+  ],
+  "_os": null
+}

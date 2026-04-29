@@ -4,6 +4,10 @@ Lokales SNMP-Dashboard für Netzwerkgeräte. Kein Cloud-Zugang erforderlich – 
 
 Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
+**Deployment, getrennte Daten, Updates:** [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md) — optional Umgebungsvariable **`ONSITE_DATA_DIR`** (absolute Pfadangabe), damit die App aktualisiert werden kann, ohne `./data` im Installationsordner zu überschreiben.
+
+**GitHub:** Repository-URL ist **`https://github.com/it00x32/onsite`**. Umbenennung auf GitHub & Remote anpassen: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md).
+
 ---
 
 ## Voraussetzungen
@@ -13,7 +17,7 @@ Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 | **Node.js** >= 18 | Web-Server (kein npm nötig) | NodeSource (siehe unten) |
 | **snmpget / snmpwalk / snmpbulkwalk** | SNMP-Abfragen | `snmp` (apt) |
 | **curl** | NodeSource-Setup-Skript herunterladen | `curl` (apt) |
-| **git** | Repository klonen | `git` (apt) |
+| **git** | Quellcode / Versionsverwaltung | `git` (apt) |
 
 ---
 
@@ -27,7 +31,7 @@ sudo apt update && sudo apt upgrade -y
 
 ### 2. Hilfspakete installieren
 
-`curl` wird für das NodeSource-Installationsskript benötigt, `git` zum Klonen des Repositories.
+`curl` wird für das NodeSource-Installationsskript benötigt, `git` für den Zugriff auf das Repository.
 
 ```bash
 sudo apt install -y curl git
@@ -60,17 +64,22 @@ Nach der Installation die MIB-Nutzung in der SNMP-Konfiguration aktivieren:
 sudo sed -i 's/^mibs :$/# mibs :/' /etc/snmp/snmp.conf
 ```
 
-### 5. Projekt klonen
+### 5. Quellcode holen (git)
+
+Empfohlener Ordnername (einheitlich mit systemd-Vorlage): **`onsite`**.
 
 ```bash
-git clone https://github.com/it00x32/lancom-onsite.git
-cd lancom-onsite
+git clone https://github.com/it00x32/onsite.git onsite
+cd onsite
+npm install --omit=dev
 ```
+
+*(Remote-URL anpassen: `git remote set-url origin https://github.com/it00x32/onsite.git` — siehe auch `docs/GITHUB-REPO-UMBENENNUNG.md`.)*
 
 ### 6. Starten
 
 ```bash
-node server.js          # Port 3002 (Standard)
+node server.js          # Port 3004 (Standard)
 node server.js 8080     # Alternativer Port
 ```
 
@@ -82,8 +91,8 @@ Die Web-Oberfläche ist dann erreichbar unter `http://<server-ip>:<port>`
 # Prüfen ob ufw aktiv ist
 sudo ufw status
 
-# Port 3002 freigeben (oder den gewählten Port)
-sudo ufw allow 3002/tcp
+# Port 3004 freigeben (oder den gewählten Port)
+sudo ufw allow 3004/tcp
 sudo ufw reload
 ```
 
@@ -91,39 +100,73 @@ sudo ufw reload
 
 ## Autostart mit systemd (empfohlen)
 
+**systemd:** Das Install-Skript setzt `WorkingDirectory` und `ExecStart` auf das **Projektverzeichnis (Repo-Root)**, aus dem es aufgerufen wird — also genau den Ordner, in dem ihr entwickelt und `server.js` liegt (kein fester Pfad im Code — Vorlage nutzt Platzhalter `__ONSITE_INSTALL_ROOT__`).
+
 ```bash
-# 1. Projektverzeichnis einrichten
-sudo cp -r lancom-onsite /opt/onsite
-sudo chown -R www-data:www-data /opt/onsite
-
-# 2. systemd-Service anlegen
-sudo tee /etc/systemd/system/onsite.service > /dev/null <<EOF
-[Unit]
-Description=OnSite SNMP Web Server
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/onsite
-ExecStart=/usr/bin/node server.js 3002
-Restart=on-failure
-RestartSec=5
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 3. Dienst aktivieren und starten
-sudo systemctl daemon-reload
-sudo systemctl enable --now onsite
-
-# Status prüfen
-sudo systemctl status onsite
+cd /pfad/zum/projektverzeichnis   # Repo-Root: dieselbe Stelle, in der auch server.js liegt
+sudo bash deploy/systemd/install-onsite-service.sh
+sudo systemctl restart onsite
 ```
 
-> **Hinweis:** Den Pfad in `WorkingDirectory` und `ExecStart` an den tatsächlichen Ablageort des Projekts anpassen.
+### systemd-Unit aus dem Projektverzeichnis neu setzen
+
+Der Arbeitsordner soll kanonisch **`onsite`** heißen (Ordnername). Unit und Pfade neu schreiben:
+
+```bash
+sudo systemctl stop onsite
+cd /pfad/zum/projektverzeichnis   # Repo-Root mit server.js und index.html
+sudo bash deploy/rename-to-onsite.sh
+```
+
+---
+
+Vorlage **`deploy/systemd/onsite.service.example`** (User **`www-data`**, Platzhalter `__ONSITE_INSTALL_ROOT__`) — Installation aus dem Projektverzeichnis:
+
+```bash
+# 1. App nach /opt/onsite (o. ä.) legen
+sudo cp -r onsite /opt/onsite
+cd /opt/onsite && npm install --omit=dev
+sudo chown -R www-data:www-data /opt/onsite
+
+# 2. Unit erzeugen (Pfade + node automatisch) und Dienst starten
+sudo bash deploy/systemd/install-onsite-service.sh --unit-product
+```
+
+### Logs & Fehlersuche
+
+**Dienst startet nicht:** Zuerst aus dem Projektroot **`bash deploy/verify-onsite-install.sh`** — prüft `index.html`, `node_modules`, Node-Pfad. Dann **`sudo journalctl -u onsite -n 100 --no-pager`** (Fehlermeldung meist `ENOENT` bei fehlender `index.html`, **`EADDRINUSE`** bei belegtem Port, oder **falscher `ExecStart`**/`WorkingDirectory` in der Unit).
+
+| Zweck | Befehl |
+|--------|--------|
+| Live-Log (systemd) | `sudo journalctl -u onsite -f` |
+| Letzte Zeilen | `sudo journalctl -u onsite -n 150 --no-pager` |
+| Nur eine Instanz? | `ss -tlnp \| grep 3004` — zweiter Prozess → oft **EADDRINUSE**, Dienst beendet sich |
+| OOM (Speicher) | `journalctl -k -b \| grep -i oom` oder `dmesg \| tail` |
+
+**Stacktrace / Log nennt `…/onsite-dev/index.html` und `…/onsite-dev/server.js`:** Der laufende Prozess kommt noch von der **alten Installation**. Häufig: ein **Drop-In** unter `/etc/systemd/system/onsite.service.d/*.conf` überschreibt `WorkingDirectory` oder `ExecStart` weiter mit `onsite-dev` — **`install-onsite-service.sh` allein** ändert nur die Hauptdatei `onsite.service`, die Drop-Ins bleiben und mergen sich **danach** wieder „falsch“ ein. Der aktuelle Code im Repo hat `sendStatic` **nicht** in Zeile 43 — ein Stack mit Zeile 43 ist **veraltete `server.js`** plus falscher Pfad.
+
+**Behebung (empfohlen):** Im **Repo-Root, in dem ihr entwickelt** (z. B. `cd /var/www/html/claude/onsite`), **`sudo bash deploy/force-onsite-path.sh`** ausführen — ersetzt `onsite-dev` in Unit **und** Drop-Ins, sichert vorher, schreibt die Unit neu, `daemon-reload` + `restart`. Alternativ manuell: Drop-Ins prüfen (`ls /etc/systemd/system/onsite.service.d/`), alle Zeilen mit `onsite-dev` auf `…/onsite` korrigieren, dann **`sudo bash deploy/systemd/install-onsite-service.sh`** und **`sudo systemctl daemon-reload && sudo systemctl restart onsite`**. Prüfen: **`systemctl cat onsite`** — nirgends `onsite-dev`. **`pgrep -af 'node.*onsite'`** — kein Prozess mit `onsite-dev` im Pfad. Optional: **`bash deploy/verify-onsite-install.sh`**.
+
+**`ENOENT` … `index.html`:** `WorkingDirectory`/`ExecStart` in der Unit müssen auf **dieselbe** Installation zeigen wie die Dateien (`index.html` im selben Ordner wie `server.js`). Aus dem Projektroot: **`sudo bash deploy/systemd/install-onsite-service.sh`** und **`sudo systemctl daemon-reload && sudo systemctl restart onsite`**. Beispiel: `WorkingDirectory=/opt/onsite`, `ExecStart=/usr/bin/node /opt/onsite/server.js` (Node-Pfad ggf. anpassen). Prüfen: `systemctl cat onsite`, `grep -rE '/onsite/|__ONSITE_INSTALL_ROOT__' /etc/systemd/system/ 2>/dev/null`.
+
+**Stacktrace zeigt noch eine alte `server.js`:** Zwei Kopien der App oder ein **unvollständiges Projektverzeichnis** — Diagnose: **`bash deploy/diagnose-onsite.sh`**. Lösung: **eine** gültige Installation (`index.html` + `server.js` im selben Ordner), Unit neu installieren, Dienst neu starten.
+
+**`sendStatic`-Fehler mit falschem Pfad zu `index.html`:** Oft **veraltete** `server.js` **oder** fehlende **`index.html`** im Ordner von `server.js`. Vorgehen: `ls index.html` im Installationsverzeichnis — fehlt die Datei → `git checkout -- index.html app.js styles.css` bzw. **`git pull`**. Danach **`sudo systemctl restart onsite`**. Nur **einen** aktiven Installationsordner nutzen (Unit-`ExecStart` = dieser Ordner).
+
+- Vorlage **/opt/onsite:** `deploy/systemd/onsite.service.example`
+- Vorlage **beliebiges Repo-Root (Platzhalter in der Datei):** `deploy/systemd/onsite.service.var-www-html-claude.example`
+
+> **Hinweis:** `WorkingDirectory` und `ExecStart` in der Unit-Datei müssen zum **absoluten** Installationspfad passen (`/opt/onsite` ist nur ein Beispiel).
+
+> **`scripte/`** und das **Datenverzeichnis** müssen für den Dienstbenutzer beschreibbar sein: Standard `./data` im Projektordner — bei **`ONSITE_DATA_DIR`** stattdessen diesen Pfad anlegen und `chown` setzen, z. B. `sudo chown -R www-data:www-data scripte/ data/` bzw. `… /var/lib/onsite/data`.
+
+### Manuell mit Logdatei (ohne systemd)
+
+```bash
+chmod +x scripte/start-onsite.sh
+./scripte/start-onsite.sh
+# Ausgabe in log/onsite.log
+```
 
 ---
 

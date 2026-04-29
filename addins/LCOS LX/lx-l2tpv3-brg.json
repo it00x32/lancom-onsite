@@ -7,6 +7,6 @@
   "lcosSxSdk4": false,
   "lcosSxXs": false,
   "lcosFx": false,
-  "script": "exports.main = function (config, context) {\n    // Dein Code hier\n};",
+  "script": "/**\n * @param {Config} config\n * @param {Context} context\n * Do not edit this comment or parameter types. Required for code suggestions\n*/\nexports.main = function (config, context) {\n\n    //--------------- WARNING ------------------\n    function warn(msg) {\n       // config.addScriptLine(\"# - \" + msg);\n       // config.warnLog(msg);\n    }\n    warn(\"LX-L2TP-BRIDGE Addin Active\")\n    //--------------- END WARNING --------------\n\n    if (context.vars.L2TPv3_Aktiv == \"1\") {\n        // SSID der L2TP Verbindung hinzufügen\n        function setL2TP(Network) {\n            var wdsNetwork = config.getTableByOid(\"13.2.20.1\");\n            var wdsNetwork_row = wdsNetwork.getFirstRowByOid(\"1\", Network)\n                 .setByOid(30, \"34\"); // 34 L2TP Interface 1\n        }\n       setL2TP(\"1_200_200\");\n\n    }\n};\n",
   "os": "LCOS LX"
 }

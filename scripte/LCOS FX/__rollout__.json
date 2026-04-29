@@ -1,0 +1,8 @@
+{
+  "name": "ROLLOUT",
+  "description": "Wird nach jedem Rollout automatisch ausgeführt",
+  "os": [
+    "LCOS FX"
+  ],
+  "commands": []
+}

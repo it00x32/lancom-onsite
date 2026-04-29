@@ -1,0 +1,16 @@
+{
+  "name": "ROLLOUT",
+  "description": "Wird nach jedem Rollout automatisch ausgeführt",
+  "os": [
+    "LCOS"
+  ],
+  "commands": [
+    "cd /Setup/SNMP/Groups",
+    "add  SNMPv3(USM)      \"snmpclient\"                      \"snmpgroup\"                       active",
+    "cd /Setup/SNMP/Accesses",
+    "add  \"snmpgroup\"                       SNMPv3(USM)     Auth-Priv           \"Full-Access\"                     \"Full-Access\"                     \"Full-Access\"                     active",
+    "cd /Setup/SNMP/Users",
+    "add  \"snmpclient\"                      HMAC-SHA                      \"snmppass\"                                                                                                                        \"E4775106DFA3CD697996E97E6A151770FA908502\"                                                                                        AES128                       \"snmppass\"                                                                                                                        \"E4775106DFA3CD697996E97E6A151770FA908502\"                                                                                        active"
+  ],
+  "_os": "LCOS"
+}

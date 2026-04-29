@@ -1,0 +1,12 @@
+{
+  "name": "Factory Reset",
+  "description": "",
+  "os": [
+    "LCOS SX 3"
+  ],
+  "commands": [
+    "restore default",
+    "reboot"
+  ],
+  "_os": "LCOS SX 3"
+}

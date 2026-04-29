@@ -1,0 +1,13 @@
+{
+  "name": "SSID",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "cd /Setup/WLAN/Network/",
+    "set LW600        LW600     OnSite!!              2.4GHz+5GHz  WP3-Onsite          300           0                         0                         0        Yes                    No                No              0             0                    No                              ALWAYS     \"\"       No               0                       0                       No                    br-lan  Off           \"\"        Yes     No   1            2347           \"\"",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

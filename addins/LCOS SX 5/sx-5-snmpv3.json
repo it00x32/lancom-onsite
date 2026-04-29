@@ -7,6 +7,6 @@
   "lcosSxSdk4": false,
   "lcosSxXs": true,
   "lcosFx": false,
-  "script": "exports.main = function (config, context) {\n    // Dein Code hier\n};",
+  "script": "/**\n * @param {Config} config\n * @param {Context} context\n * Do not edit this comment or parameter types. Required for code suggestions\n*/\nexports.main = function (config, context) {\n\n\n\tconfig.addScriptLine(\"configure\");\n\tconfig.addScriptLine(\"snmp-server contact snmpcontact\");\n\tconfig.addScriptLine(\"exit\");\n\n\tfunction warn(msg) {\n\t\t//config.addScriptLine(\"# - \" + msg);\n\t\tconfig.warnLog(msg);\n\t}\n\n\n\tvar helper = config.getScalarByOid(\"2.1.4\");\n\n\twarn(\"helper: \" + helper);\n\n\n\tif (helper != \"snmpcontact\") {\n\t\tcreateSNMPaccess();\n\t}\n\tfunction createSNMPaccess() {\n\t\tconfig.addScriptLine(\"configure\");\n\t\tconfig.addScriptLine(\"snmp-server view \\\"any\\\" iso included\");\n\t\t//config.addScriptLine(\"snmp-server group \" + context.vars.SNMP_Group +\" v3 priv notify \\\"Default\\\" read \\\"any\\\" write \\\"any\\\"\");\n        config.addScriptLine(\"snmp-server group \\\" \" + context.vars.SNMP_Group + \"\\\" v3 priv notify \\\"Default\\\" read \\\"any\\\" write \\\"any\\\"\");\n\t\tconfig.addScriptLine(\"snmp-server user \\\" \" +context.vars.SNMP_USER + \"\\\" \\\" \" + context.vars.SNMP_Group + \"\\\" auth-sha \" + context.vars.SNMP_AUTH_PW  + \" priv-aes \" + context.vars.SNMP_PRIV_PW + \"\");\n\t\tconfig.addScriptLine(\"exit\");\n\n\n\t}\n}\n\n",
   "os": "LCOS SX 5"
 }

@@ -1,0 +1,12 @@
+{
+  "name": "WDS Slave",
+  "description": "konfiguriert einen LX Access Point als WDS Slave",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "set /Setup/WLAN/WDS/Links WDSConnection WDSConnection 1 2 P-PSK-WPA3 12345678 100,200 1 0",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

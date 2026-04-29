@@ -1,0 +1,14 @@
+{
+  "name": "LMC",
+  "description": "",
+  "os": [
+    "LCOS SX 5"
+  ],
+  "commands": [
+    "enable",
+    "startlmc UXI7-K137-CYUY-RS3K-AW76-9VRN cloud.lancom.de",
+    "copy system:running-config nvram:startup-config",
+    "y"
+  ],
+  "_os": "LCOS SX 5"
+}

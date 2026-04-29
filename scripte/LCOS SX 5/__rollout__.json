@@ -1,0 +1,18 @@
+{
+  "name": "ROLLOUT",
+  "description": "Wird nach jedem Rollout automatisch ausgeführt",
+  "os": [
+    "LCOS SX 5"
+  ],
+  "commands": [
+    "enable",
+    "configure",
+    "snmp-server view \"any\" iso included",
+    "snmp-server group \" snmpgroup\" v3 priv notify \"Default\" read \"any\" write \"any\"",
+    "snmp-server user \" snmpclient\" \" snmpgroup\" auth-sha snmppass priv-aes snmppass",
+    "exit",
+    "copy system:running-config nvram:startup-config",
+    "y"
+  ],
+  "_os": "LCOS SX 5"
+}

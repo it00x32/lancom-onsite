@@ -7,6 +7,6 @@
   "lcosSxSdk4": false,
   "lcosSxXs": false,
   "lcosFx": false,
-  "script": "exports.main = function (config, context) {\n    // Dein Code hier\n};",
+  "script": "/**\n * @param {Config} config\n * @param {Context} context\n * Do not edit this comment or parameter types. Required for code suggestions\n*/\nexports.main = function (config, context) {\n\n    function warn(msg) {\n        config.warnLog(msg);\n    }\n    warn(\"LX-L2TP-ENDPUNKT Addin Active\");\n\n    var endpunktList = config.getTableByOid(\"13.2.61.1\");\n    var endpunkt = endpunktList.createNewRow();\n    endpunkt.setByOid(\"1\", \"L2TP-SSID\");\n    endpunkt.setByOid(\"2\", context.vars.L2TP_Target_IP);\n    endpunkt.setByOid(\"3\", \"1701\");\n    endpunkt.setByOid(\"4\", context.device.serialNumber);\n    endpunkt.setByOid(\"5\", \"123456789\"); //PW\n    endpunkt.setByOid(\"6\", \"0\");\n    endpunkt.setByOid(\"7\", \"0\");\n    endpunkt.setByOid(\"8\", \"1\");\n    endpunktList.addOrMerge(endpunkt);\n\n        var ethernetList = config.getTableByOid(\"13.2.61.2\");\n        var ethernet = ethernetList.createNewRow();\n        ethernet.setByOid(\"1\", \"L2TP-SSID\");\n        ethernet.setByOid(\"2\", \"L2TP-SSID\");\n        ethernet.setByOid(\"3\", \"0\"); //L2TP-Tunnel1\n        ethernet.setByOid(\"4\", \"1500\");\n        ethernetList.addOrMerge(ethernet);\n};",
   "os": "LCOS LX"
 }

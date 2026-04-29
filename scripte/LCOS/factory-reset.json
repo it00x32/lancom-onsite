@@ -1,0 +1,12 @@
+{
+  "name": "Factory Reset",
+  "description": "",
+  "os": [
+    "LCOS"
+  ],
+  "commands": [
+    "do /Other/Reset-Config",
+    "{{password}}"
+  ],
+  "_os": "LCOS"
+}

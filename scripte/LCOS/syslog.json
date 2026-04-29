@@ -1,0 +1,12 @@
+{
+  "name": "SYSLOG",
+  "description": "",
+  "os": [
+    "LCOS"
+  ],
+  "commands": [
+    "Set /Setup/SYSLOG/Server/1111 172.16.16.45 1514 0 0 0x10 0x8 INTRANET 0",
+    "flash yes"
+  ],
+  "_os": "LCOS"
+}

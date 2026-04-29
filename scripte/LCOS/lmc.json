@@ -1,0 +1,11 @@
+{
+  "name": "LMC",
+  "description": "",
+  "os": [
+    "LCOS"
+  ],
+  "commands": [
+    "startlmc S16Y-ARG4-1HF8-E1VU-ANH9-DMHL"
+  ],
+  "_os": null
+}

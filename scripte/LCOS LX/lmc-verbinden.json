@@ -1,0 +1,12 @@
+{
+  "name": "LMC Verbinden",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "startlmc UXI7-K137-CYUY-RS3K-AW76-9VRN",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

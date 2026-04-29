@@ -1,0 +1,17 @@
+# Drop-in: TLS-SNI-Tool im Web-UI darf auf Ports < 1024 lauschen (z. B. 443).
+#
+# Installation (als root):
+#   sudo mkdir -p /etc/systemd/system/onsite.service.d
+#   sudo cp deploy/systemd/onsite.service.d/10-sni-privileged-ports.conf.example \
+#          /etc/systemd/system/onsite.service.d/10-sni-privileged-ports.conf
+#   sudo systemctl daemon-reload
+#   sudo systemctl restart onsite
+#
+# OnSite läuft als root (var-www-html-claude-Vorlage): nur Environment nötig.
+# OnSite läuft als www-data: AmbientCapabilities zusätzlich nötig (siehe unten).
+
+[Service]
+Environment=SNI_ALLOW_PRIV_PORTS=1
+
+# Nur bei User=www-data (nicht root) auskommentieren — sonst weglassen:
+# AmbientCapabilities=CAP_NET_BIND_SERVICE

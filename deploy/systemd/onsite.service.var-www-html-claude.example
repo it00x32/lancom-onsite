@@ -1,0 +1,34 @@
+# OnSite — Beispiel-unit (Platzhalter __ONSITE_INSTALL_ROOT__ wird durch install-onsite-service.sh ersetzt).
+#
+# Installation:
+#   sudo bash deploy/systemd/install-onsite-service.sh
+#
+# Oder manuell: Platzhalter durch absolutes Repo-Root ersetzen, z. B. /opt/onsite oder /srv/www/onsite
+#
+# User anpassen: Lesezugriff auf das Projektverzeichnis, Schreibzugriff auf data/ + scripte/
+
+[Unit]
+Description=OnSite SNMP Web Dashboard
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=__ONSITE_INSTALL_ROOT__
+Environment=NODE_ENV=production
+Environment=PORT=3004
+# TLS-SNI-Listener auf Port 443 o. ä.: App-Freigabe (OS erlaubt <1024 als root ohnehin)
+Environment=SNI_ALLOW_PRIV_PORTS=1
+ExecStart=/usr/bin/node __ONSITE_INSTALL_ROOT__/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=onsite
+
+[Install]
+WantedBy=multi-user.target

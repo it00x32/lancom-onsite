@@ -1,0 +1,13 @@
+{
+  "name": "Factory Reset",
+  "description": "",
+  "os": [
+    "LCOS SX 5"
+  ],
+  "commands": [
+    "enable",
+    "clear config",
+    "y"
+  ],
+  "_os": "LCOS SX 5"
+}

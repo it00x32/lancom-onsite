@@ -1,0 +1,17 @@
+{
+  "name": "ROLLOUT",
+  "description": "Wird nach jedem Rollout automatisch ausgeführt",
+  "os": [
+    "LCOS SX 4"
+  ],
+  "commands": [
+    "configure",
+    "snmp-server user snmpclient sha snmppass priv aes snmppass",
+    "snmp-server security-to-group model v3 name snmpclient group snmpgroup",
+    "snmp-server view snmpview .1 include",
+    "snmp-server access snmpgroup model v3 level priv read snmpview write snmpview",
+    "exit",
+    "copy running-config startup-config"
+  ],
+  "_os": "LCOS SX 4"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Hostname",
+  "description": "setzt den Hostname",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "set /Setup/Name \"LX-7500\"",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

@@ -1,0 +1,44 @@
+# OnSite als systemd-Dienst (www-data, typisch /opt/onsite o. ä.)
+#
+# Installation per Skript (ersetzt Platzhalter + Node-Pfad):
+#   cd /pfad/zum/repo
+#   sudo bash deploy/systemd/install-onsite-service.sh --unit-product
+#
+# Oder manuell: __ONSITE_INSTALL_ROOT__ durch absolutes App-Verzeichnis ersetzen,
+# ExecStart-Node durch `which node`, dann:
+#   sudo cp … /etc/systemd/system/onsite.service && sudo systemctl daemon-reload && sudo systemctl enable --now onsite
+#
+# Logs: sudo journalctl -u onsite -f
+# Nur eine Instanz: Port 3004/tcp und UDP 1620, 1514, 1812/1813 dürfen nicht doppelt belegt sein.
+
+[Unit]
+Description=OnSite SNMP Web Dashboard
+After=network-online.target
+Wants=network-online.target
+# Bei Crash-Schleifen nach einigen Versuchen Pause (optional auskommentieren)
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=__ONSITE_INSTALL_ROOT__
+Environment=NODE_ENV=production
+Environment=PORT=3004
+# TLS-SNI-Listener auf Port <1024 (z. B. 443): App-Freigabe + Capability zum Binden als www-data
+Environment=SNI_ALLOW_PRIV_PORTS=1
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+# Optional: Daten außerhalb des App-Ordners (Updates ersetzen nur __ONSITE_INSTALL_ROOT__)
+# Environment=ONSITE_DATA_DIR=/var/lib/onsite/data
+ExecStart=/usr/bin/node __ONSITE_INSTALL_ROOT__/server.js
+Restart=on-failure
+RestartSec=5
+
+# Stdout/Stderr im Journal (journalctl -u onsite)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=onsite
+
+[Install]
+WantedBy=multi-user.target

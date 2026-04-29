@@ -1,0 +1,13 @@
+{
+  "name": "Encryption Profile",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "cd /Setup/WLAN/Encryption/",
+    "set WP3-Onsite     Yes         802.11i-WPA-PSK  WPA3         TKIP                   AES-CCMP-128               BIP-CMAC-128       mandatory          Auto           0                   Yes                 Yes  Standard             DH-19              redsdfwr3S23ddEHRW223                                            \"\"",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

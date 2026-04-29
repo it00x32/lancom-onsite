@@ -1,0 +1,15 @@
+{
+  "name": "ROLLOUT",
+  "description": "Wird nach jedem Rollout automatisch ausgeführt",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "add Setup/SNMP/GROUPS SNMPv3_USM snmpclient snmpgroup",
+    "add Setup/SNMP/Accesses/ snmpgroup SNMPv3_USM AuthPriv snmpgroup snmpgroup snmpgroup",
+    "add Setup/SNMP/views/ snmpgroup          1                            Included  Active",
+    "add Setup/SNMP/users snmpclient  HMAC-SHA                 Masterkey                     e4775106dfa3cd697996e97e6a151770fa908502  AES128            Masterkey              e4775106dfa3cd697996e97e6a151770fa908502  Active",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

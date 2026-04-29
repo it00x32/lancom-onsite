@@ -11,28 +11,115 @@
 </head>
 <body>
 
+<!-- ═══ LIZENZ-SPERRE ═══════════════════════════════════════════════════════ -->
+<div id="license-wall" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center">
+  <div style="width:100%;max-width:480px;padding:40px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+    <div class="header-logo" style="margin-bottom:6px">On<span>Site</span></div>
+    <div id="lw-status" style="font-size:13px;font-weight:600;margin-bottom:24px;padding:8px 12px;border-radius:6px;display:inline-block"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Lizenz-Datei einfügen oder hochladen</div>
+    <label id="lw-drop" class="license-drop" style="margin-bottom:8px;cursor:pointer" ondragover="licenseDragOver(event,true)" ondragleave="licenseDragLeave(true)" ondrop="licenseDrop(event,true)">
+      <input type="file" id="lw-file" accept=".json,application/json" style="display:none" onchange="licenseFileSelected(event,true)">
+      <span id="lw-drop-text">JSON-Datei hier ablegen oder <u>auswählen</u></span>
+    </label>
+    <textarea id="lw-input" rows="5" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg3);color:var(--text1);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical" placeholder='{ "customer": "...", "expiresAt": "...", "signature": "..." }'></textarea>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+      <button class="btn" onclick="activateLicense(true)">Lizenz aktivieren</button>
+      <span id="lw-msg" style="font-size:12px;display:none"></span>
+    </div>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-logo">On<span>Site</span></div>
   <div class="header-signal"><span></span><span></span><span></span><span></span></div>
   <div style="flex:1"></div>
   <div id="detail-badge" onclick="showTab('detail')"></div>
-  <span class="version-tag" id="version-tag">v1.0.0</span>
+  <span class="version-tag" id="version-tag">v0.8.8</span>
+  <span class="license-header-tag" id="license-header-tag" onclick="showTab('settings');showCfgTab('license')" title="Lizenz-Details"></span>
   <button class="theme-toggle" onclick="toggleTheme()" title="Tag / Nacht Modus" id="theme-toggle-btn">☀️</button>
 </div>
 
 <div class="app-body">
 <div class="tabs" id="main-tabs">
-  <div class="tab active" onclick="showTab('devices')" id="tab-devices"> Geräte <span class="badge" id="badge-devices"></span></div>
-  <div class="tab"        onclick="showTab('mesh')"    id="tab-mesh">    WiFi WDS <span class="badge" id="badge-mesh"></span></div>
-  <div class="tab"        onclick="showTab('l2tp')"    id="tab-l2tp">    L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
-  <div class="tab"        onclick="showTab('topology')" id="tab-topology">Netzwerkplan</div>
+
+  <div class="tab-group" id="tgroup-uebersicht">
+    <div class="tab-group-label" onclick="toggleGroup('uebersicht')">Übersicht<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab active" onclick="showTab('dashboard')" id="tab-dashboard">Dashboard</div>
+      <div class="tab"        onclick="showTab('devices')"   id="tab-devices">Geräte <span class="badge" id="badge-devices"></span></div>
+      <div class="tab"        onclick="showTab('topology')"  id="tab-topology">Netzwerkplan</div>
+      <div class="tab"        onclick="showTab('clients')"   id="tab-clients">Client Explorer <span class="badge" id="badge-clients"></span></div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-wifi">
+    <div class="tab-group-label" onclick="toggleGroup('wifi')">Wifi<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('wifidash')" id="tab-wifidash">WiFi Analyse</div>
+      <div class="tab" onclick="showTab('wifiplan')" id="tab-wifiplan">WiFi-Plan</div>
+      <div class="tab" onclick="showTab('wifi-settings')" id="tab-wifi-settings">WiFi Settings</div>
+      <div class="tab" onclick="showTab('roaming')" id="tab-roaming">Roaming</div>
+      <div class="tab" onclick="showTab('mesh')"     id="tab-mesh">WiFi WDS <span class="badge" id="badge-mesh"></span></div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-switch">
+    <div class="tab-group-label" onclick="toggleGroup('switch')">LAN<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('traffic')" id="tab-traffic">Traffic</div>
+      <div class="tab" onclick="showTab('vlantracer')" id="tab-vlantracer">VLAN-Tracer</div>
+      <div class="tab" onclick="showTab('stp')"        id="tab-stp">STP</div>
+      <div class="tab" onclick="showTab('poe')"        id="tab-poe">PoE</div>
+      <div class="tab" onclick="showTab('sensors')"    id="tab-sensors">Sensors</div>
+      <div class="tab" onclick="showTab('loopdetect')" id="tab-loopdetect">Loop-Erkennung</div>
+      <div class="tab" onclick="showTab('porttest')"  id="tab-porttest">Port-Test</div>
+      <div class="tab" onclick="showTab('l2tp')"       id="tab-l2tp">L2TPv3 <span class="badge" id="badge-l2tp"></span></div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-security">
+    <div class="tab-group-label" onclick="toggleGroup('security')">Sicherheit<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('nac')" id="tab-nac">NAC</div>
+      <div class="tab" onclick="showTab('freeradius')" id="tab-freeradius">FreeRADIUS</div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-monitoring">
+    <div class="tab-group-label" onclick="toggleGroup('monitoring')">Monitoring<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('traps')"  id="tab-traps">SNMP Traps <span class="badge" id="badge-traps"></span></div>
+      <div class="tab" onclick="showTab('syslog')" id="tab-syslog">Syslog</div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-tools">
+    <div class="tab-group-label" onclick="toggleGroup('tools')">Tools<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('ai')"        id="tab-ai">KI-Assistent</div>
+      <div class="tab" onclick="showTab('mib')"       id="tab-mib">MIB-Browser</div>
+      <div class="tab" onclick="showTab('backup')"    id="tab-backup">Config-Backup</div>
+      <div class="tab" onclick="showTab('scripting')" id="tab-scripting">Scripting</div>
+      <div class="tab" onclick="showTab('sni')" id="tab-sni">TLS-SNI</div>
+    </div>
+  </div>
+
+  <div class="tab-group" id="tgroup-verwaltung">
+    <div class="tab-group-label" onclick="toggleGroup('verwaltung')">Verwaltung<span class="tab-group-chevron">▾</span></div>
+    <div class="tab-group-items">
+      <div class="tab" onclick="showTab('sdn')"      id="tab-sdn">SDN</div>
+      <div class="tab" onclick="showTab('scanner')"  id="tab-scanner">SNMP Scan</div>
+      <div class="tab" onclick="showTab('rollout')"  id="tab-rollout">MAC Scan</div>
+      <div class="tab" onclick="showTab('lmc')"      id="tab-lmc">LMC Connect</div>
+      <div class="tab" onclick="showTab('settings')" id="tab-settings">Einstellungen</div>
+    </div>
+  </div>
+
+  <!-- versteckt -->
   <div class="tab" style="display:none" onclick="showTab('detail')" id="tab-detail">
     <span id="tab-detail-label">Gerät</span>
   </div>
-  <div class="tab"        onclick="showTab('sdn')"     id="tab-sdn">     SDN</div>
-  <div class="tab"        onclick="showTab('scanner')" id="tab-scanner"> Scanner</div>
-  <div class="tab"        onclick="showTab('lmc')"     id="tab-lmc">     Cloud Sync</div>
-  <div class="tab"        onclick="showTab('settings')"id="tab-settings">Einstellungen</div>
+
 </div>
 
 <div class="content">
@@ -91,8 +178,275 @@
   </div>
 </div>
 
+<!-- ═══ CLIENT EXPLORER ══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-clients">
+  <div class="toolbar">
+    <div class="filter-group">
+      <button class="fbtn active" onclick="setClientsFilter('all')"  id="clf-all">Alle</button>
+      <button class="fbtn"        onclick="setClientsFilter('wlan')" id="clf-wlan">WLAN</button>
+      <button class="fbtn"        onclick="setClientsFilter('fdb')"  id="clf-fdb">Switch-MAC</button>
+    </div>
+    <input class="search-input" id="clients-search" placeholder="MAC / IP / Hostname / SSID…" oninput="renderClients()" style="width:240px">
+    <div class="toolbar-spacer"></div>
+    <label style="font-size:12px;color:var(--text2)">Uplink ab</label>
+    <input type="number" id="uplink-threshold" value="3" min="1" max="99" oninput="renderClients()" style="width:52px;text-align:center" class="search-input">
+    <label style="font-size:12px;color:var(--text2)">MACs</label>
+    <div class="sep"></div>
+    <button class="btn btn-sm btn-danger" onclick="clearClientsData()">Liste leeren</button>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin:0 0 10px;line-height:1.45;max-width:920px">Hinweis: <strong>keine Live-Daten</strong> — die Tabelle zeigt den letzten Abgleich („WLAN Clients“ / Switch-MAC). Nach <strong>Status</strong> am Gerät werden Einträge von <strong>offline</strong> Geräten ausgeblendet; ein neuer WLAN-Abgleich leert veraltete Client-Listen.</p>
+  <div class="table-wrap">
+    <div class="table-title">Client Explorer <span class="cnt" id="cnt-clients"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-clients">
+        <thead><tr><th>Quelle</th><th>Typ</th><th>MAC-Adresse</th><th>IP-Adresse</th><th>Hostname</th><th>SSID / Port</th><th>Band</th><th>Kanal</th><th>Signal</th><th>Bezeichnung (NAC)</th><th>NAC-Liste</th></tr></thead>
+        <tbody><tr><td colspan="11" class="empty">„WLAN Clients" im Geräte-Tab starten um Daten zu laden</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NAC (Network Access Control) ═══════════════════════════════════════════ -->
+<div class="panel" id="panel-nac">
+  <div class="toolbar">
+    <span id="nac-save-status" style="font-size:12px;color:var(--text3);min-height:20px"></span>
+  </div>
+  <div id="nac-root"></div>
+</div>
+
+<!-- ═══ FreeRADIUS (Docker) ══════════════════════════════════════════════════ -->
+<div class="panel" id="panel-freeradius">
+  <div class="toolbar">
+    <span style="font-size:12px;color:var(--text3)">NAS-Clients, Docker-Container</span>
+  </div>
+  <div id="freeradius-root"></div>
+</div>
+
 <!-- ═══ GERÄTE ═══════════════════════════════════════════════════════════════ -->
-<div class="panel active" id="panel-devices">
+<div class="panel active" id="panel-dashboard">
+  <div id="dash-content" style="padding:4px 0"></div>
+</div>
+
+<div class="panel" id="panel-wifidash">
+  <div class="toolbar">
+    <button class="btn btn-sm" id="btn-wifi-refresh" onclick="wifiRefresh(this)">&#x21BB; Aktualisieren</button>
+    <div class="toolbar-spacer"></div>
+    <span style="font-size:12px;color:var(--text3)">Fragt WLAN-Clients von allen APs ab</span>
+  </div>
+  <div id="wifi-sync-status" class="status-bar"></div>
+  <div id="wifi-dash-content" style="padding:4px 0"></div>
+</div>
+
+<div class="panel" id="panel-wifi-settings">
+  <div class="toolbar">
+    <button class="btn btn-sm" onclick="renderWifiSettings()">&#x21BB; Aktualisieren</button>
+    <div class="toolbar-spacer"></div>
+    <span style="font-size:12px;color:var(--text3)">LCOS LX · SSIDs per SNMP (Setup <code style="font-size:10px">2356.13.2.20.1</code>)</span>
+  </div>
+  <div id="wifi-settings-content" style="padding:12px 16px"></div>
+</div>
+
+<div class="panel" id="panel-wifiplan">
+  <div class="toolbar">
+    <span style="font-size:13px;font-weight:700;color:var(--text)">WiFi-Plan</span>
+    <button class="btn btn-sm btn-ghost" onclick="wifiPlanZoom(1.25)" title="Vergrößern">＋</button>
+    <button class="btn btn-sm btn-ghost" onclick="wifiPlanZoom(0.8)"  title="Verkleinern">－</button>
+    <button class="btn btn-sm btn-ghost" onclick="wifiPlanFit()"      title="Ansicht anpassen">⊡</button>
+    <button class="btn btn-sm btn-ghost" onclick="wpResetLayout()"    title="Gespeicherte Positionen löschen und automatisches Layout wiederherstellen">↺ Layout</button>
+    <div style="width:1px;height:18px;background:var(--border);margin:0 4px"></div>
+    <span style="font-size:11px;color:var(--text3);margin-right:4px">Interferenz:</span>
+    <button id="wpf-all" class="btn btn-sm active" onclick="wpSetBandFilter('all')"   title="Alle Bänder">Alle</button>
+    <button id="wpf-2.4" class="btn btn-sm"        onclick="wpSetBandFilter('2.4 GHz')" title="2.4 GHz">2.4G</button>
+    <button id="wpf-5"   class="btn btn-sm"        onclick="wpSetBandFilter('5 GHz')"   title="5 GHz">5G</button>
+    <button id="wpf-6"   class="btn btn-sm"        onclick="wpSetBandFilter('6 GHz')"   title="6 GHz">6G</button>
+    <div class="toolbar-spacer"></div>
+    <span style="font-size:11px;color:var(--text3)">Basiert auf Nachbar-AP-Scan · erst <b>WiFi Analyse → Aktualisieren</b></span>
+  </div>
+  <div id="wifiplan-container" style="position:relative;width:100%;height:640px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;user-select:none">
+    <svg id="wifiplan-svg" width="100%" height="100%"
+         onmousedown="wpBgDragStart(event)"
+         onmousemove="wpMouseMove(event)"
+         onmouseup="wpMouseUp(event)"
+         onmouseleave="wpMouseUp(event)"
+         onwheel="wpWheel(event)">
+      <defs>
+        <filter id="wp-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g id="wifiplan-g"></g>
+    </svg>
+    <div id="wifiplan-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text3);pointer-events:none">
+      Keine WiFi-Daten – zuerst <b>WiFi Analyse → Aktualisieren</b>
+    </div>
+    <div id="wifiplan-legend" style="position:absolute;bottom:12px;left:12px;font-size:10px;color:var(--text3);line-height:1.8;pointer-events:none"></div>
+  </div>
+</div>
+
+<!-- ═══ ROAMING (Syslog) ═════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-roaming">
+  <div class="toolbar">
+    <button class="btn btn-sm" onclick="loadRoamingSyslog()">&#x21BB; Aktualisieren</button>
+    <label class="trap-autorefresh-label" title="Liste alle 5 Sekunden neu laden (nur solange dieser Tab offen ist)"><input type="checkbox" id="roaming-autorefresh" onchange="setRoamingSyslogAutoRefresh(this.checked)"> Automatisch aktualisieren</label>
+    <input class="search-input" id="roaming-syslog-ip-filter" placeholder="Absender-IP filtern…" style="width:160px" oninput="loadRoamingSyslog()">
+    <button class="btn btn-sm btn-ghost" onclick="showTab('syslog')">Alle Syslog-Einträge</button>
+    <button class="btn btn-sm btn-danger" onclick="clearRoamingSyslogAll()" title="Alle gespeicherten Syslog-Zeilen löschen (UDP/1514)">Syslog leeren</button>
+    <div class="toolbar-spacer"></div>
+    <span id="roaming-syslog-hint" style="font-size:12px;color:var(--text3)"></span>
+  </div>
+  <div id="roaming-tracker-root" style="margin-bottom:16px"></div>
+  <div class="table-wrap">
+    <div class="table-title">Passende Syslog-Zeilen (Roh) <span class="cnt" id="cnt-roaming-syslog"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-roaming-syslog">
+        <thead><tr><th>Zeit</th><th>Von</th><th>Severity</th><th>Facility</th><th>Programm</th><th>Nachricht</th><th style="width:44px"></th></tr></thead>
+        <tbody id="tbody-roaming-syslog"><tr><td colspan="7" class="empty">Lade…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Roaming: Vollständiger Verlauf (Overlay) -->
+<div id="roaming-detail-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeRoamDetailView()">
+  <div class="modal modal-roam-detail" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="roaming-detail-title">Roaming-Verlauf</h3>
+      <button type="button" class="btn btn-sm" onclick="closeRoamDetailView()">Schließen</button>
+    </div>
+    <div id="roaming-detail-body" class="roam-detail-scroll"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-stp">
+  <div class="toolbar">
+    <button class="btn btn-sm" id="btn-stp-sync" onclick="syncStpAll()">&#x21BB; Alle Switches abfragen</button>
+    <div class="toolbar-spacer"></div>
+    <span id="stp-sync-status" class="status-bar"></span>
+  </div>
+  <div id="stp-content" style="padding:4px 0"></div>
+</div>
+
+<div class="panel" id="panel-poe">
+  <div class="toolbar">
+    <button class="btn btn-sm" id="btn-poe-sync" onclick="syncPoeAll()">&#x21BB; Alle Switches abfragen</button>
+    <div class="toolbar-spacer"></div>
+    <span id="poe-sync-status" class="status-bar"></span>
+  </div>
+  <div id="poe-tab-content" style="padding:4px 0"></div>
+</div>
+
+<div class="panel" id="panel-sensors">
+  <div class="toolbar">
+    <button class="btn btn-sm" id="btn-sensors-sync" onclick="syncSensorsAll()">&#x21BB; Alle Switches abfragen</button>
+    <div class="toolbar-spacer"></div>
+    <span id="sensors-sync-status" class="status-bar"></span>
+  </div>
+  <div id="sensors-content" style="padding:4px 0"></div>
+</div>
+
+<!-- ═══ KI-ASSISTENT ══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-ai">
+  <div class="ai-chat-wrap">
+    <div class="ai-quick-bar">
+      <button class="btn btn-sm btn-ghost" onclick="aiQuick('status')">Netzwerk-Status</button>
+      <button class="btn btn-sm btn-ghost" onclick="aiQuick('problems')">Probleme analysieren</button>
+      <button class="btn btn-sm btn-ghost" onclick="aiQuick('traps')">Traps auswerten</button>
+      <button class="btn btn-sm btn-ghost" onclick="aiQuick('recommend')">Empfehlungen</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm btn-ghost" onclick="aiClear()" title="Chat leeren">Leeren</button>
+    </div>
+    <div id="ai-messages" class="ai-messages"></div>
+    <div class="ai-input-bar">
+      <input id="ai-input" class="ai-input" type="text" placeholder="Frage zum Netzwerk stellen…" onkeydown="aiInputKey(event)" autocomplete="off">
+      <button id="ai-send-btn" class="btn" onclick="aiSend()">Senden</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MIB-BROWSER ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-mib">
+  <div class="toolbar" style="flex-wrap:wrap;gap:6px">
+    <select id="mib-dev-select" class="settings-input" style="max-width:220px;height:30px" onchange="mibDevChanged()"></select>
+    <input type="text" id="mib-host-input" class="search-input" placeholder="IP / Hostname" style="width:140px" title="IP-Adresse oder Hostname direkt eingeben">
+    <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
+    <input type="text" id="mib-oid" class="search-input" placeholder="OID z.B. 1.3.6.1.2.1.1" style="width:240px" value="1.3.6.1.2.1.1">
+    <button class="btn btn-sm" id="mib-run-btn" onclick="mibWalk()">Walk</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibGet()">GET</button>
+    <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
+    <select id="mib-set-type" class="search-input" style="width:80px;height:30px" title="SNMP-Typ für SET">
+      <option value="i">Integer</option>
+      <option value="s">String</option>
+      <option value="o">OID</option>
+      <option value="a">IpAddr</option>
+      <option value="u">Gauge32</option>
+      <option value="t">TimeTicks</option>
+    </select>
+    <input type="text" id="mib-set-value" class="search-input" placeholder="Wert" style="width:120px">
+    <button class="btn btn-sm btn-ghost" onclick="mibSet()" title="SNMP SET (Achtung: verändert Gerätekonfiguration!)">SET</button>
+    <div class="toolbar-spacer"></div>
+    <span id="mib-status" class="status-bar"></span>
+  </div>
+  <div class="toolbar" style="border-top:1px solid var(--border2);padding-top:6px;margin-top:0;gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text3)">Presets:</span>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.1')" style="font-size:11px;padding:2px 8px">system</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.2.2')" style="font-size:11px;padding:2px 8px">ifTable</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.31.1.1')" style="font-size:11px;padding:2px 8px">ifXTable</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.4.22')" style="font-size:11px;padding:2px 8px">ARP</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.17.4.3')" style="font-size:11px;padding:2px 8px">MAC (FDB)</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.17.7.1')" style="font-size:11px;padding:2px 8px">VLAN</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.2.1.47.1.1')" style="font-size:11px;padding:2px 8px">Entity</button>
+    <button class="btn btn-sm btn-ghost" onclick="mibPreset('1.3.6.1.4.1.2356')" style="font-size:11px;padding:2px 8px">LANCOM</button>
+    <span id="mib-result-count" style="font-size:11px;color:var(--text3);margin-left:auto"></span>
+  </div>
+  <div id="mib-results" style="overflow:auto;max-height:calc(100vh - 240px)">
+    <div style="padding:40px;text-align:center;color:var(--text3)">OID eingeben und "Walk" oder "GET" klicken um SNMP-Daten abzurufen.</div>
+  </div>
+</div>
+
+<!-- ═══ CONFIG-BACKUP ═════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-backup">
+  <div class="toolbar">
+    <select id="backup-dev-select" class="settings-input" style="max-width:220px;height:30px" onchange="loadBackupList()"></select>
+    <button class="btn btn-sm" onclick="runBackup()">Backup erstellen</button>
+    <button class="btn btn-sm btn-ghost" onclick="runBackupAll()">Alle sichern</button>
+    <div class="toolbar-spacer"></div>
+    <span id="backup-status" class="status-bar"></span>
+  </div>
+  <div style="display:flex;gap:16px;padding:8px 0;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:1;min-width:260px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Gespeicherte Backups</div>
+      <div id="backup-list" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;max-height:400px;overflow-y:auto">
+        <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Gerät wählen um Backups zu laden</div>
+      </div>
+    </div>
+    <div style="flex:2;min-width:400px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em">Config-Inhalt</div>
+        <select id="backup-diff-select" class="search-input" style="width:180px;height:26px;font-size:11px;display:none" onchange="loadBackupDiff()">
+          <option value="">— Diff mit… —</option>
+        </select>
+      </div>
+      <div id="backup-content" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;max-height:500px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;white-space:pre-wrap;color:var(--text1)">
+        <div style="color:var(--text3);text-align:center;padding:20px;font-family:system-ui">Backup auswählen um Inhalt anzuzeigen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-porttest">
+  <div class="toolbar">
+    <select id="porttest-dev-select" class="settings-input" style="max-width:220px;height:30px"></select>
+    <button class="btn btn-sm" onclick="runPortDiag()">&#x25B6; Diagnose starten</button>
+    <div class="toolbar-spacer"></div>
+    <span id="porttest-status" class="status-bar"></span>
+  </div>
+  <div id="porttest-content" style="padding:4px 0">
+    <div style="padding:40px;text-align:center;color:var(--text3)">Gerät wählen und "Diagnose starten" klicken.</div>
+  </div>
+</div>
+
+<div class="panel" id="panel-devices">
   <div class="toolbar">
     <div class="filter-group">
       <button class="fbtn active"    onclick="setDevFilter('all')"     id="df-all">Alle</button>
@@ -104,13 +458,17 @@
       <option value="all">Alle Standorte</option>
     </select>
     <div class="toolbar-spacer"></div>
+    <button class="btn btn-sm btn-ghost" onclick="geraeteSync()">&#x21C4; Geräte Sync</button>
     <button class="btn btn-sm" id="btn-topo-sync-all" onclick="syncTopologyAll()">&#x21BB; Daten Abrufen</button>
+    <div class="sep"></div>
+    <button class="btn btn-sm btn-ghost" onclick="exportDevices('csv')" title="Geräteliste als CSV exportieren">↓ CSV</button>
     <div class="sep"></div>
     <button class="btn btn-sm btn-ghost" id="btn-check-status" onclick="checkAllDeviceStatus()">Status</button>
     <button class="btn btn-sm btn-ghost" id="btn-lldp-sync" onclick="syncDeviceLldp()">LLDP</button>
     <button class="btn btn-sm btn-ghost" id="btn-wds-sync" onclick="syncWdsAll()">WDS</button>
     <button class="btn btn-sm btn-ghost" id="btn-l2tp-sync2" onclick="syncL2tpAll()">L2TPv3</button>
     <button class="btn btn-sm btn-ghost" id="btn-mac-sync" onclick="syncDeviceMacs()">MAC</button>
+    <button class="btn btn-sm btn-ghost" id="btn-wlan-clients-sync" onclick="syncWlanClients()">WLAN Clients</button>
     <button class="btn btn-sm btn-danger" onclick="clearAllDevices()">Liste leeren</button>
   </div>
   <div id="dev-sync-status" class="status-bar"></div>
@@ -141,9 +499,16 @@
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(1.25)" title="Vergrößern">＋</button>
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(0.8)" title="Verkleinern">－</button>
     <button class="btn btn-sm btn-ghost" onclick="topoFit()" title="Ansicht anpassen">⊡</button>
+    <button class="btn btn-sm btn-ghost" onclick="topoResetLayout()" title="Gespeicherte Positionen löschen und automatisches Layout wiederherstellen">↺ Layout</button>
+    <button id="topo-bp-btn" class="btn btn-sm btn-ghost" onclick="toggleTopoMode()" title="Blueprint-Ansicht umschalten" style="letter-spacing:.04em">Blueprint</button>
+    <button id="topo-traffic-btn" class="btn btn-sm btn-ghost" onclick="toggleTraffic()" title="Live-Bandbreite anzeigen (alle 5s)" style="letter-spacing:.04em">Traffic</button>
     <select id="topo-loc-filter" class="search-input" onchange="setTopoLocFilter(this.value)" style="width:150px" title="Standort filtern">
       <option value="all">Alle Standorte</option>
     </select>
+    <div style="position:relative;display:flex;align-items:center">
+      <input id="topo-mac-search" class="search-input" placeholder="MAC / IP suchen…" oninput="searchTopoMac(this.value)" style="width:170px;padding-right:24px" title="MAC-Adresse oder IP im Netzwerkplan suchen">
+      <span id="topo-mac-clear" onclick="clearTopoMacSearch()" style="display:none;position:absolute;right:6px;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="Suche löschen">✕</span>
+    </div>
   </div>
   <div id="topo-status" class="status-bar"></div>
   <div id="topo-container" style="position:relative;width:100%;height:620px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;user-select:none">
@@ -193,6 +558,112 @@
   </div>
 </div>
 
+<!-- ═══ TRAFFIC ═══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-traffic">
+  <div class="toolbar">
+    <span style="font-size:13px;font-weight:700;color:var(--text)">Traffic Monitor</span>
+    <button class="btn btn-sm" id="traffic-toggle-btn" onclick="trafficTogglePoll()">▶ Start</button>
+    <select id="traffic-dev-select" class="topo-select" style="min-width:180px" onchange="trafficDevChanged()">
+      <option value="">Alle Geräte</option>
+    </select>
+    <select id="traffic-range-select" class="topo-select" style="min-width:120px" onchange="trafficRangeChanged()">
+      <option value="live">Live</option>
+      <option value="60">1 Stunde</option>
+      <option value="360">6 Stunden</option>
+      <option value="1440">24 Stunden</option>
+    </select>
+    <div class="toolbar-spacer"></div>
+    <span id="traffic-status" class="status-bar" style="font-size:11px"></span>
+    <button class="btn btn-sm btn-danger" onclick="trafficClearHistory()" title="Gespeicherte Traffic-History löschen">History löschen</button>
+  </div>
+
+  <div id="traffic-overview" style="padding:8px 0">
+    <!-- Chart area -->
+    <div id="traffic-chart-wrap" style="position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div id="traffic-chart-label" style="font-size:12px;margin-bottom:6px;min-height:18px"></div>
+      <canvas id="traffic-canvas" width="900" height="260" style="width:100%;height:260px"></canvas>
+      <div id="traffic-chart-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text3);font-size:13px;pointer-events:none">
+        ▶ Start drücken oder Zeitraum wählen um Traffic-Daten anzuzeigen
+      </div>
+    </div>
+
+    <!-- Averages / Stats -->
+    <div id="traffic-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:12px"></div>
+
+    <!-- Links table -->
+    <div class="table-wrap">
+      <div class="table-title">LLDP-Uplink Traffic <span class="cnt" id="cnt-traffic"></span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl-traffic">
+          <thead><tr>
+            <th>Gerät</th><th>Interface</th><th>Nachbar</th><th style="text-align:right">TX</th><th style="text-align:right">RX</th><th style="text-align:right">Auslastung</th><th style="text-align:right">Ø 5 Min</th><th style="text-align:right">Ø 1 Std</th><th style="width:120px">Trend</th>
+          </tr></thead>
+          <tbody><tr><td colspan="9" class="empty">Noch keine Traffic-Daten – LLDP Sync + Traffic starten</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VLAN-TRACER ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-vlantracer">
+  <div class="toolbar">
+    <label style="font-size:12px;color:var(--text2)">VLAN-ID</label>
+    <input type="number" id="vt-vlan-id" class="search-input" placeholder="z.B. 10" min="1" max="4094" style="width:100px">
+    <select id="vt-vlan-select" class="search-input" style="width:220px;display:none" onchange="document.getElementById('vt-vlan-id').value=this.value;vtRun()">
+      <option value="">— VLAN wählen —</option>
+    </select>
+    <button class="btn" id="btn-vt-run" onclick="vtRun()">▶ Pfad verfolgen</button>
+    <div class="toolbar-spacer"></div>
+    <span id="vt-status" class="status-bar"></span>
+  </div>
+  <div id="vt-progress" style="display:none;padding:6px 16px">
+    <div class="progress-track"><div class="progress-fill" id="vt-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:3px" id="vt-progress-lbl"></div>
+  </div>
+  <div class="table-wrap" id="vt-result" style="display:none">
+    <div class="table-title" id="vt-title"></div>
+    <table id="tbl-vt">
+      <thead><tr>
+        <th>Gerät</th><th>IP</th><th>Standort</th>
+        <th>Tagged Ports</th><th>Untagged Ports</th><th>Gesamt Ports</th>
+      </tr></thead>
+      <tbody id="vt-tbody"></tbody>
+    </table>
+  </div>
+  <div id="vt-empty" style="display:none;padding:40px;text-align:center;color:var(--text2);font-size:13px">
+    Dieses VLAN wurde auf keinem Gerät gefunden.
+  </div>
+</div>
+
+<!-- ═══ Loop-Erkennung ══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-loopdetect">
+  <div class="toolbar">
+    <button class="btn" id="btn-ld-run" onclick="ldRun()">▶ Alle Geräte prüfen</button>
+    <div class="toolbar-spacer"></div>
+    <span id="ld-status" class="status-bar"></span>
+  </div>
+  <div id="ld-progress" style="display:none;padding:6px 16px">
+    <div class="progress-track"><div class="progress-fill" id="ld-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:3px" id="ld-progress-lbl"></div>
+  </div>
+  <div class="table-wrap" id="ld-result" style="display:none">
+    <div class="table-title">Loop-Erkennung – STP-Analyse</div>
+    <table id="tbl-ld">
+      <thead><tr>
+        <th>Gerät</th><th>IP</th><th>Standort</th>
+        <th>STP aktiv</th><th>Topologie-Änderungen</th><th>Letzter Change</th>
+        <th>Loop Protection</th><th>Loop erkannt</th>
+        <th>LP+STP aktiv</th><th>Blockierte Ports</th><th>Risiko</th>
+      </tr></thead>
+      <tbody id="ld-tbody"></tbody>
+    </table>
+  </div>
+  <div id="ld-empty" style="display:none;padding:40px;text-align:center;color:var(--text2);font-size:13px">
+    Keine Geräte erreichbar oder keine STP-Daten verfügbar.
+  </div>
+</div>
+
 <!-- ═══ SDN ══════════════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-sdn">
   <div class="sub-tabs">
@@ -213,7 +684,7 @@
             <tr>
               <th>Name</th>
               <th>VLAN ID</th>
-              <th style="text-align:center">Management VLAN</th>
+              <th style="text-align:center;min-width:140px">Management VLAN</th>
               <th></th>
             </tr>
           </thead>
@@ -230,10 +701,11 @@
   <div class="toolbar">
     <label style="font-size:12px;color:var(--text2)">Subnetz</label>
     <input type="text" id="scan-subnet" class="search-input" placeholder="z.B. 192.168.1.0/24 oder 192.168.1.1-254" style="width:280px">
-    <button class="btn" id="btn-scan" onclick="startScan()">Scan starten</button>
+    <button class="btn" id="btn-scan" onclick="startScan()">SNMP Scan</button>
     <button class="btn" id="btn-scan-stop" onclick="stopScan()" style="background:var(--red);display:none">Abbrechen</button>
     <div class="sep" id="sep-save-all" style="display:none"></div>
     <button class="btn btn-sm" id="btn-save-all" onclick="saveScanResults()" style="display:none;background:var(--green);color:#000">Alle speichern</button>
+    <button class="btn btn-sm" id="btn-update-details" onclick="updateScanDetails()" style="display:none">Update Details</button>
   </div>
   <div class="toolbar" style="border-top:1px solid var(--border2);padding-top:8px;margin-top:0;gap:8px">
     <label style="font-size:12px;color:var(--text2);white-space:nowrap">Standort zuweisen:</label>
@@ -262,6 +734,34 @@
   </div>
 </div>
 
+<!-- ═══ ROLLOUT ══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-rollout">
+  <div class="toolbar">
+    <label style="font-size:12px;color:var(--text2)">Subnetz</label>
+    <input type="text" id="rollout-subnet" class="search-input" placeholder="z.B. 192.168.1.0/24 oder 192.168.1.1-254" style="width:280px">
+    <button class="btn" id="btn-rollout" onclick="startRolloutScan()">MAC Scan</button>
+    <button class="btn" id="btn-rollout-stop" onclick="stopRolloutScan()" style="background:var(--red);display:none">Abbrechen</button>
+    <button class="btn" id="btn-rollout-all" onclick="rolloutAll()" style="display:none">▶ Alle</button>
+  </div>
+  <div id="rollout-progress-wrap" style="display:none;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+      <span id="rollout-progress-lbl">Suche läuft…</span>
+      <span id="rollout-found-lbl" style="color:var(--green)"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="rollout-bar" style="width:0%;transition:none"></div></div>
+  </div>
+  <div id="rollout-status" class="status-bar"></div>
+  <div class="table-wrap">
+    <div class="table-title">Gefundene LANCOM-Geräte <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">(MAC 00:a0:57:…)</span> <span class="cnt" id="cnt-rollout"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-rollout">
+        <thead><tr><th>IP-Adresse</th><th>MAC-Adresse</th><th>Hersteller</th><th>Hostname</th><th>Betriebssystem</th><th></th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">Noch kein Scan gestartet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ LMC IMPORT ══════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-lmc">
 
@@ -275,6 +775,10 @@
   <div class="form-card" id="lmc-connect-card">
     <h3>LMC API Verbindung</h3>
     <div class="form-row">
+      <span class="form-label">API Server</span>
+      <input type="text" id="lmc-host" class="form-input" placeholder="cloud.lancom.de" style="min-width:300px">
+    </div>
+    <div class="form-row">
       <span class="form-label">API Token</span>
       <input type="password" id="lmc-token" class="form-input" placeholder="LMC API Token" style="min-width:300px">
       <label class="checkbox-label"><input type="checkbox" id="lmc-save-token" onchange="lmcToggleSave()"> Temporär speichern (nur dieser Browser)</label>
@@ -282,6 +786,7 @@
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-sm" onclick="lmcTest()">Verbinden</button>
     </div>
+    <div id="lmc-connect-status" class="status-bar" style="margin-top:8px"></div>
   </div>
 
   <div class="form-card" id="lmc-project-card" style="display:none">
@@ -298,6 +803,8 @@
     <div class="sub-tabs">
       <div class="stab active" onclick="showLmcTab('sync')"   id="lmctab-sync">Geräte synchronisieren</div>
       <div class="stab"        onclick="showLmcTab('addins')" id="lmctab-addins">Add-ins</div>
+      <div class="stab"        onclick="showLmcTab('vars')"       id="lmctab-vars">Variable</div>
+      <div class="stab"        onclick="showLmcTab('activation')" id="lmctab-activation">Activation Key</div>
     </div>
 
     <!-- Tab: Geräte synchronisieren -->
@@ -345,34 +852,129 @@
       </div>
       <div id="addins-list"></div>
     </div>
+
+    <!-- Tab: Activation Key -->
+    <div class="sub-panel" id="lmcpanel-activation">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0 14px;flex-wrap:wrap">
+        <label style="font-size:12px;color:var(--text2)">Gültigkeit</label>
+        <select id="activation-validity" class="search-input" style="width:160px">
+          <option value="3600">1 Stunde</option>
+          <option value="86400" selected>1 Tag</option>
+          <option value="604800">7 Tage</option>
+          <option value="2592000">30 Tage</option>
+        </select>
+        <button class="btn btn-sm" onclick="activationCreate()">Erstellen</button>
+        <span id="activation-status" style="font-size:12px"></span>
+      </div>
+      <div id="activation-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <!-- Tab: Variable -->
+    <div class="sub-panel" id="lmcpanel-vars">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0 12px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="addGlobalVar()">+ Variable hinzufügen</button>
+        <button class="btn btn-sm" id="btn-vars-sync" onclick="syncVarsToCloud()">Sync to Cloud</button>
+        <span id="vars-save-lbl" style="font-size:12px;color:var(--green);display:none">✓ Gespeichert</span>
+      </div>
+      <div id="global-vars-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SNMP TRAPS ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-traps">
+  <div class="toolbar">
+    <button class="btn btn-sm" onclick="loadTraps()">&#x21BB; Aktualisieren</button>
+    <label class="trap-autorefresh-label" title="Liste alle 5 Sekunden neu laden (nur solange dieser Tab offen ist)"><input type="checkbox" id="traps-autorefresh" onchange="setTrapsAutoRefresh(this.checked)"> Automatisch aktualisieren</label>
+    <button class="btn btn-sm btn-ghost" onclick="clearTraps()">Liste leeren</button>
+    <div class="toolbar-spacer"></div>
+    <span style="font-size:12px;color:var(--text3)">Lauscht auf UDP/1620 — Geräte müssen OnSite als Trap-Empfänger konfiguriert haben</span>
+  </div>
+  <div class="table-wrap">
+    <div class="table-title">SNMP Traps <span class="cnt" id="cnt-traps"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-traps">
+        <thead><tr><th>Zeit</th><th>Von</th><th>Version</th><th>Community</th><th>Typ</th><th>Trap</th><th>Uptime</th><th>Varbinds</th></tr></thead>
+        <tbody id="tbody-traps"><tr><td colspan="8" class="empty">Keine Traps empfangen</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SYSLOG ════════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-syslog">
+  <div class="toolbar">
+    <button class="btn btn-sm" onclick="loadSyslog()">&#x21BB; Aktualisieren</button>
+    <label class="syslog-autorefresh-label" title="Liste alle 5 Sekunden neu laden (nur solange dieser Tab offen ist)"><input type="checkbox" id="syslog-autorefresh" onchange="setSyslogAutoRefresh(this.checked)"> Automatisch aktualisieren</label>
+    <button class="btn btn-sm btn-ghost" onclick="clearSyslog()">Liste leeren</button>
+    <div style="width:1px;height:18px;background:var(--border);margin:0 4px"></div>
+    <select id="syslog-severity-filter" class="search-input" style="width:120px;height:30px" onchange="loadSyslog()">
+      <option value="">Alle Severity</option>
+      <option value="emerg">emerg</option>
+      <option value="alert">alert</option>
+      <option value="crit">crit</option>
+      <option value="err">err</option>
+      <option value="warning">warning</option>
+      <option value="notice">notice</option>
+      <option value="info">info</option>
+      <option value="debug">debug</option>
+    </select>
+    <input class="search-input" id="syslog-ip-filter" placeholder="IP filtern…" style="width:140px" oninput="loadSyslog()">
+    <input class="search-input" id="syslog-search" placeholder="Nachricht suchen…" style="width:200px" oninput="filterSyslogLocal()">
+    <div class="toolbar-spacer"></div>
+    <span style="font-size:12px;color:var(--text3)">Lauscht auf UDP/1514 — Geräte müssen OnSite als Syslog-Server konfiguriert haben</span>
+  </div>
+  <div class="table-wrap">
+    <div class="table-title">Syslog-Nachrichten <span class="cnt" id="cnt-syslog"></span></div>
+    <div style="overflow-x:auto">
+      <table id="tbl-syslog">
+        <thead><tr><th>Zeit</th><th>Von</th><th>Severity</th><th>Facility</th><th>Programm</th><th>Nachricht</th></tr></thead>
+        <tbody id="tbody-syslog"><tr><td colspan="6" class="empty">Keine Syslog-Nachrichten empfangen</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- ═══ EINSTELLUNGEN ════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-settings">
   <div class="sub-tabs">
-    <div class="stab active" onclick="showCfgTab('snmp')"    id="cfgtab-snmp">SNMP</div>
-    <div class="stab"        onclick="showCfgTab('import')"  id="cfgtab-import">Import-Filter</div>
-    <div class="stab"        onclick="showCfgTab('rssi')"    id="cfgtab-rssi">WiFi / RSSI</div>
-    <div class="stab"        onclick="showCfgTab('license')" id="cfgtab-license">Lizenz</div>
+    <div class="stab active" onclick="showCfgTab('snmp')"       id="cfgtab-snmp">SNMP</div>
+    <div class="stab"        onclick="showCfgTab('import')"     id="cfgtab-import">Import-Filter</div>
+    <div class="stab"        onclick="showCfgTab('rssi')"       id="cfgtab-rssi">WiFi / RSSI</div>
+    <div class="stab"        onclick="showCfgTab('license')"    id="cfgtab-license">Lizenz</div>
+    <div class="stab"        onclick="showCfgTab('devpw')"      id="cfgtab-devpw">Gerätepasswort</div>
+    <div class="stab"        onclick="showCfgTab('monitoring')" id="cfgtab-monitoring">Monitoring</div>
+    <div class="stab"        onclick="showCfgTab('alerts')"     id="cfgtab-alerts">Alerts</div>
+    <div class="stab"        onclick="showCfgTab('scheduler')"  id="cfgtab-scheduler">Auto-Scan</div>
+    <div class="stab"        onclick="showCfgTab('ai')"         id="cfgtab-ai">KI</div>
+    <div class="stab"        onclick="showCfgTab('grundwerte')" id="cfgtab-grundwerte">Grundwerte</div>
+    <div class="stab"        onclick="showCfgTab('traffic')"    id="cfgtab-traffic">Traffic</div>
   </div>
 
   <!-- SNMP -->
   <div class="sub-panel active settings-section" id="cfgpanel-snmp">
-    <div class="settings-grid">
-      <label>Read Community</label>
-      <input class="settings-input" id="cfg-snmp-read" type="text">
-      <label>Write Community</label>
-      <input class="settings-input" id="cfg-snmp-write" type="text">
-      <label>Version</label>
+    <div class="settings-grid snmp-version-row">
+      <label>SNMP-Version</label>
       <select class="settings-input" id="cfg-snmp-version" onchange="onSnmpVersionChange()">
         <option value="2c">SNMPv2c</option>
-        <option value="1">SNMPv1</option>
         <option value="3">SNMPv3</option>
       </select>
     </div>
-    <div id="cfg-v3-section" style="display:none;margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">SNMPv3 – Identität</div>
+
+    <div id="cfg-snmpv2-section" class="snmp-block snmp-block-v2">
+      <div class="snmp-block-title">SNMPv2c</div>
+      <p class="settings-hint snmp-block-lead">Zugang per Community-String (wird bei SNMPv3 nicht verwendet).</p>
+      <div class="settings-grid">
+        <label>Read Community</label>
+        <input class="settings-input" id="cfg-snmp-read" type="text">
+        <label>Write Community</label>
+        <input class="settings-input" id="cfg-snmp-write" type="text">
+      </div>
+    </div>
+
+    <div id="cfg-v3-section" class="snmp-block snmp-block-v3" style="display:none">
+      <div class="snmp-block-title">SNMPv3</div>
+      <p class="settings-hint snmp-block-lead">Identität und ggf. Authentifizierung/Verschlüsselung — global für alle Geräte ohne eigene Konfiguration. Community-Strings werden ignoriert.</p>
       <div class="settings-grid">
         <label>Security Name</label>
         <input class="settings-input" id="cfg-v3-secname" type="text" placeholder="admin" autocomplete="off">
@@ -384,7 +986,7 @@
         </select>
       </div>
       <div id="cfg-v3-auth-block" style="display:none;margin-top:14px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Authentifizierung</div>
+        <div class="snmp-block-subtitle">Authentifizierung</div>
         <div class="settings-grid">
           <label>Auth Protokoll</label>
           <select class="settings-input" id="cfg-v3-authproto">
@@ -398,7 +1000,7 @@
         </div>
       </div>
       <div id="cfg-v3-priv-block" style="display:none;margin-top:14px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Privacy (Verschlüsselung)</div>
+        <div class="snmp-block-subtitle">Privacy (Verschlüsselung)</div>
         <div class="settings-grid">
           <label>Priv Protokoll</label>
           <select class="settings-input" id="cfg-v3-privproto">
@@ -411,7 +1013,6 @@
           <input class="settings-input" id="cfg-v3-privpass" type="password" autocomplete="new-password" placeholder="min. 8 Zeichen">
         </div>
       </div>
-      <p class="settings-hint" style="margin-top:12px">Bei SNMPv3 werden Read/Write Community ignoriert. Die Zugangsdaten gelten global für alle Geräte ohne eigene Konfiguration.</p>
     </div>
   </div>
 
@@ -503,7 +1104,11 @@
       <div id="license-details" style="font-size:12px;color:var(--text3);display:flex;flex-direction:column;gap:4px"></div>
     </div>
     <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Lizenz-Datei einfügen (JSON)</div>
-    <textarea id="license-input" rows="8" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg2);color:var(--text1);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical" placeholder='{ "customer": "...", "email": "...", "issuedAt": "...", "expiresAt": "...", "signature": "..." }'></textarea>
+    <label id="license-drop" class="license-drop" style="cursor:pointer" ondragover="licenseDragOver(event)" ondragleave="licenseDragLeave(event)" ondrop="licenseDrop(event)">
+      <input type="file" id="license-file" accept=".json,application/json" style="display:none" onchange="licenseFileSelected(event)">
+      <span id="license-drop-text">JSON-Datei hier ablegen oder <u>auswählen</u></span>
+    </label>
+    <textarea id="license-input" rows="5" style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg2);color:var(--text1);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical;margin-top:8px" placeholder='{ "customer": "...", "email": "...", "issuedAt": "...", "expiresAt": "...", "signature": "..." }'></textarea>
     <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
       <button class="btn" onclick="activateLicense()">Lizenz aktivieren</button>
       <button class="btn btn-ghost btn-sm" onclick="removeLicense()">Lizenz entfernen</button>
@@ -511,9 +1116,415 @@
     </div>
   </div>
 
+  <!-- Gerätepasswort -->
+  <div class="sub-panel settings-section" id="cfgpanel-devpw">
+    <div class="settings-grid">
+      <label>Admin / Root Kennwort</label>
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <input class="settings-input" id="cfg-device-password" type="password" autocomplete="new-password" style="flex:1;min-width:0">
+        <button type="button" class="btn btn-sm btn-ghost" id="cfg-device-password-toggle" onclick="toggleCfgDevicePasswordVisible()">Anzeigen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monitoring -->
+  <div class="sub-panel settings-section" id="cfgpanel-monitoring" style="display:none">
+    <div class="settings-grid">
+      <label>Auto Status-Sync</label>
+      <select class="settings-input" id="cfg-auto-sync">
+        <option value="0">Deaktiviert</option>
+        <option value="5">Alle 5 Minuten</option>
+        <option value="10">Alle 10 Minuten</option>
+        <option value="30">Alle 30 Minuten</option>
+        <option value="60">Stündlich</option>
+      </select>
+      <label>Offline-Benachrichtigungen</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label class="checkbox-label"><input type="checkbox" id="cfg-notify-offline"> Gerät offline melden</label>
+        <button class="btn btn-sm btn-ghost" onclick="requestNotifyPermission()">Erlaubnis</button>
+        <span id="notify-perm-status" style="font-size:12px;color:var(--text2)"></span>
+      </div>
+    </div>
+    <p class="settings-hint" style="margin-top:10px">Auto-Sync prüft den Status aller Geräte im Hintergrund. Benachrichtigungen erscheinen wenn ein Gerät offline geht.</p>
+  </div>
+
+  <!-- Alerts -->
+  <div class="sub-panel settings-section" id="cfgpanel-alerts" style="display:none">
+    <div class="settings-grid">
+      <label>Alerts aktiviert</label>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-alerts-enabled"> E-Mail / Webhook / Telegram Alerts senden</label>
+      <label>Prüfintervall</label>
+      <select class="settings-input" id="cfg-alert-interval">
+        <option value="1">Jede Minute</option>
+        <option value="2">Alle 2 Minuten</option>
+        <option value="5">Alle 5 Minuten</option>
+        <option value="10">Alle 10 Minuten</option>
+        <option value="30">Alle 30 Minuten</option>
+      </select>
+      <label>Cooldown</label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input class="settings-input" id="cfg-alert-cooldown" type="number" min="60" max="86400" style="width:100px">
+        <span style="font-size:12px;color:var(--text3)">Sekunden zwischen gleichen Alerts</span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">E-Mail (SMTP)</div>
+      <div class="settings-grid">
+        <label>Aktiviert</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-email-on"> E-Mail-Versand</label>
+        <label>SMTP-Host</label>
+        <input class="settings-input" id="cfg-alert-email-host" type="text" placeholder="smtp.example.com">
+        <label>Port</label>
+        <input class="settings-input" id="cfg-alert-email-port" type="number" value="587" style="width:100px">
+        <label>SSL/TLS</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-email-secure"> Verschlüsselt (Port 465)</label>
+        <label>Benutzer</label>
+        <input class="settings-input" id="cfg-alert-email-user" type="text" placeholder="user@example.com" autocomplete="off">
+        <label>Passwort</label>
+        <input class="settings-input" id="cfg-alert-email-pass" type="password" autocomplete="new-password">
+        <label>Absender</label>
+        <input class="settings-input" id="cfg-alert-email-from" type="text" placeholder="OnSite <onsite@example.com>">
+        <label>Empfänger</label>
+        <input class="settings-input" id="cfg-alert-email-to" type="text" placeholder="admin@example.com, noc@example.com">
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="testAlertEmail()">Test-Mail senden</button>
+        <span id="alert-email-msg" style="font-size:12px;display:none"></span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Webhook</div>
+      <div class="settings-grid">
+        <label>Aktiviert</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-wh-on"> Webhook senden</label>
+        <label>URL</label>
+        <input class="settings-input" id="cfg-alert-wh-url" type="text" placeholder="https://hooks.slack.com/services/...">
+        <label>Format</label>
+        <select class="settings-input" id="cfg-alert-wh-type">
+          <option value="generic">Generic JSON</option>
+          <option value="teams">Microsoft Teams</option>
+          <option value="slack">Slack</option>
+        </select>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="testAlertWebhook()">Test-Webhook senden</button>
+        <span id="alert-wh-msg" style="font-size:12px;display:none"></span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Telegram</div>
+      <div class="settings-grid">
+        <label>Aktiviert</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-tg-on"> Telegram-Nachricht senden</label>
+        <label>Bot-Token</label>
+        <input class="settings-input" id="cfg-alert-tg-token" type="password" placeholder="123456789:ABCdef..." autocomplete="new-password">
+        <label>Chat-ID</label>
+        <input class="settings-input" id="cfg-alert-tg-chatid" type="text" placeholder="-1001234567890 oder @channel">
+        <label>Lautlos</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-tg-silent"> Ohne Ton senden</label>
+      </div>
+      <p class="settings-hint" style="margin-top:8px">Bot erstellen: <code>@BotFather</code> in Telegram → <code>/newbot</code>. Chat-ID: Bot zur Gruppe/zum Kanal hinzufügen, dann <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> aufrufen.</p>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="testAlertTelegram()">Test-Nachricht senden</button>
+        <span id="alert-tg-msg" style="font-size:12px;display:none"></span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Alert-Regeln</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-r-offline" checked> Gerät offline</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-r-online" checked> Gerät wieder online</label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-r-trap"> SNMP Trap empfangen</label>
+        <div style="margin-left:22px;display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:var(--text3)">Filter:</span>
+          <input class="settings-input" id="cfg-alert-r-trapfilter" type="text" placeholder="z.B. linkDown, coldStart" style="width:220px;font-size:12px">
+        </div>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-alert-r-loop"> Loop erkannt</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label class="checkbox-label"><input type="checkbox" id="cfg-alert-r-temp"> Temperatur über</label>
+          <input class="settings-input" id="cfg-alert-r-tempval" type="number" min="0" max="120" value="65" style="width:70px;font-size:12px">
+          <span style="font-size:12px;color:var(--text3)">°C</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3)">Alert-Protokoll</div>
+        <button class="btn btn-sm btn-ghost" onclick="loadAlertLog()">Laden</button>
+        <button class="btn btn-sm btn-ghost" onclick="clearAlertLog()">Leeren</button>
+        <span id="alert-log-count" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+      <div id="alert-log-box" style="max-height:320px;overflow-y:auto;font-size:12px;font-family:'JetBrains Mono',monospace">
+        <div style="color:var(--text3);padding:8px 0">Klicke "Laden" um das Protokoll anzuzeigen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-Scan / Scheduler -->
+  <div class="sub-panel settings-section" id="cfgpanel-scheduler" style="display:none">
+    <div class="settings-grid">
+      <label>Intervall</label>
+      <select class="settings-input" id="cfg-sched-hours">
+        <option value="0">Deaktiviert</option>
+        <option value="1">Stündlich</option>
+        <option value="6">Alle 6 Stunden</option>
+        <option value="12">Alle 12 Stunden</option>
+        <option value="24">Täglich</option>
+      </select>
+      <label>Subnetz</label>
+      <input class="settings-input" id="cfg-sched-subnet" type="text" placeholder="z.B. 172.16.17.0/24">
+      <label>Neue Geräte speichern</label>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-sched-autosave"> Automatisch in Geräteliste übernehmen</label>
+    </div>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+      <button class="btn btn-sm" onclick="runSchedulerNow()">Jetzt scannen</button>
+      <span id="sched-status" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+    <div id="sched-last-result" style="margin-top:12px;font-size:12px;display:none">
+      <div style="font-weight:600;margin-bottom:4px">Letzter Scan:</div>
+      <div id="sched-last-info"></div>
+    </div>
+    <p class="settings-hint" style="margin-top:10px">Scannt das Subnetz automatisch im Hintergrund und meldet neue SNMP-Geräte. Der erste Scan startet 30s nach Serverstart.</p>
+  </div>
+
+  <!-- KI -->
+  <div class="sub-panel settings-section" id="cfgpanel-ai" style="display:none">
+    <div class="settings-grid">
+      <label>Anbieter</label>
+      <select class="settings-input" id="cfg-ai-provider" onchange="onAiProviderChange()">
+        <option value="gemini">Google Gemini (gratis)</option>
+        <option value="groq">Groq (gratis)</option>
+        <option value="ollama">Ollama (lokal, gratis)</option>
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic (Claude)</option>
+      </select>
+      <label>API-Endpunkt</label>
+      <input class="settings-input" id="cfg-ai-endpoint" type="text" placeholder="https://api.openai.com/v1">
+      <label>API-Key</label>
+      <input class="settings-input" id="cfg-ai-key" type="password" autocomplete="new-password" placeholder="sk-...">
+      <label>Modell</label>
+      <input class="settings-input" id="cfg-ai-model" type="text" placeholder="gpt-4o-mini">
+    </div>
+    <p class="settings-hint" style="margin-top:10px">
+      <strong>Gemini (gratis):</strong> Key von <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com</a> · 
+      <strong>Groq (gratis):</strong> Key von <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com</a> · 
+      <strong>Ollama:</strong> Kein Key, lokal installieren · 
+      <strong>OpenAI / Anthropic:</strong> Kostenpflichtig
+    </p>
+  </div>
+
+  <!-- Grundwerte -->
+  <div class="sub-panel settings-section" id="cfgpanel-grundwerte" style="display:none">
+    <div class="settings-grid">
+      <label>Strompreis (€/kWh)</label>
+      <input type="number" class="settings-input" id="cfg-power-price" min="0" max="2" step="0.01" placeholder="0.30" style="max-width:120px">
+    </div>
+    <p class="settings-hint" style="margin-top:10px">Wird für die Kostenberechnung im PoE-Dashboard verwendet.</p>
+  </div>
+
+  <!-- Traffic -->
+  <div class="sub-panel settings-section" id="cfgpanel-traffic" style="display:none">
+    <div class="settings-grid">
+      <label>Poll-Intervall</label>
+      <select class="settings-input" id="cfg-traffic-interval" style="max-width:160px">
+        <option value="10">10 Sekunden</option>
+        <option value="30">30 Sekunden</option>
+        <option value="60">1 Minute</option>
+        <option value="120">2 Minuten</option>
+        <option value="300">5 Minuten</option>
+      </select>
+
+      <label>History aktiviert</label>
+      <label class="switch-label"><input type="checkbox" id="cfg-traffic-history-enabled" checked> Traffic-Daten automatisch mitloggen</label>
+
+      <label>Aufbewahrung</label>
+      <select class="settings-input" id="cfg-traffic-retention" style="max-width:160px">
+        <option value="6">6 Stunden</option>
+        <option value="12">12 Stunden</option>
+        <option value="24">24 Stunden</option>
+        <option value="48">48 Stunden</option>
+        <option value="72">3 Tage</option>
+        <option value="168">7 Tage</option>
+      </select>
+
+      <label>Auto-Start</label>
+      <label class="switch-label"><input type="checkbox" id="cfg-traffic-autostart"> Polling beim Öffnen des Traffic-Tabs automatisch starten</label>
+
+      <label>Warn-Schwellwert</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" class="settings-input" id="cfg-traffic-warn" min="1" max="100" placeholder="80" style="max-width:80px">
+        <span style="font-size:12px;color:var(--text3)">% Auslastung → gelb/rot markiert</span>
+      </div>
+    </div>
+    <p class="settings-hint" style="margin-top:10px">Überwacht nur Interfaces, die per LLDP als Uplink erkannt wurden. Daten werden im Arbeitsspeicher gehalten und alle 5 Min. auf Disk geschrieben.</p>
+  </div>
+
   <div style="margin-top:20px">
     <button class="btn" onclick="saveSettings()">Einstellungen speichern</button>
     <span id="settings-save-lbl" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Gespeichert</span>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTING ════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-scripting">
+  <div class="scripting-layout">
+
+    <!-- Linke Spalte: Script-Liste -->
+    <div class="script-sidebar">
+      <div class="script-sidebar-top">
+        <span style="font-size:13px;font-weight:600;color:var(--text1)">Scripts</span>
+        <button class="btn btn-sm" onclick="scriptNew()">+ Neu</button>
+      </div>
+      <div id="script-list"></div>
+    </div>
+
+    <!-- Rechte Spalte: Editor + Ausführen + Ausgabe -->
+    <div class="script-main">
+
+      <!-- Editor -->
+      <div class="script-editor-box" id="script-editor">
+        <div class="script-empty-hint" id="script-empty-hint">
+          ← Script auswählen oder <a href="#" onclick="scriptNew();return false">neu anlegen</a>
+        </div>
+        <div id="script-form" style="display:none">
+          <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:160px">
+              <div class="field-label">Name</div>
+              <input id="script-name" class="input-field" type="text" placeholder="z.B. Sessions anzeigen">
+            </div>
+            <div style="flex:2;min-width:200px">
+              <div class="field-label">Beschreibung</div>
+              <input id="script-desc" class="input-field" type="text" placeholder="Was macht dieses Script?">
+            </div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div class="field-label" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px" onclick="toggleScriptOs()">
+              Betriebssystem
+              <span id="script-os-chevron" style="font-size:11px;transition:transform .2s;display:inline-block;transform:rotate(-90deg)">▾</span>
+            </div>
+            <div id="script-os-checks-wrap" style="overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s ease">
+              <div class="script-os-checks" id="script-os-checks" style="margin-top:8px">
+                <label><input type="radio" name="script-os" value="LCOS"> LCOS</label>
+                <label><input type="radio" name="script-os" value="LCOS LX"> LCOS LX</label>
+                <label><input type="radio" name="script-os" value="LCOS FX"> LCOS FX</label>
+                <label><input type="radio" name="script-os" value="LCOS SX 3"> LCOS SX 3</label>
+                <label><input type="radio" name="script-os" value="LCOS SX 4"> LCOS SX 4</label>
+                <label><input type="radio" name="script-os" value="LCOS SX 5"> LCOS SX 5</label>
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:16px">
+            <div class="field-label">Befehle <span style="color:var(--text3);font-weight:400">(einer pro Zeile)</span></div>
+            <textarea id="script-commands" class="script-cmd-editor" rows="6" placeholder="show sessions&#10;show diag system&#10;show syslog"></textarea>
+            <div style="margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:4px;font-size:11px;color:var(--text3);line-height:1.8">
+              <span style="color:var(--text2);font-weight:600">Platzhalter:</span>
+              <code style="color:var(--accent)">{{password}}</code> Gerätepasswort &nbsp;·&nbsp;
+              <code style="color:var(--accent)">{{snmp_securityname}}</code> SNMPv3 Security Name &nbsp;·&nbsp;
+              <code style="color:var(--accent)">{{snmp_auth_password}}</code> SNMPv3 Auth-Passwort &nbsp;·&nbsp;
+              <code style="color:var(--accent)">{{snmp_priv_password}}</code> SNMPv3 Priv-Passwort
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="scriptSave()">💾 Speichern</button>
+            <button class="btn btn-danger btn-sm" onclick="scriptDelete()">🗑 Löschen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ausführen -->
+      <div class="script-run-box" id="script-run-box" style="display:none">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+          <div style="min-width:230px;flex:1">
+            <div class="field-label" style="display:flex;align-items:center;justify-content:space-between">
+              Geräte
+              <span style="font-weight:400;font-size:11px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <a href="#" onclick="scriptSelectAll(true);return false">Alle</a>
+                <a href="#" onclick="scriptSelectAll(false);return false">Keine</a>
+              </span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+              <select id="script-loc-select" class="input-field" style="flex:1;min-width:140px" title="Standort für Schnellauswahl">
+                <option value="">Standort…</option>
+              </select>
+              <button type="button" class="btn btn-sm" onclick="scriptSelectDevicesByLocation()" title="Nur Geräte dieses Standorts markieren">Standort wählen</button>
+            </div>
+            <div id="script-device-list" style="max-height:130px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;background:var(--bg2)"></div>
+            <div style="display:flex;gap:4px;margin-top:4px">
+              <input id="script-run-ip" class="input-field" style="flex:1" type="text" placeholder="Weitere IP manuell…">
+              <button class="btn btn-sm" onclick="scriptAddCustomIp()" title="IP zur Liste hinzufügen">+</button>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">SSH-User</div>
+            <input id="script-run-user" class="input-field" style="width:100px" type="text" value="root">
+          </div>
+          <div>
+            <div class="field-label">SSH-Passwort</div>
+            <input id="script-run-pass" class="input-field" style="width:130px" type="password" placeholder="Passwort">
+          </div>
+          <div style="align-self:flex-end">
+            <button class="btn" onclick="scriptRun()" id="script-run-btn">▶ Ausführen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ausgabe -->
+      <div id="script-output" style="display:none">
+        <div class="script-output-header">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">Ausgabe</span>
+          <button class="btn btn-ghost btn-sm" onclick="q('script-output').style.display='none'">✕</button>
+        </div>
+        <div id="script-output-body"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TLS-SNI-MITSCHNITT ═══════════════════════════════════════════════════ -->
+<div class="panel" id="panel-sni">
+  <p class="settings-hint" style="margin-bottom:16px;max-width:920px;line-height:1.55">
+    Lauscht auf einem <strong>TCP-Port</strong> (auf diesem Server), liest den TLS-<strong>ClientHello</strong> und zeigt die <strong>SNI</strong>
+    (vom Client angefragter Hostname). Der HTTPS-Inhalt bleibt <strong>verschlüsselt</strong>.
+    Jede Verbindung wird nach dem Mitschnitt <strong>beendet</strong> — es gibt keinen gültigen TLS-Server (nur Diagnose).
+    Standard-Port <strong>8443</strong> (ohne Root). Für Port <strong>443</strong>: OnSite mit <code>SNI_ALLOW_PRIV_PORTS=1</code> starten und Root bzw. <code>CAP_NET_BIND_SERVICE</code> nutzen; nicht parallel mit anderem Dienst auf demselben Port.
+  </p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+    <div>
+      <div class="field-label">Port</div>
+      <input id="sni-port" class="input-field" type="number" min="1" max="65535" value="8443" style="width:100px" title="TCP-Port auf diesem Server">
+    </div>
+    <div style="flex:1;min-width:220px;max-width:440px">
+      <div class="field-label">Nur loggen wenn SNI enthält … (optional, Komma)</div>
+      <input id="sni-filter" class="input-field" type="text" placeholder="z.B. lancom.de, cloud.lancom.de" style="width:100%">
+    </div>
+    <button type="button" class="btn" id="sni-btn-start" onclick="sniStart()">Start</button>
+    <button type="button" class="btn btn-danger" id="sni-btn-stop" onclick="sniStop()" disabled>Stopp</button>
+    <button type="button" class="btn btn-sm btn-ghost" onclick="sniClearLogs()">Log leeren</button>
+  </div>
+  <div id="sni-status" style="font-size:12px;color:var(--text3);margin-bottom:12px">Gestoppt</div>
+  <div class="table-wrap">
+    <div class="table-title">SNI-Ereignisse</div>
+    <div style="overflow-x:auto">
+      <table id="tbl-sni">
+        <thead>
+          <tr>
+            <th style="width:170px">Zeit</th>
+            <th style="width:160px">Client</th>
+            <th>SNI / Hinweis</th>
+            <th style="width:72px">Bytes</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-sni">
+          <tr><td colspan="4" class="empty">Keine Einträge</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -528,7 +1539,6 @@
     <label style="font-size:12px;color:var(--text2)">Version</label>
     <select id="detail-version" class="search-input" style="width:110px">
       <option value="2c">SNMPv2c</option>
-      <option value="1">SNMPv1</option>
       <option value="3">SNMPv3</option>
     </select>
     <button class="btn btn-sm" onclick="queryDetail()">&#x21BB; Abfragen</button>
@@ -554,8 +1564,8 @@
   <div class="sub-panel" id="sub-interfaces">
     <div class="table-wrap"><div style="overflow-x:auto">
       <table id="tbl-ifaces">
-        <thead><tr><th>Name</th><th>Beschreibung</th><th>Status</th><th>Speed</th><th>RX</th><th>TX</th></tr></thead>
-        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+        <thead><tr><th>Name</th><th>Beschreibung</th><th>Status</th><th>Speed</th><th>RX</th><th>TX</th><th>Traffic</th><th></th></tr></thead>
+        <tbody><tr><td colspan="8" class="empty">Keine Daten</td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -572,8 +1582,8 @@
   <div class="sub-panel" id="sub-wlan">
     <div class="table-wrap"><div style="overflow-x:auto">
       <table id="tbl-wlan">
-        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>SSID</th><th>Band</th><th>Kanal</th><th>Signal</th></tr></thead>
-        <tbody><tr><td colspan="6" class="empty">Keine Daten</td></tr></tbody>
+        <thead><tr><th>MAC-Adresse</th><th>IP-Adresse</th><th>Hostname</th><th>SSID</th><th>Band</th><th>Kanal</th><th>Signal</th><th>SNR</th></tr></thead>
+        <tbody><tr><td colspan="8" class="empty">Keine Daten</td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -622,13 +1632,24 @@
     <div id="loop-controls" style="margin-bottom:8px;display:flex;gap:8px;align-items:center"></div>
     <div class="table-wrap"><div style="overflow-x:auto">
       <table id="tbl-loop">
-        <thead><tr><th>Port</th><th>STP-Status</th><th></th></tr></thead>
+        <thead><tr><th>Port</th><th>LP-Status</th><th></th></tr></thead>
         <tbody><tr><td colspan="3" class="empty">Keine Daten</td></tr></tbody>
       </table>
     </div></div>
   </div>
   <!-- LLDP -->
   <div class="sub-panel" id="sub-lldp">
+    <div id="lldp-controls" style="margin-bottom:8px;display:flex;gap:8px;align-items:center"></div>
+    <div id="lldp-config-wrap" style="margin-bottom:14px;display:none">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Port-Konfiguration</div>
+      <div class="table-wrap"><div style="overflow-x:auto">
+        <table id="tbl-lldp-cfg">
+          <thead><tr><th>Port</th><th>LLDP Modus</th><th></th></tr></thead>
+          <tbody><tr><td colspan="3" class="empty">Keine Daten</td></tr></tbody>
+        </table>
+      </div></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Nachbarn</div>
     <div class="table-wrap"><div style="overflow-x:auto">
       <table id="tbl-lldp">
         <thead><tr><th>Lokaler Port</th><th>Gerätename</th><th>Remote Port</th><th>Systembeschreibung</th></tr></thead>
@@ -674,6 +1695,13 @@
         <div style="font-size:11px;color:var(--text3);line-height:1.5">
           Datei: <span id="edit-filepath" style="font-family:var(--mono)"></span>
         </div>
+        <!-- Variablen (innerhalb der linken Spalte) -->
+        <div id="edit-vars-section" style="display:none">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding-top:4px;border-top:1px solid var(--border);margin-bottom:8px">
+            Variablen
+          </div>
+          <div id="edit-vars-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
       </div>
       <!-- Code Editor -->
       <div class="modal-editor">
@@ -681,8 +1709,14 @@
           <span>JavaScript</span>
           <span style="opacity:.4">·</span>
           <span>Tab = 4 Leerzeichen</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px" id="vars-picker-wrap">
+            <select id="vars-picker-select" style="font-size:11px;padding:2px 6px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text1);max-width:180px">
+              <option value="">— Variable einfügen —</option>
+            </select>
+            <button class="btn btn-sm" onclick="insertVarAtCursor()" title="context.vars.NAME an Cursor-Position einfügen" style="padding:2px 8px;font-size:11px">Einfügen</button>
+          </div>
         </div>
-        <textarea class="code-area" id="edit-script" spellcheck="false" wrap="off"></textarea>
+        <textarea class="code-area" id="edit-script" spellcheck="false" wrap="off" oninput="renderAddinVars(this.value)"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -694,5 +1728,7 @@
     </div>
   </div>
 </div>
+<!-- Traffic Sparkline Tooltip -->
+<div id="traffic-tt" style="display:none;position:fixed;z-index:9999;pointer-events:none;background:rgba(8,18,36,.96);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:10px 12px;font-family:system-ui,sans-serif;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.7)"></div>
 </body>
 </html>

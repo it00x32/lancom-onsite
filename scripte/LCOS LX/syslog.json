@@ -1,0 +1,12 @@
+{
+  "name": "Syslog",
+  "description": "",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "set /Setup/Syslog/Server 172.16.16.245 172.16.16.245 1514 UDP",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

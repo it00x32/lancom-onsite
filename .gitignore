@@ -1,0 +1,20 @@
+node_modules/
+.cursor/
+*.original
+/dist/
+license-myself*.json
+data/backups/
+# Lokaler Laufzeitstatus (nicht versionieren)
+data/alert-log.json
+data/license.json
+data/nac.json
+data/roaming-state.json
+data/roaming.json
+data/syslog.json
+data/topo-changes.json
+data/topo-state.json
+data/traffic-history.json
+data/traps.json
+data/uptime.json
+data/vars.json
+data/wifi-history.json

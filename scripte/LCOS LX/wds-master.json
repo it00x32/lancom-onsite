@@ -1,0 +1,12 @@
+{
+  "name": "WDS Master",
+  "description": "konfiguriert einen LX Access Point als WDS Master",
+  "os": [
+    "LCOS LX"
+  ],
+  "commands": [
+    "set /Setup/WLAN/WDS/Links WDSConnection WDSConnection 0 2 P-PSK-WPA3 12345678 100,200 1 0",
+    "flash yes"
+  ],
+  "_os": "LCOS LX"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "LLDP",
+  "description": "",
+  "os": [
+    "LCOS SX 5"
+  ],
+  "commands": [
+    "enable",
+    "configure",
+    "interface 1/0/1-1/0/52",
+    "lldp transmit",
+    "lldp receive",
+    "lldp transmit-tlv port-desc",
+    "lldp transmit-tlv sys-name",
+    "lldp transmit-tlv sys-desc",
+    "lldp transmit-tlv sys-cap",
+    "lldp transmit-mgmt",
+    "lldp notification",
+    "lldp med",
+    "exit",
+    "exit",
+    "copy system:running-config nvram:startup-config",
+    "y"
+  ],
+  "_os": "LCOS SX 5"
+}

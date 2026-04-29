@@ -1,0 +1,19 @@
+# FreeRADIUS neben OnSite — Konfiguration (clients.conf) unter Sicherheit → FreeRADIUS nach docker/freeradius/clients.conf.
+# Start: docker compose -f docker-compose.freeradius.yml up -d
+# Hinweis: Ports 1812/1813 kollidieren mit dem eingebetteten OnSite-RADIUS — nur einen Dienst gleichzeitig auf diesen Ports nutzen
+# oder in dieser Datei die linken Ports ändern (z. B. "11812:1812/udp").
+
+services:
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: onsite-freeradius
+    restart: unless-stopped
+    # Auf manchen Hosts (z. B. LXC/Proxmox) schlägt das Docker-Standard-AppArmor-Profil fehl —
+    # ohne diese Zeile: „AppArmor … docker-default … Access denied“.
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    volumes:
+      - ./docker/freeradius/clients.conf:/etc/raddb/clients.conf:rw
