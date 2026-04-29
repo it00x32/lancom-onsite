@@ -1,6 +1,14 @@
-# GitHub-Repository umbenennen (`lancom-onsite` → `onsite`)
+# GitHub-Repository umbenennen (`lancom-onsite` ↔ `onsite`)
 
-Die Metadaten im Repo (z. B. `package.json`) zeigen auf **`https://github.com/it00x32/onsite`**. Auf GitHub musst du die Umbenennung **einmal** ausführen.
+**Aktueller Klone-URL (README, Installation):** **`https://github.com/it00x32/lancom-onsite`**.
+
+Die folgenden Abschnitte beschreiben eine **optionale** Umbenennung auf GitHub (z. B. auf **`onsite`**) und das Anpassen von Remotes — nur relevant, wenn ihr den Repo-Namen wirklich ändern wollt.
+
+---
+
+## *(Historischer Leitfaden)* Umbenennung `lancom-onsite` → `onsite`
+
+Die Metadaten im Repo können auf **`https://github.com/it00x32/onsite`** zeigen, sobald auf GitHub umbenannt wurde. Auf GitHub musst du die Umbenennung **einmal** ausführen.
 
 ## 1. Auf GitHub (oder per CLI)
 

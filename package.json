@@ -1,6 +1,6 @@
 {
   "name": "onsite",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "OnSite – lokales SNMP-Dashboard",
   "main": "server.js",
   "bin": {
@@ -27,15 +27,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/it00x32/onsite.git"
+    "url": "git+https://github.com/it00x32/lancom-onsite.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/it00x32/onsite/issues"
+    "url": "https://github.com/it00x32/lancom-onsite/issues"
   },
-  "homepage": "https://github.com/it00x32/onsite#readme",
+  "homepage": "https://github.com/it00x32/lancom-onsite#readme",
   "dependencies": {
     "express": "^5.2.1",
     "net-snmp": "^3.26.1",

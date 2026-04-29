@@ -6,18 +6,25 @@ Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
 **Deployment, getrennte Daten, Updates:** [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md) — optional Umgebungsvariable **`ONSITE_DATA_DIR`** (absolute Pfadangabe), damit die App aktualisiert werden kann, ohne `./data` im Installationsordner zu überschreiben.
 
-**GitHub:** Repository-URL ist **`https://github.com/it00x32/onsite`**. Umbenennung auf GitHub & Remote anpassen: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md).
+**GitHub:** **`https://github.com/it00x32/lancom-onsite`**. Umbenennung & Remote-Umstellung: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md).
 
 ---
 
 ## Voraussetzungen
 
-| Tool | Zweck | Paket |
-|------|-------|-------|
-| **Node.js** >= 18 | Web-Server (kein npm nötig) | NodeSource (siehe unten) |
-| **snmpget / snmpwalk / snmpbulkwalk** | SNMP-Abfragen | `snmp` (apt) |
+| Tool | Zweck | Paket / Hinweis |
+|------|-------|------------------|
+| **Node.js** ≥ 18 (inkl. **npm**) | Laufzeit und Abhängigkeiten (`express`, `net-snmp`, `ws`, …) | NodeSource (siehe unten) |
+| **snmpget / snmpwalk / snmpbulkwalk** | SNMP-Abfragen (werden per Unterprozess genutzt) | `snmp` (apt) |
 | **curl** | NodeSource-Setup-Skript herunterladen | `curl` (apt) |
-| **git** | Quellcode / Versionsverwaltung | `git` (apt) |
+| **git** | Quellcode holen / aktualisieren | `git` (apt) |
+
+**Optional (je nach genutzten Funktionen):**
+
+| Paket | Nutzung in OnSite |
+|-------|-------------------|
+| **sshpass**, **expect** | SSH-Rollout, Konfigurations-Backup auf Geräten |
+| **arp-scan** | Scanner-Subnetz (falls eingesetzt) |
 
 ---
 
@@ -64,35 +71,55 @@ Nach der Installation die MIB-Nutzung in der SNMP-Konfiguration aktivieren:
 sudo sed -i 's/^mibs :$/# mibs :/' /etc/snmp/snmp.conf
 ```
 
-### 5. Quellcode holen (git)
+### 5. Quellcode holen und Abhängigkeiten installieren (git + npm)
 
 Empfohlener Ordnername (einheitlich mit systemd-Vorlage): **`onsite`**.
 
 ```bash
-git clone https://github.com/it00x32/onsite.git onsite
+git clone https://github.com/it00x32/lancom-onsite.git onsite
 cd onsite
 npm install --omit=dev
 ```
 
-*(Remote-URL anpassen: `git remote set-url origin https://github.com/it00x32/onsite.git` — siehe auch `docs/GITHUB-REPO-UMBENENNUNG.md`.)*
+Das Repository enthält ein **vorgebündeltes** `app.js` (esbuild aus `ui/`). Für einen reinen Betrieb reicht **`npm install --omit=dev`** meist aus.
+
+**Nach einem `git pull`, der `ui/` oder die Bundling-Konfiguration ändert**, das Frontend neu bauen und den Server neu starten:
+
+```bash
+npm install          # einmal mit devDependencies (esbuild), falls noch nicht vorhanden
+npm run build        # erzeugt app.js aus ui/main.js
+```
+
+*(Projekt-Repository auch unter älterem Namen **`onsite`** nutzbar — Remote anpassen: [`docs/GITHUB-REPO-UMBENENNUNG.md`](docs/GITHUB-REPO-UMBENENNUNG.md).)*
 
 ### 6. Starten
 
 ```bash
-node server.js          # Port 3004 (Standard)
-node server.js 8080     # Alternativer Port
+node server.js          # Port 3004 (Standard), oder per Umgebung: PORT=8080 node server.js
+node server.js 8080     # Alternativer Port als Argument
 ```
 
-Die Web-Oberfläche ist dann erreichbar unter `http://<server-ip>:<port>`
+Die Web-Oberfläche ist dann unter **`http://<server-ip>:<port>`** erreichbar.
 
 ### 7. Firewall-Freigabe (falls ufw aktiv)
 
-```bash
-# Prüfen ob ufw aktiv ist
-sudo ufw status
+Mindestens den **HTTP-Port** (Standard **3004/tcp**) freigeben. Zusätzlich je nach Nutzung:
 
-# Port 3004 freigeben (oder den gewählten Port)
+| Richtung | Port | Protokoll | Funktion |
+|----------|------|-----------|----------|
+| eingehend | **3004** (oder `PORT`) | TCP | Web-UI, API, WebSocket |
+| eingehend | **1620** | UDP | SNMP-Trap-Empfang |
+| eingehend | **1514** | UDP | Syslog-Empfang |
+| eingehend | **1812/1813** (o. ä.) | UDP | Nur wenn NAC / eingebetteter RADIUS genutzt wird |
+
+SNMP zu den Geräten läuft **vom Server aus** (üblicherweise UDP/161 zum Zielgerät) — dafür müssen Firewall/Routing zum LAN passen, nicht zwingend ein eingehender Port auf dem OnSite-Host.
+
+```bash
+sudo ufw status
 sudo ufw allow 3004/tcp
+# Optional:
+sudo ufw allow 1620/udp
+sudo ufw allow 1514/udp
 sudo ufw reload
 ```
 
@@ -125,7 +152,7 @@ Vorlage **`deploy/systemd/onsite.service.example`** (User **`www-data`**, Platzh
 ```bash
 # 1. App nach /opt/onsite (o. ä.) legen
 sudo cp -r onsite /opt/onsite
-cd /opt/onsite && npm install --omit=dev
+cd /opt/onsite && npm install --omit=dev   # nach UI-Updates: npm install && npm run build
 sudo chown -R www-data:www-data /opt/onsite
 
 # 2. Unit erzeugen (Pfade + node automatisch) und Dienst starten
@@ -247,18 +274,20 @@ Der Scanner nutzt **Server-Sent Events (SSE)** für Echtzeit-Rückmeldung. Es we
 
 ### Datenpersistenz
 
-Alle Daten liegen unter `data/` im Projektverzeichnis (nicht im Git-Repository):
+Standard: alle Laufzeitdaten unter **`data/`** im Projektverzeichnis (lokal, nicht verpflichtend mit Git mitgeführt). Über **`ONSITE_DATA_DIR`** kann ein absoluter Pfad gesetzt werden (z. B. `/var/lib/onsite/data`), damit Updates das Programmverzeichnis ersetzen können, ohne die Daten zu überschreiben — siehe [`docs/PRODUKT-DEPLOY-CHECKLISTE.md`](docs/PRODUKT-DEPLOY-CHECKLISTE.md).
 
-| Datei | Inhalt |
-|-------|--------|
-| `data/settings.json` | SNMP-Einstellungen, RSSI-Schwellwerte, letztes Scan-Subnetz |
-| `data/devices.json` | Geräteliste mit Status, LLDP-, WDS-, L2TP-Daten und Standorten |
+| Datei / Bereich | Inhalt (Auszug) |
+|-----------------|-------------------|
+| `data/settings.json` | SNMP-Einstellungen, RSSI-Schwellwerte, … |
+| `data/devices.json` | Geräteliste, LLDP/WDS/L2TP, Standorte |
+| weitere JSON-Dateien | Traps, Monitoring, NAC, Roaming, … je nach Nutzung |
 
 ### Architektur
 
-- **server.js** – Node.js HTTP-Server ohne externe Abhängigkeiten (nur Built-in-Module)
-- **index.html** – Single-Page-App (HTML + CSS + JavaScript, kein Build-Schritt)
-- Kein npm, kein Webpack, kein Framework
+- **`server.js`** – Einstieg; statische Auslieferung von `index.html`, `app.js`, `styles.css`; lädt Module unter **`src/`** (Express-API, SNMP-Helfer, WebSockets, Traps, Scheduler, …).
+- **`ui/`** – Quellcode der SPA (ES-Module); **`npm run build`** (esbuild) erzeugt das gebündelte **`app.js`**.
+- **`index.html`**, **`styles.css`** – Shell und Styles; kein React/Vue — Vanilla-JS-Frontend.
+- **Abhängigkeiten:** siehe `package.json` (`express`, `net-snmp`, `ws`, …).
 
 ---
 
