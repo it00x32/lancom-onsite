@@ -19462,6 +19462,14 @@
         return false;
       }
     })(),
+    /** Netzwerkplan: nicht verwaltete Knoten (LLDP-„Geist“, L2TP ohne Gerät) ausblenden */
+    topoHideUnmanaged: (() => {
+      try {
+        return localStorage.getItem("onsite_topo_hide_unmanaged") === "1";
+      } catch (e2) {
+        return false;
+      }
+    })(),
     meshSort: { col: null, dir: 1 },
     l2tpSort: { col: null, dir: 1 },
     roamSort: { col: null, dir: 1 },
@@ -42250,6 +42258,8 @@ Fehler: ${e2.message}`;
   function buildTopoFromStore() {
     const hideApCb = q("topo-hide-ap");
     if (hideApCb) hideApCb.checked = !!state_default.topoHideAccessPoints;
+    const hideUnmanagedCb = q("topo-hide-unmanaged");
+    if (hideUnmanagedCb) hideUnmanagedCb.checked = !!state_default.topoHideUnmanaged;
     topoLldpMap = {};
     Object.values(state_default.deviceStore).forEach((dev) => {
       if (dev.lldpData?.length) topoLldpMap[dev.ip] = dev.lldpData;
@@ -42338,6 +42348,13 @@ Fehler: ${e2.message}`;
         l2tpCnt++;
       });
     });
+    if (state_default.topoHideUnmanaged) {
+      const removeIds = new Set(Object.keys(topoNodes).filter((id) => topoNodes[id]?.ghost));
+      removeIds.forEach((id) => {
+        delete topoNodes[id];
+      });
+      topoEdges = topoEdges.filter((e2) => !removeIds.has(e2.src) && !removeIds.has(e2.tgt));
+    }
     buildTopoSelector();
     layoutTopo(topoRootId);
     renderTopoSvg();
@@ -46338,6 +46355,14 @@ Fortfahren?`)) return;
     }
     buildTopoFromStore();
   }
+  function setTopoHideUnmanaged(on) {
+    state_default.topoHideUnmanaged = !!on;
+    try {
+      localStorage.setItem("onsite_topo_hide_unmanaged", on ? "1" : "0");
+    } catch (e2) {
+    }
+    buildTopoFromStore();
+  }
   window.S = state_default;
   window.toggleTheme = toggleTheme;
   window.showTab = showTab;
@@ -46456,6 +46481,7 @@ Fortfahren?`)) return;
   window.toggleTraffic = toggleTraffic;
   window.setTopoLocFilter = setTopoLocFilter;
   window.setTopoHideAccessPoints = setTopoHideAccessPoints;
+  window.setTopoHideUnmanaged = setTopoHideUnmanaged;
   window.searchTopoMac = searchTopoMac;
   window.clearTopoMacSearch = clearTopoMacSearch;
   window.topoBgDragStart = topoBgDragStart;

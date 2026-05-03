@@ -1430,6 +1430,8 @@ export async function syncTopologyAll() {
 export function buildTopoFromStore() {
   const hideApCb = q('topo-hide-ap');
   if (hideApCb) hideApCb.checked = !!S.topoHideAccessPoints;
+  const hideUnmanagedCb = q('topo-hide-unmanaged');
+  if (hideUnmanagedCb) hideUnmanagedCb.checked = !!S.topoHideUnmanaged;
 
   // LLDP edges
   topoLldpMap = {};
@@ -1496,6 +1498,12 @@ export function buildTopoFromStore() {
       l2tpCnt++;
     });
   });
+
+  if (S.topoHideUnmanaged) {
+    const removeIds = new Set(Object.keys(topoNodes).filter(id => topoNodes[id]?.ghost));
+    removeIds.forEach(id => { delete topoNodes[id]; });
+    topoEdges = topoEdges.filter(e => !removeIds.has(e.src) && !removeIds.has(e.tgt));
+  }
 
   buildTopoSelector();
   layoutTopo(topoRootId);

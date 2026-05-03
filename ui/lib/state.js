@@ -19,6 +19,10 @@ const S = {
   topoHideAccessPoints: (() => {
     try { return localStorage.getItem('onsite_topo_hide_ap') === '1'; } catch (e) { return false; }
   })(),
+  /** Netzwerkplan: nicht verwaltete Knoten (LLDP-„Geist“, L2TP ohne Gerät) ausblenden */
+  topoHideUnmanaged: (() => {
+    try { return localStorage.getItem('onsite_topo_hide_unmanaged') === '1'; } catch (e) { return false; }
+  })(),
   meshSort: { col: null, dir: 1 },
   l2tpSort: { col: null, dir: 1 },
   roamSort: { col: null, dir: 1 },

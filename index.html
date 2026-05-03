@@ -34,7 +34,7 @@
   <div class="header-signal"><span></span><span></span><span></span><span></span></div>
   <div style="flex:1"></div>
   <div id="detail-badge" onclick="showTab('detail')"></div>
-  <span class="version-tag" id="version-tag">v0.11.8</span>
+  <span class="version-tag" id="version-tag">v0.11.9</span>
   <span class="license-header-tag" id="license-header-tag" onclick="showTab('settings');showCfgTab('license')" title="Lizenz-Details"></span>
   <button class="theme-toggle" onclick="toggleTheme()" title="Tag / Nacht Modus" id="theme-toggle-btn">☀️</button>
 </div>
@@ -508,6 +508,10 @@
     <label class="topo-toolbar-checkbox" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none" title="LANCOM Access Points (Typ lx-ap / lcos-ap) aus dem Graphen ausblenden">
       <input type="checkbox" id="topo-hide-ap" onchange="setTopoHideAccessPoints(this.checked)" style="cursor:pointer;margin:0">
       APs ausblenden
+    </label>
+    <label class="topo-toolbar-checkbox" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none" title="Nur verwaltete Geräte: LLDP-„Geist“-Knoten und L2TP-Ziele ohne Gerät im Bestand ausblenden">
+      <input type="checkbox" id="topo-hide-unmanaged" onchange="setTopoHideUnmanaged(this.checked)" style="cursor:pointer;margin:0">
+      Nicht verwaltete Geräte ausblenden
     </label>
     <div style="position:relative;display:flex;align-items:center">
       <input id="topo-mac-search" class="search-input" placeholder="MAC / IP suchen…" oninput="searchTopoMac(this.value)" style="width:170px;padding-right:24px" title="MAC-Adresse oder IP im Netzwerkplan suchen">

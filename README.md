@@ -272,7 +272,7 @@ chmod +x scripte/start-onsite.sh
 | **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, Standort, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Filter nach Status und Standort. |
 | **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung, Standort-Spalte, Filter nach Status und Standort. |
 | **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Standort-Spalte, Filter nach Status und Standort. |
-| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: FDB-Treffer auf **Switches** werden nicht gezeichnet, wenn der Port laut LLDP mit einem **anderen Switch** verbunden ist (kein Client-Overlay auf Switch-zu-Switch-Uplinks). |
+| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. Optionen: **APs ausblenden**, **Nicht verwaltete Geräte ausblenden** (LLDP-„Geist“-Knoten und L2TP-Ziele ohne Eintrag im Gerätebestand). PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: FDB-Treffer auf **Switches** werden nicht gezeichnet, wenn der Port laut LLDP mit einem **anderen Switch** verbunden ist (kein Client-Overlay auf Switch-zu-Switch-Uplinks). |
 | **Scanner** | Subnetz oder IP-Bereich scannen und direkt importieren. Standort kann beim Import zugewiesen werden (vorhandener Standort wählen oder neuen eingeben). |
 | **LMC Import** | Geräteliste aus der LANCOM Management Cloud importieren – liest automatisch den Standort (`siteName`) aus. |
 | **Einstellungen** | SNMP (v2c/v3), Communities/Passwörter mit Anzeigen/Verbergen, RSSI-Schwellwerte – serverseitig persistent. |
@@ -306,6 +306,7 @@ chmod +x scripte/start-onsite.sh
 
 | Version | Kurzüberblick |
 |---------|----------------|
+| **v0.11.9** | Netzwerkplan: Option **Nicht verwaltete Geräte ausblenden** (wie „APs ausblenden“); blendet Geist-Knoten und L2TP-Ziele ohne Gerät aus, inkl. Kanten. |
 | **v0.11.8** | Netzwerkplan: MAC-/IP-Suche — FDB-Client nicht auf Switch-Ports, die per LLDP mit einem anderen **Switch** verbunden sind (frühere Uplink-Dedupe-Heuristik entfernt). |
 | **v0.11.7** | Netzwerkplan: fehlende `topoFdbPortMatchesLldp` wiederhergestellt (MAC-Uplink-Dedupe war zur Laufzeit kaputt). Port-Matching ohne riskantes Substring. Dedupe-Priorität: Plan-Filter wie `buildTopoGraph`, dann Knoten im Graphen. |
 | **v0.11.6** | Netzwerkplan: MAC-/FDB-Dedupe entfernt immer den Treffer, der **nicht** im aktuellen Topologie-Graphen liegt (sonst verschwand das Overlay komplett). LLDP-Kandidaten ohne remPortId/remPortDesc der Gegenstelle (falsche lokale Treffer). |
