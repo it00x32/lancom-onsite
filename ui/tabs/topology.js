@@ -371,7 +371,9 @@ function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
 
 /**
  * Dieselbe MAC erscheint auf zwei Switches in der FDB typischerweise auf dem Uplink zueinander.
- * Wenn es genau die LLDP-Kante zwischen zwei bekannten Geräten ist (Ports passen), einen Treffer weglassen.
+ * Wenn es die LLDP-Kante zwischen zwei bekannten Geräten ist, einen Treffer weglassen:
+ * zuerst strikt (Ports passen zu LLDP), sonst Fallback nur bei genau einer LLDP-Kante zwischen dem Paar
+ * (z. B. fehlendes dstPort oder abweichende FDB-Portbezeichnung).
  */
 function dedupeFdbMacAcrossKnownLldpLinks(results) {
   const known = new Set(Object.keys(S.deviceStore));
@@ -381,15 +383,27 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
     if (r.type === 'fdb') fdb.push(r);
     else rest.push(r);
   }
-  const lldpEdges = topoEdges.filter(e =>
+  const lldpKnown = topoEdges.filter(e =>
     !e.type
     && !String(e.src).startsWith('ghost_')
     && !String(e.tgt).startsWith('ghost_')
     && known.has(e.src)
     && known.has(e.tgt)
-    && String(e.srcPort || '').trim()
-    && String(e.dstPort || '').trim()
   );
+  function edgesBetween(a, b) {
+    return lldpKnown.filter(e =>
+      (e.src === a && e.tgt === b) || (e.src === b && e.tgt === a)
+    );
+  }
+  function strictOk(A, B, edge) {
+    if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
+      return topoFdbPortMatchesLldp(A.port, edge.srcPort) && topoFdbPortMatchesLldp(B.port, edge.dstPort);
+    }
+    if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
+      return topoFdbPortMatchesLldp(A.port, edge.dstPort) && topoFdbPortMatchesLldp(B.port, edge.srcPort);
+    }
+    return false;
+  }
   const drop = new Set();
   for (let i = 0; i < fdb.length; i++) {
     for (let j = i + 1; j < fdb.length; j++) {
@@ -397,17 +411,11 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
       const A = fdb[i], B = fdb[j];
       const ma = topoMacNormKey(A.mac), mb = topoMacNormKey(B.mac);
       if (!ma || ma !== mb) continue;
-      const edge = lldpEdges.find(e =>
-        (e.src === A.switchIp && e.tgt === B.switchIp) || (e.src === B.switchIp && e.tgt === A.switchIp)
-      );
-      if (!edge) continue;
-      let ok = false;
-      if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
-        ok = topoFdbPortMatchesLldp(A.port, edge.srcPort) && topoFdbPortMatchesLldp(B.port, edge.dstPort);
-      } else if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
-        ok = topoFdbPortMatchesLldp(A.port, edge.dstPort) && topoFdbPortMatchesLldp(B.port, edge.srcPort);
-      }
-      if (ok) drop.add(j);
+      const eb = edgesBetween(A.switchIp, B.switchIp);
+      if (!eb.length) continue;
+      const strict = eb.some(edge => strictOk(A, B, edge));
+      if (strict) drop.add(j);
+      else if (eb.length === 1) drop.add(j);
     }
   }
   return rest.concat(fdb.filter((_, i) => !drop.has(i)));

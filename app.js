@@ -41276,9 +41276,23 @@ Fehler: ${e2.message}`;
       if (r2.type === "fdb") fdb.push(r2);
       else rest.push(r2);
     }
-    const lldpEdges = topoEdges.filter(
-      (e2) => !e2.type && !String(e2.src).startsWith("ghost_") && !String(e2.tgt).startsWith("ghost_") && known.has(e2.src) && known.has(e2.tgt) && String(e2.srcPort || "").trim() && String(e2.dstPort || "").trim()
+    const lldpKnown = topoEdges.filter(
+      (e2) => !e2.type && !String(e2.src).startsWith("ghost_") && !String(e2.tgt).startsWith("ghost_") && known.has(e2.src) && known.has(e2.tgt)
     );
+    function edgesBetween(a3, b2) {
+      return lldpKnown.filter(
+        (e2) => e2.src === a3 && e2.tgt === b2 || e2.src === b2 && e2.tgt === a3
+      );
+    }
+    function strictOk(A2, B2, edge) {
+      if (A2.switchIp === edge.src && B2.switchIp === edge.tgt) {
+        return topoFdbPortMatchesLldp(A2.port, edge.srcPort) && topoFdbPortMatchesLldp(B2.port, edge.dstPort);
+      }
+      if (A2.switchIp === edge.tgt && B2.switchIp === edge.src) {
+        return topoFdbPortMatchesLldp(A2.port, edge.dstPort) && topoFdbPortMatchesLldp(B2.port, edge.srcPort);
+      }
+      return false;
+    }
     const drop = /* @__PURE__ */ new Set();
     for (let i3 = 0; i3 < fdb.length; i3++) {
       for (let j2 = i3 + 1; j2 < fdb.length; j2++) {
@@ -41286,17 +41300,11 @@ Fehler: ${e2.message}`;
         const A2 = fdb[i3], B2 = fdb[j2];
         const ma = topoMacNormKey(A2.mac), mb = topoMacNormKey(B2.mac);
         if (!ma || ma !== mb) continue;
-        const edge = lldpEdges.find(
-          (e2) => e2.src === A2.switchIp && e2.tgt === B2.switchIp || e2.src === B2.switchIp && e2.tgt === A2.switchIp
-        );
-        if (!edge) continue;
-        let ok = false;
-        if (A2.switchIp === edge.src && B2.switchIp === edge.tgt) {
-          ok = topoFdbPortMatchesLldp(A2.port, edge.srcPort) && topoFdbPortMatchesLldp(B2.port, edge.dstPort);
-        } else if (A2.switchIp === edge.tgt && B2.switchIp === edge.src) {
-          ok = topoFdbPortMatchesLldp(A2.port, edge.dstPort) && topoFdbPortMatchesLldp(B2.port, edge.srcPort);
-        }
-        if (ok) drop.add(j2);
+        const eb = edgesBetween(A2.switchIp, B2.switchIp);
+        if (!eb.length) continue;
+        const strict = eb.some((edge) => strictOk(A2, B2, edge));
+        if (strict) drop.add(j2);
+        else if (eb.length === 1) drop.add(j2);
       }
     }
     return rest.concat(fdb.filter((_3, i3) => !drop.has(i3)));

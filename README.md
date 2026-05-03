@@ -272,7 +272,7 @@ chmod +x scripte/start-onsite.sh
 | **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, Standort, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Filter nach Status und Standort. |
 | **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung, Standort-Spalte, Filter nach Status und Standort. |
 | **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Standort-Spalte, Filter nach Status und Standort. |
-| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: doppelte FDB-Treffer auf demselben LLDP-Uplink zwischen zwei verwalteten Geräten werden zusammengefasst. |
+| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: doppelte FDB-Treffer auf demselben LLDP-Uplink zwischen zwei verwalteten Geräten werden zusammengefasst (strikt per Port-Match, sonst wenn nur eine LLDP-Kante zwischen dem Paar existiert). |
 | **Scanner** | Subnetz oder IP-Bereich scannen und direkt importieren. Standort kann beim Import zugewiesen werden (vorhandener Standort wählen oder neuen eingeben). |
 | **LMC Import** | Geräteliste aus der LANCOM Management Cloud importieren – liest automatisch den Standort (`siteName`) aus. |
 | **Einstellungen** | SNMP (v2c/v3), Communities/Passwörter mit Anzeigen/Verbergen, RSSI-Schwellwerte – serverseitig persistent. |
@@ -306,6 +306,7 @@ chmod +x scripte/start-onsite.sh
 
 | Version | Kurzüberblick |
 |---------|----------------|
+| **v0.11.2** | Netzwerkplan: MAC-/FDB-Deduplizierung robuster (eine LLDP-Kante zwischen zwei Geräten auch ohne vollständige Portlabels / bei abweichender FDB-Schreibweise). |
 | **v0.11.1** | Netzwerkplan: MAC-/IP-Suche blendet doppelte FDB-Treffer aus, wenn dieselbe MAC auf beiden Seiten einer LLDP-Verbindung zwischen zwei bekannten Geräten (passende Ports) erscheint. |
 | **v0.11.0** | Netzwerkplan: PDF-Export (Karte + LLDP-Tabelle), Kantenfarbe nach Portgeschwindigkeit bei Traffic, Legende theme-konform; Blueprint-Ansicht entfernt. SNMP-Einstellungen: Passwörter/Communities einblenden. Frontend-Bundle inkl. `jspdf` / `html2canvas`. |
 
