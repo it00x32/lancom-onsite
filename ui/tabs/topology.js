@@ -345,18 +345,8 @@ function setTopoStatus(msg) {
   if (el) el.textContent = msg;
 }
 
-/** MAC nur hex/klein für Vergleich */
-function topoMacNormKey(m) {
-  return String(m || '').toLowerCase().replace(/[^0-9a-f]/g, '');
-}
-
 function topoPortNormKey(p) {
   return String(p || '').toLowerCase().replace(/\s+/g, '').replace(/[\-_]/g, '');
-}
-
-/** LLDP remPortId o.ä.: reine MAC → nicht mit FDB-ifName vergleichbar */
-function topoIsMacLikePortLabel(s) {
-  return /^([0-9a-fA-F]{2}[:\- ]){5}[0-9a-fA-F]{2}$/.test(String(s || '').trim());
 }
 
 function topoPortNumTail(p) {
@@ -364,17 +354,7 @@ function topoPortNumTail(p) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-/** Gleiche Regeln wie buildTopoGraph: Gerät erscheint im Netzwerkplan (für Dedupe-Priorität). */
-function topoIpShownInTopoPlan(ip) {
-  if (!ip || String(ip).startsWith('ghost_')) return false;
-  const d = S.deviceStore[ip];
-  if (!d || d.online === false) return false;
-  if (S.topoLocFilter !== 'all' && (d.location || '') !== S.topoLocFilter) return false;
-  if (S.topoHideAccessPoints && isTopoAccessPointType(d.type)) return false;
-  return true;
-}
-
-/** FDB-Portname vs. LLDP-/Uplink-Portbezeichnung (kein loses substring — verwechselt z. B. 1/11 mit 1/1). */
+/** FDB-Port vs. LLDP localPortName (gleicher logischer Port). */
 function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
   const lp = String(lldpPort || '').trim();
   if (!lp) return false;
@@ -384,142 +364,17 @@ function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
   return na !== null && nb !== null && na === nb;
 }
 
-/** Lokaler Portname auf hostIp zum Nachbarn neighborIp (ifName / LLDP). */
-function topoInferLocalPortTowardNeighbor(hostIp, neighborIp) {
-  if (!hostIp || !neighborIp || String(neighborIp).startsWith('ghost_')) return '';
-  for (const ent of topoLldpMap[hostIp] || []) {
-    if (resolveTopoNeighbor(ent, hostIp) === neighborIp && String(ent.localPortName || '').trim()) {
-      return String(ent.localPortName).trim();
-    }
-  }
-  return '';
-}
-
-/** Für FDB-Vergleich: sinnvolle srcPort/dstPort (MAC-artige / leere Gegenports per LLDP ersetzen). */
-function topoPortsForLldpEdge(edge) {
-  let sp = String(edge.srcPort || '').trim();
-  let dp = String(edge.dstPort || '').trim();
-  if (!sp || topoIsMacLikePortLabel(sp)) {
-    const t = topoInferLocalPortTowardNeighbor(edge.src, edge.tgt);
-    if (t) sp = t;
-  }
-  if (!dp || topoIsMacLikePortLabel(dp)) {
-    const t = topoInferLocalPortTowardNeighbor(edge.tgt, edge.src);
-    if (t) dp = t;
-  }
-  return { srcPort: sp, dstPort: dp };
-}
-
-/** FDB-Port passt zu mindestens einem Kandidaten (LLDP-/Uplink-Bezeichnungen). */
-function topoFdbMatchesAnyLabel(fdbPort, labels) {
-  for (const lab of labels) {
-    if (topoFdbPortMatchesLldp(fdbPort, lab)) return true;
+/** Port laut LLDP mit einem anderen verwalteten Switch verbunden → kein Client-Overlay aus FDB. */
+function topoFdbPortIsUplinkToManagedSwitch(switchIp, portLabel) {
+  if (!switchIp || !portLabel) return false;
+  for (const ent of topoLldpMap[switchIp] || []) {
+    const peer = resolveTopoNeighbor(ent, switchIp);
+    if (!peer || String(peer).startsWith('ghost_')) continue;
+    const peerDev = S.deviceStore[peer];
+    if (!peerDev || peerDev.type !== 'switch') continue;
+    if (topoFdbPortMatchesLldp(portLabel, ent.localPortName)) return true;
   }
   return false;
-}
-
-/** Alle brauchbaren Port-Labels auf hostIp Richtung peerIp (LLDP, Kantenobjekt, FDB wo Nachbar-MAC gelernt). */
-function topoUplinkLabelCandidates(hostIp, peerIp, edge) {
-  const e = topoPortsForLldpEdge(edge);
-  const seen = new Set();
-  const out = [];
-  function add(s) {
-    const t = String(s || '').trim();
-    if (!t || topoIsMacLikePortLabel(t)) return;
-    const k = topoPortNormKey(t);
-    if (!k || seen.has(k)) return;
-    seen.add(k);
-    out.push(t);
-  }
-  add(topoInferLocalPortTowardNeighbor(hostIp, peerIp));
-  for (const ent of topoLldpMap[hostIp] || []) {
-    if (resolveTopoNeighbor(ent, hostIp) !== peerIp) continue;
-    add(ent.localPortName);
-    // remPortId / remPortDesc = Gegenstelle (Nachbar-Port), nicht lokales ifName → nicht für lokalen FDB-Abgleich
-  }
-  const hostDev = S.deviceStore[hostIp];
-  const peerDev = S.deviceStore[peerIp];
-  if (hostDev?.fdbEntries && peerDev) {
-    const peerM = new Set(
-      [topoMacNormKey(peerDev.mac), ...(peerDev.macs || []).map(topoMacNormKey)].filter(Boolean)
-    );
-    for (const fe of hostDev.fdbEntries) {
-      if (peerM.has(topoMacNormKey(fe.mac))) add(fe.port);
-    }
-  }
-  if (hostIp === edge.src) {
-    add(edge.srcPort);
-    add(e.srcPort);
-  }
-  if (hostIp === edge.tgt) {
-    add(edge.dstPort);
-    add(e.dstPort);
-  }
-  return out;
-}
-
-/**
- * Dieselbe MAC erscheint auf zwei Switches in der FDB typischerweise auf dem Uplink zueinander.
- * Abgleich gegen alle sinnvollen Uplink-Port-Labels pro Seite (LLDP beidseitig, FDB-Ports mit Nachbar-MAC).
- * Kein reiner „eine Kante genügt“-Fallback (Access-Port + Uplink).
- */
-function dedupeFdbMacAcrossKnownLldpLinks(results) {
-  const known = new Set(Object.keys(S.deviceStore));
-  const fdb = [];
-  const rest = [];
-  for (const r of results) {
-    if (r.type === 'fdb') fdb.push(r);
-    else rest.push(r);
-  }
-  const lldpKnown = topoEdges.filter(e =>
-    !e.type
-    && !String(e.src).startsWith('ghost_')
-    && !String(e.tgt).startsWith('ghost_')
-    && known.has(e.src)
-    && known.has(e.tgt)
-  );
-  function edgesBetween(a, b) {
-    return lldpKnown.filter(e =>
-      (e.src === a && e.tgt === b) || (e.src === b && e.tgt === a)
-    );
-  }
-  function strictOk(A, B, edge) {
-    const labSrc = topoUplinkLabelCandidates(edge.src, edge.tgt, edge);
-    const labTgt = topoUplinkLabelCandidates(edge.tgt, edge.src, edge);
-    if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
-      return topoFdbMatchesAnyLabel(A.port, labSrc) && topoFdbMatchesAnyLabel(B.port, labTgt);
-    }
-    if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
-      return topoFdbMatchesAnyLabel(A.port, labTgt) && topoFdbMatchesAnyLabel(B.port, labSrc);
-    }
-    return false;
-  }
-  const drop = new Set();
-  for (let i = 0; i < fdb.length; i++) {
-    if (drop.has(i)) continue;
-    for (let j = i + 1; j < fdb.length; j++) {
-      if (drop.has(i) || drop.has(j)) continue;
-      const A = fdb[i], B = fdb[j];
-      const ma = topoMacNormKey(A.mac), mb = topoMacNormKey(B.mac);
-      if (!ma || ma !== mb) continue;
-      const eb = edgesBetween(A.switchIp, B.switchIp);
-      if (!eb.length) continue;
-      if (eb.some(edge => strictOk(A, B, edge))) {
-        const aPlan = topoIpShownInTopoPlan(A.switchIp);
-        const bPlan = topoIpShownInTopoPlan(B.switchIp);
-        const aNode = !!topoNodes[A.switchIp];
-        const bNode = !!topoNodes[B.switchIp];
-        if (aPlan && !bPlan) drop.add(j);
-        else if (!aPlan && bPlan) drop.add(i);
-        else if (aPlan && bPlan) {
-          if (aNode && !bNode) drop.add(j);
-          else if (!aNode && bNode) drop.add(i);
-          else drop.add(j);
-        } else drop.add(j);
-      }
-    }
-  }
-  return rest.concat(fdb.filter((_, i) => !drop.has(i)));
 }
 
 export function searchTopoMac(val) {
@@ -550,12 +405,13 @@ export function searchTopoMac(val) {
         const mac = (e.mac||'').toLowerCase();
         const ip  = (e.ip||'').toLowerCase();
         if (mac.includes(topoMacSearch) || ip.includes(topoMacSearch)) {
-          if (!infraMacs.has(mac) && !wlanMacs.has(mac))
-            topoMacResults.push({ switchIp: dev.ip, switchName: dev.name||dev.ip, port: e.port||'?', mac: e.mac||'', ip: e.ip||'', type: 'fdb' });
+          if (!infraMacs.has(mac) && !wlanMacs.has(mac)) {
+            if (!(dev.type === 'switch' && topoFdbPortIsUplinkToManagedSwitch(dev.ip, e.port || '')))
+              topoMacResults.push({ switchIp: dev.ip, switchName: dev.name||dev.ip, port: e.port||'?', mac: e.mac||'', ip: e.ip||'', type: 'fdb' });
+          }
         }
       });
     });
-    topoMacResults = dedupeFdbMacAcrossKnownLldpLinks(topoMacResults);
   }
   renderTopoSvg();
   if (topoMacSearch.length >= 4) {
