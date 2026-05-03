@@ -2,6 +2,9 @@ import S from '../lib/state.js';
 import { q, h, fmtBytes, fmtSpeed, fmtDate, statusBadge, setBadge, extractModel, shortModel, OS_BADGE, TYPE_BADGE, logActivity, getLocations, refreshLocationSelects, matchesLocFilter, parseFetchJson, parseFetchJsonLenient } from '../lib/helpers.js';
 import { detectOsFromCriteria, detectDeviceType } from '../criteria.js';
 import { resolvePeerDev } from './mesh.js';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // NETZWERKPLAN (LLDP TOPOLOGY)
@@ -16,7 +19,6 @@ let topoMacResults = [];   // [{switchIp, switchName, port, mac, ip}]
 let topoTx = 0, topoTy = 0, topoScale = 1;
 let topoDragNode = null, topoPan = null, topoWasDrag = false;
 let topoRootId = '', topoDetailId = null;
-let topoViewMode   = 'default';
 let trafficEnabled = false;
 let trafficData    = {}; // ip → { ifName → { inBps, outBps, speedBps, utilPct } }
 let trafficHistory = {}; // edgeKey → [{inBps, outBps}, ...] (max 12)
@@ -423,6 +425,18 @@ function getIfaceForEdge(edge) {
 
 function edgeUtilPct(edge) { return getIfaceForEdge(edge)?.utilPct || 0; }
 
+/** LLDP-Kanten: Farbe nach Port-Speed (speedBps aus Traffic-Poll). WDS/L2TP/Geist unverändert. */
+function edgeColorWithSpeed(_baseColor, speedBps, e, bothOnline, ghost) {
+  if (ghost || e.type === 'wds' || e.type === 'l2tp') return _baseColor;
+  if (!speedBps || speedBps <= 0) return _baseColor;
+  const O = (on, off) => (bothOnline ? on : off);
+  if (speedBps <= 100e6) return `rgba(100,116,139,${O(0.62, 0.28)})`;
+  if (speedBps <= 1e9) return `rgba(37,99,235,${O(0.65, 0.26)})`;
+  if (speedBps <= 2.5e9) return `rgba(6,182,212,${O(0.78, 0.3)})`;
+  if (speedBps <= 10e9) return `rgba(124,58,237,${O(0.8, 0.32)})`;
+  return `rgba(217,119,6,${O(0.88, 0.36)})`;
+}
+
 function edgeWidthWithTraffic(base, util) {
   return (!trafficEnabled || !util) ? base : base + Math.min(3.5, util / 100 * 3.5);
 }
@@ -480,230 +494,8 @@ export function trafficEdgeLeave() {
   if (tt) tt.style.display = 'none';
 }
 
-// ── Blueprint mode ─────────────────────────────────────────────────────────────
-export function toggleTopoMode() {
-  topoViewMode = topoViewMode === 'blueprint' ? 'default' : 'blueprint';
-  const btn = document.getElementById('topo-bp-btn');
-  if (btn) {
-    btn.textContent      = topoViewMode === 'blueprint' ? 'Normal' : 'Blueprint';
-    btn.style.color      = topoViewMode === 'blueprint' ? '#00c8ff' : '';
-    btn.style.borderColor= topoViewMode === 'blueprint' ? 'rgba(0,200,255,.4)' : '';
-  }
-  q('topo-container').classList.toggle('bp-mode', topoViewMode === 'blueprint');
-  renderTopoSvg();
-}
-
-export function bpNodeHover(id) {
-  const g = q('topo-g');
-  const neighbors = new Set([id]);
-  topoEdges.forEach(e => {
-    if (e.src === id || e.tgt === id) { neighbors.add(e.src); neighbors.add(e.tgt); }
-  });
-  g.querySelectorAll('[data-bp-node]').forEach(el => {
-    el.style.opacity = neighbors.has(el.getAttribute('data-bp-node')) ? '1' : '0.1';
-  });
-  g.querySelectorAll('[data-bp-edge-src]').forEach(el => {
-    const s = el.getAttribute('data-bp-edge-src');
-    const t = el.getAttribute('data-bp-edge-tgt');
-    el.style.opacity = (neighbors.has(s) && neighbors.has(t)) ? '1' : '0.05';
-  });
-}
-
-export function bpNodeHoverEnd() {
-  q('topo-g').querySelectorAll('[data-bp-node],[data-bp-edge-src]').forEach(el => {
-    el.style.opacity = '';
-  });
-}
-
-export function renderTopoSvgBlueprint() {
-  const nodes = Object.values(topoNodes);
-  q('topo-empty').style.display = nodes.length ? 'none' : '';
-  if (!nodes.length) { q('topo-g').innerHTML = ''; return; }
-
-  const hw = NW/2, hh = NH/2;
-  const CR = 12;
-
-  function borderPt(cx, cy, tx, ty) {
-    const dx = tx-cx, dy = ty-cy;
-    if (!dx && !dy) return {x:cx, y:cy+hh};
-    const sX = dx ? hw/Math.abs(dx) : Infinity;
-    const sY = dy ? hh/Math.abs(dy) : Infinity;
-    const s = Math.min(sX, sY);
-    return {x: cx+dx*s, y: cy+dy*s};
-  }
-
-  function bpEdgePath(fx, fy, tx, ty) {
-    const midX = (fx + tx) / 2;
-    if (Math.abs(tx - fx) < 4) return `M${fx.toFixed(1)},${fy.toFixed(1)} L${tx.toFixed(1)},${ty.toFixed(1)}`;
-    const sx1 = midX >= fx ? 1 : -1;
-    const sx2 = tx  >= midX ? 1 : -1;
-    const sy  = ty > fy ? 1 : ty < fy ? -1 : 0;
-    const rr  = Math.min(CR, Math.abs(midX - fx) - 1, Math.abs(ty - fy) / 2 + 0.1);
-    if (rr < 2 || sy === 0) return `M${fx.toFixed(1)},${fy.toFixed(1)} H${midX.toFixed(1)} V${ty.toFixed(1)} H${tx.toFixed(1)}`;
-    return `M${fx.toFixed(1)},${fy.toFixed(1)} H${(midX-sx1*rr).toFixed(1)} Q${midX.toFixed(1)},${fy.toFixed(1)} ${midX.toFixed(1)},${(fy+sy*rr).toFixed(1)} V${(ty-sy*rr).toFixed(1)} Q${midX.toFixed(1)},${ty.toFixed(1)} ${(midX+sx2*rr).toFixed(1)},${ty.toFixed(1)} H${tx.toFixed(1)}`;
-  }
-
-  function bpAccent(type) {
-    switch (type) {
-      case 'switch':   return '#00c8ff';
-      case 'lx-ap':
-      case 'lcos-ap':  return '#ff8c00';
-      case 'router':   return '#4d8fff';
-      case 'firewall': return '#ef4444';
-      default:         return '#64748b';
-    }
-  }
-
-  function bpEdgeColor(e, bothOnline, ghost) {
-    if (ghost)            return 'rgba(40,60,100,.5)';
-    if (e.type === 'wds') return bothOnline ? '#ff8c00' : 'rgba(255,140,0,.3)';
-    if (e.type === 'l2tp')return bothOnline ? '#22c55e' : 'rgba(34,197,94,.3)';
-    return bothOnline ? '#00c8ff' : 'rgba(0,200,255,.3)';
-  }
-
-  let svg = '';
-
-  // Separator for unconnected nodes
-  const connectedIds = new Set(topoEdges.flatMap(e => [e.src, e.tgt]));
-  const unconn = nodes.filter(n => !connectedIds.has(n.id));
-  const conn   = nodes.filter(n =>  connectedIds.has(n.id));
-  if (unconn.length && conn.length) {
-    const uy = Math.min(...unconn.map(n => n.y));
-    const xs = unconn.map(n => n.x);
-    const x1 = Math.min(...xs)-hw-30, x2 = Math.max(...xs)+hw+30;
-    svg += `<line x1="${x1}" y1="${uy-55}" x2="${x2}" y2="${uy-55}" stroke="rgba(0,200,255,.12)" stroke-width="1" stroke-dasharray="4,4"/>`;
-    svg += `<text x="${(x1+x2)/2}" y="${uy-64}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(0,200,255,.25)" font-family="system-ui,sans-serif" letter-spacing="0.12em">KEINE VERBINDUNG</text>`;
-  }
-
-  // Parallel edge counting
-  const pairCount = {}, pairSeen = {};
-  topoEdges.forEach(e => {
-    const k = [e.src, e.tgt].sort().join('||');
-    pairCount[k] = (pairCount[k]||0) + 1;
-    pairSeen[k]  = 0;
-  });
-
-  // Port label helper
-  const LOFF = 14;
-  function bpLabelPt(cx, cy, bx, by) {
-    if (Math.abs(Math.abs(by-cy)-hh) < 0.5) return {x:bx, y:cy+Math.sign(by-cy)*(hh+LOFF), anchor:'middle'};
-    return {x:cx+Math.sign(bx-cx)*(hw+LOFF), y:by, anchor:bx>cx?'start':'end'};
-  }
-
-  // Edges (drawn first, below nodes)
-  topoEdges.forEach(e => {
-    const f = topoNodes[e.src], t = topoNodes[e.tgt];
-    if (!f || !t) return;
-    const bothOnline = f.online===true && t.online===true;
-    const ghost = f.ghost || t.ghost;
-    const pairKey = [e.src, e.tgt].sort().join('||');
-    const total = pairCount[pairKey] || 1;
-    const idx   = pairSeen[pairKey]++;
-    const offset = (idx - (total-1)/2) * 44;
-    const fs = borderPt(f.x, f.y, t.x, t.y);
-    const te = borderPt(t.x, t.y, f.x, f.y);
-    const fxA = fs.x, fyA = fs.y + offset;
-    const txA = te.x, tyA = te.y + offset;
-    const util  = ghost ? 0 : edgeUtilPct(e);
-    const color = edgeColorWithTraffic(bpEdgeColor(e, bothOnline, ghost), util);
-    const w     = edgeWidthWithTraffic(ghost ? 1 : 1.5, util);
-    const isActive = bothOnline && !ghost && e.type !== 'l2tp';
-    const d = bpEdgePath(fxA, fyA, txA, tyA);
-    const portStyle = `font-size="9" font-weight="600" fill="${color}" font-family="monospace,system-ui" opacity="0.75"`;
-    const tevt = (trafficEnabled && !ghost && e.srcPort)
-      ? ` onmouseenter="trafficEdgeHover(event,'${h(e.src)}','${h(e.srcPort)}')" onmouseleave="trafficEdgeLeave()"  style="cursor:crosshair"`
-      : '';
-
-    svg += `<g data-bp-edge-src="${h(e.src)}" data-bp-edge-tgt="${h(e.tgt)}">`;
-    if (tevt) {
-      svg += `<path d="${d}" stroke="transparent" stroke-width="14" fill="none"${tevt}/>`;
-    }
-    if (isActive) {
-      svg += `<path d="${d}" stroke="${color}" stroke-width="${w+3}" fill="none" opacity="0.07" style="pointer-events:none"/>`;
-      svg += `<path class="topo-bp-flow" d="${d}" stroke="${color}" stroke-width="${w}" fill="none" stroke-linecap="round" style="pointer-events:none"/>`;
-    } else {
-      const da = (ghost || !bothOnline) ? ' stroke-dasharray="5,4"' : '';
-      svg += `<path d="${d}" stroke="${color}" stroke-width="${w}" fill="none"${da} style="pointer-events:none"/>`;
-    }
-    // Bandbreiten-Label (TX/RX getrennt)
-    if (trafficEnabled && !ghost) {
-      const iface = getIfaceForEdge(e);
-      if (iface && (iface.outBps > 1000 || iface.inBps > 1000)) {
-        const lx = (fxA + txA) / 2, ly = (fyA + tyA) / 2;
-        svg += `<text x="${lx.toFixed(1)}" y="${(ly-10).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" fill="#f97316" font-family="monospace,system-ui" style="pointer-events:none">TX ${h(formatBps(iface.outBps))}</text>`;
-        svg += `<text x="${lx.toFixed(1)}" y="${(ly+1).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" fill="#22c55e" font-family="monospace,system-ui" style="pointer-events:none">RX ${h(formatBps(iface.inBps))}</text>`;
-      }
-    }
-    if (e.srcPort) { const lp=bpLabelPt(f.x,f.y,fs.x,fs.y); svg+=`<text x="${lp.x.toFixed(1)}" y="${(lp.y+offset*0.3).toFixed(1)}" text-anchor="${lp.anchor}" ${portStyle}>${h(e.srcPort)}</text>`; }
-    if (e.dstPort) { const rp=bpLabelPt(t.x,t.y,te.x,te.y); svg+=`<text x="${rp.x.toFixed(1)}" y="${(rp.y+offset*0.3).toFixed(1)}" text-anchor="${rp.anchor}" ${portStyle}>${h(e.dstPort)}</text>`; }
-    svg += `</g>`;
-  });
-
-  // Nodes (drawn above edges)
-  nodes.forEach(node => {
-    const {x, y} = node;
-    const rx = x-hw, ry = y-hh;
-    const isRoot = node.id === topoRootId;
-    const ac = node.ghost ? '#64748b' : bpAccent(node.type);
-
-    if (node.ghost) {
-      const dn = node.name.length>22 ? node.name.slice(0,21)+'…' : node.name;
-      const gmac     = node.ghostMac  || '';
-      const ginfo    = node.ghostInfo || '';
-      const gSrcName = node.ghostSrc ? (S.deviceStore[node.ghostSrc]?.name || node.ghostSrc) : '';
-      const extras = (gmac?1:0) + (ginfo?1:0) + (gSrcName?1:0);
-      const cardH  = NH + (extras>=2?20:extras===1?10:0);
-      const nameY  = ry + (extras>=2 ? 17 : extras===1 ? 20 : 25);
-      const macY   = ry + (extras>=2 ? 29 : 35);
-      const infoY  = ry + (extras>=2 ? 41 : 35);
-      const srcY   = ry + (extras>=3 ? 52 : extras===2 ? 52 : extras===1 ? 48 : 42);
-      const tagY   = ry + (extras>=3 ? 63 : extras>=2 ? 63 : extras===1 ? 58 : 42);
-      svg += `<g class="topo-node" data-bp-node="${h(node.id)}" opacity="0.55" onmousedown="topoNodeDragStart(event,'${h(node.id)}',event)" onclick="topoNodeClick('${h(node.id)}')" onmouseenter="bpNodeHover('${h(node.id)}')" onmouseleave="bpNodeHoverEnd()">
-        <rect x="${rx}" y="${ry}" width="${NW}" height="${cardH}" rx="6" fill="#0f2540" stroke="rgba(148,163,184,.4)" stroke-width="1" stroke-dasharray="5,3"/>
-        <text x="${rx+NW/2}" y="${nameY}" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(148,163,184,.7)" font-family="system-ui,sans-serif">${h(dn)}</text>
-        ${gmac  ? `<text x="${rx+NW/2}" y="${macY}"  text-anchor="middle" font-size="9" fill="rgba(100,116,139,.6)" font-family="monospace,system-ui">${h(gmac)}</text>` : ''}
-        ${ginfo ? `<text x="${rx+NW/2}" y="${infoY}" text-anchor="middle" font-size="9" fill="rgba(100,116,139,.5)" font-family="system-ui,sans-serif">${h(ginfo)}</text>` : ''}
-        ${gSrcName ? `<text x="${rx+NW/2}" y="${srcY}" text-anchor="middle" font-size="8" fill="rgba(100,116,139,.4)" font-family="system-ui,sans-serif">via ${h(gSrcName)}</text>` : ''}
-        <text x="${rx+NW/2}" y="${tagY}" text-anchor="middle" font-size="9" fill="rgba(100,116,139,.35)" font-family="system-ui,sans-serif" font-style="italic">nicht verwaltet</text>
-      </g>`;
-      return;
-    }
-
-    const badge      = TOPO_TYPE_BADGE[node.type];
-    const badgeLabel = badge?.label || '?';
-    const dname = node.name.length>21 ? node.name.slice(0,20)+'…' : node.name;
-    const dsub  = (node.model||node.os||'').slice(0,26);
-    const dloc  = (node.location||'').slice(0,28);
-    const glow  = isRoot ? ` filter="url(#topo-glow)"` : '';
-    const ledFill   = node.online===true ? ac : node.online===false ? '#1c304a' : 'rgba(80,110,150,.5)';
-    const ledStroke = node.online!==true ? ` stroke="${ac}" stroke-width="1.5"` : '';
-    const ledAnim   = node.online===true
-      ? `<circle cx="${rx+14}" cy="${y}" r="5" fill="${ac}" opacity="0"><animate attributeName="r" values="5;10;5" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/></circle>` : '';
-    const rootPulse = isRoot
-      ? `<rect x="${rx-1}" y="${ry-1}" width="${NW+2}" height="${NH+2}" rx="7" fill="none" stroke="${ac}" stroke-width="1.5" opacity="0"><animate attributeName="opacity" values="0.65;0;0.65" dur="2.8s" repeatCount="indefinite"/></rect>` : '';
-
-    svg += `<g class="topo-node" data-bp-node="${h(node.id)}" onmousedown="topoNodeDragStart(event,'${h(node.id)}',event)" onclick="topoNodeClick('${h(node.id)}')" onmouseenter="bpNodeHover('${h(node.id)}')" onmouseleave="bpNodeHoverEnd()"${glow}>
-      ${rootPulse}
-      <rect x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="6" fill="#102236" stroke="${ac}" stroke-width="${isRoot?2:1.2}"/>
-      <rect x="${rx}" y="${ry}" width="4" height="${NH}" rx="3" fill="${ac}"/>
-      <rect x="${rx+4}" y="${ry}" width="${NW-4}" height="${NH}" fill="${ac}" opacity="0.07"/>
-      <circle cx="${rx+14}" cy="${y}" r="5" fill="${ledFill}"${ledStroke}/>
-      ${ledAnim}
-      <rect x="${rx+NW-32}" y="${ry+6}" width="24" height="13" rx="3" fill="${ac}" fill-opacity="0.18"/>
-      <text x="${rx+NW-20}" y="${ry+16}" text-anchor="middle" font-size="8" font-weight="700" fill="${ac}" font-family="monospace,system-ui">${h(badgeLabel)}</text>
-      <text x="${rx+26}" y="${ry+26}" font-size="12" font-weight="600" fill="#e2eeff" font-family="system-ui,sans-serif">${h(dname)}</text>
-      <text x="${rx+26}" y="${ry+41}" font-size="10" fill="${ac}" font-family="monospace,system-ui" opacity="0.8">${h(dsub||'–')}</text>
-      <text x="${rx+26}" y="${ry+56}" font-size="9" fill="rgba(140,190,230,.55)" font-family="monospace,system-ui">${h(node.id)}</text>
-      ${dloc?`<text x="${rx+26}" y="${ry+70}" font-size="9" fill="rgba(140,190,230,.6)" font-family="system-ui,sans-serif">&#128205; ${h(dloc)}</text>`:''}
-    </g>`;
-  });
-
-  q('topo-g').innerHTML = svg;
-}
-
 // ── Render ────────────────────────────────────────────────────────────────────
 export function renderTopoSvg() {
-  if (topoViewMode === 'blueprint') { renderTopoSvgBlueprint(); return; }
   const nodes = Object.values(topoNodes);
   q('topo-empty').style.display = nodes.length ? 'none' : '';
   if (!nodes.length) { q('topo-g').innerHTML = ''; return; }
@@ -775,8 +567,11 @@ export function renderTopoSvg() {
     const fs = borderPt(f.x, f.y, t.x, t.y);
     const te = borderPt(t.x, t.y, f.x, f.y);
 
-    const util  = ghost ? 0 : edgeUtilPct(e);
-    const color = edgeColorWithTraffic(edgeColor(e, bothOnline, ghost), util);
+    const iface = ghost ? null : getIfaceForEdge(e);
+    const util = ghost ? 0 : (iface?.utilPct || 0);
+    const speedBps = iface?.speedBps || 0;
+    const base = edgeColor(e, bothOnline, ghost);
+    const color = edgeColorWithTraffic(edgeColorWithSpeed(base, speedBps, e, bothOnline, ghost), util);
     const w     = edgeWidthWithTraffic(ghost ? 1.5 : 2, util);
     const disconnected = e.type ? e.connected === false : !bothOnline;
     const dash = (ghost || disconnected) ? ' stroke-dasharray="5,4"' : '';
@@ -793,7 +588,6 @@ export function renderTopoSvg() {
 
     // Bandbreiten-Label bei aktivem Traffic (TX/RX getrennt)
     if (trafficEnabled && !ghost) {
-      const iface = getIfaceForEdge(e);
       if (iface && (iface.outBps > 1000 || iface.inBps > 1000)) {
         const lx = (fs.x + te.x) / 2, ly = (fs.y + te.y) / 2 + offset * 0.5;
         const ts = `text-anchor="middle" font-size="8" font-weight="700" font-family="monospace,system-ui" paint-order="stroke" stroke="${tt.portStroke}" stroke-width="3"`;
@@ -1689,6 +1483,132 @@ export function buildTopoFromStore() {
     if (l2tpCnt)     parts.push(`L2TP: ${l2tpCnt} Verbindung${l2tpCnt!==1?'en':''}`);
     st.className = 'status-bar ok';
     st.textContent = `${nc} Knoten, ${ec} Kante${ec!==1?'n':''} – ${parts.join(' · ')}`;
+  }
+}
+
+/** Alle LLDP-Zeilen aus der Geräteliste (gespeicherte lldpData). */
+function collectTopoLldpTableBody() {
+  const rows = [];
+  for (const dev of Object.values(S.deviceStore)) {
+    const dName = dev.name || dev.ip || '';
+    const dIp = dev.ip || '';
+    const loc = dev.location || '';
+    for (const e of dev.lldpData || []) {
+      const tgtIp = resolveTopoNeighbor(e, dIp) || '';
+      rows.push([
+        dName,
+        dIp,
+        loc,
+        e.localPortName || '',
+        e.remSysName || '',
+        e.remPortId || '',
+        e.remPortDesc || '',
+        e.remMac || '',
+        e.remPortMac || '',
+        e.remChassisIp || '',
+        tgtIp,
+      ]);
+    }
+  }
+  rows.sort((a, b) => `${a[0]}${a[3]}`.localeCompare(`${b[0]}${b[3]}`, 'de'));
+  return rows;
+}
+
+/** PDF: aktuelle Kartensicht (#topo-container) + Tabelle aller LLDP-Einträge. */
+export async function exportTopoPdf() {
+  const st = q('topo-status');
+  const setErr = (msg) => {
+    if (st) { st.className = 'status-bar error'; st.textContent = msg; }
+    else alert(msg);
+  };
+  const clearSt = () => {
+    if (st) { st.textContent = ''; st.className = 'status-bar'; }
+  };
+
+  try {
+    topoCloseDetail();
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const ctr = q('topo-container');
+    if (!ctr) {
+      setErr('Netzwerkplan nicht gefunden.');
+      return;
+    }
+
+    if (st) {
+      st.className = 'status-bar';
+      st.textContent = 'PDF wird erstellt…';
+    }
+
+    const bgVar = getComputedStyle(document.documentElement).getPropertyValue('--bg2').trim();
+    const canvas = await html2canvas(ctr, {
+      scale: 2,
+      backgroundColor: bgVar || '#f0f4f8',
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+    });
+    const imgData = canvas.toDataURL('image/png');
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    doc.setFontSize(11);
+    doc.text('OnSite – Netzwerkplan', margin, margin + 4);
+    const imgTop = margin + 12;
+    const maxW = pageW - 2 * margin;
+    const maxH = pageH - imgTop - margin;
+    const imgProps = doc.getImageProperties(imgData);
+    let w = maxW;
+    let h = (imgProps.height * w) / imgProps.width;
+    if (h > maxH) {
+      h = maxH;
+      w = (imgProps.width * h) / imgProps.height;
+    }
+    doc.addImage(imgData, 'PNG', margin, imgTop, w, h);
+
+    const head = [[
+      'Quellgerät',
+      'Quell-IP',
+      'Standort',
+      'Lokaler Port',
+      'Nachbar (SysName)',
+      'Remote-Port-ID',
+      'Remote-Port-Info',
+      'Chassis-MAC',
+      'Port-MAC',
+      'Chassis-IP',
+      'Gegenstelle IP',
+    ]];
+    const body = collectTopoLldpTableBody();
+
+    doc.addPage('a4', 'landscape');
+    if (!body.length) {
+      doc.setFontSize(10);
+      doc.text('Keine LLDP-Daten in der Geräteliste – bitte unter Geräte „LLDP“ synchronisieren.', margin, margin + 8);
+    } else {
+      autoTable(doc, {
+        head,
+        body,
+        startY: margin + 2,
+        styles: { fontSize: 6.5, cellPadding: 0.8, overflow: 'linebreak' },
+        headStyles: { fillColor: [37, 99, 235], fontSize: 7 },
+        margin: { left: margin, right: margin, top: margin },
+      });
+    }
+
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    doc.save(`netzwerkplan-${ts}.pdf`);
+
+    if (st) {
+      st.className = 'status-bar ok';
+      st.textContent = 'PDF gespeichert.';
+      setTimeout(clearSt, 5000);
+    }
+  } catch (e) {
+    console.error(e);
+    setErr('Fehler: ' + (e.message || String(e)));
   }
 }
 

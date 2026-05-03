@@ -3,7 +3,7 @@ const path = require('path');
 
 const PORT        = parseInt(process.argv[2] || process.env.PORT || '3004', 10);
 // UI + GET /api/version — bei Änderungen hochzählen: PATCH = Fixes/Kleinigkeiten, MINOR = Features/UX, MAJOR = Breaking
-const APP_VERSION = 'v0.10.5';
+const APP_VERSION = 'v0.11.0';
 
 // PKG-Binary-Erkennung: beschreibbare Dateien neben der Binary, nicht im Snapshot
 const IS_PKG  = !!process.pkg;

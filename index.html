@@ -34,7 +34,7 @@
   <div class="header-signal"><span></span><span></span><span></span><span></span></div>
   <div style="flex:1"></div>
   <div id="detail-badge" onclick="showTab('detail')"></div>
-  <span class="version-tag" id="version-tag">v0.8.8</span>
+  <span class="version-tag" id="version-tag">v0.11.0</span>
   <span class="license-header-tag" id="license-header-tag" onclick="showTab('settings');showCfgTab('license')" title="Lizenz-Details"></span>
   <button class="theme-toggle" onclick="toggleTheme()" title="Tag / Nacht Modus" id="theme-toggle-btn">☀️</button>
 </div>
@@ -499,8 +499,8 @@
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(1.25)" title="Vergrößern">＋</button>
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(0.8)" title="Verkleinern">－</button>
     <button class="btn btn-sm btn-ghost" onclick="topoFit()" title="Ansicht anpassen">⊡</button>
+    <button class="btn btn-sm btn-ghost" onclick="exportTopoPdf()" title="Aktuelle Ansicht und LLDP-Tabelle als PDF speichern">↓ PDF</button>
     <button class="btn btn-sm btn-ghost" onclick="topoResetLayout()" title="Gespeicherte Positionen löschen und automatisches Layout wiederherstellen">↺ Layout</button>
-    <button id="topo-bp-btn" class="btn btn-sm btn-ghost" onclick="toggleTopoMode()" title="Blueprint-Ansicht umschalten" style="letter-spacing:.04em">Blueprint</button>
     <button id="topo-traffic-btn" class="btn btn-sm btn-ghost" onclick="toggleTraffic()" title="Live-Bandbreite anzeigen (alle 5s)" style="letter-spacing:.04em">Traffic</button>
     <select id="topo-loc-filter" class="search-input" onchange="setTopoLocFilter(this.value)" style="width:150px" title="Standort filtern">
       <option value="all">Alle Standorte</option>
@@ -532,19 +532,20 @@
     </svg>
     <div id="topo-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text3);font-size:13px;pointer-events:none;white-space:nowrap;text-align:center">
       Keine Online-Geräte – "Daten Abrufen" starten um Verbindungen abzufragen</div>
-    <div style="position:absolute;bottom:12px;left:12px;background:rgba(15,17,23,.82);border:1px solid var(--border);border-radius:6px;padding:8px 12px;pointer-events:none;display:flex;flex-direction:column;gap:6px;z-index:10;">
+    <div style="position:absolute;bottom:12px;left:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;pointer-events:none;display:flex;flex-direction:column;gap:6px;z-index:10;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(37,99,235,.7)" stroke-width="2.5" stroke-dasharray="none"/></svg>
-        <span style="font-size:11px;color:var(--text2)">Direkt (LLDP)</span>
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(37,99,235,.6)" stroke-width="2.5" stroke-dasharray="none"/></svg>
+        <span style="font-size:11px;color:var(--text)">Direkt (LLDP)</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(249,115,22,.8)" stroke-width="2.5" stroke-dasharray="6 3"/></svg>
-        <span style="font-size:11px;color:var(--text2)">WDS / Mesh</span>
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(249,115,22,.7)" stroke-width="2.5" stroke-dasharray="6 3"/></svg>
+        <span style="font-size:11px;color:var(--text)">WDS / Mesh</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(34,197,94,.8)" stroke-width="2.5" stroke-dasharray="3 3"/></svg>
-        <span style="font-size:11px;color:var(--text2)">L2TPv3</span>
+        <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="rgba(34,197,94,.7)" stroke-width="2.5" stroke-dasharray="3 3"/></svg>
+        <span style="font-size:11px;color:var(--text)">L2TPv3</span>
       </div>
+      <div style="font-size:9px;color:var(--text3);line-height:1.35;margin-top:2px;max-width:min(100vw - 48px, 320px)">LLDP: Linienfarbe = Portgeschwindigkeit (Stufen), wenn <strong style="color:var(--text2)">Traffic</strong> aktiv und Port zuordenbar.</div>
     </div>
     <div id="topo-detail" style="display:none;position:absolute;top:0;right:0;bottom:0;width:320px;background:var(--bg);border-left:1px solid var(--border);flex-direction:column;z-index:20;box-shadow:-6px 0 24px rgba(0,0,0,.45);">
       <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0">
@@ -964,15 +965,18 @@
         <option value="3">SNMPv3</option>
       </select>
     </div>
+    <div style="display:flex;justify-content:flex-end;margin:0 0 10px">
+      <button type="button" class="btn btn-sm btn-ghost" id="cfg-snmp-secrets-toggle" onclick="toggleCfgSnmpSecretsVisible()">Passwörter anzeigen</button>
+    </div>
 
     <div id="cfg-snmpv2-section" class="snmp-block snmp-block-v2">
       <div class="snmp-block-title">SNMPv2c</div>
       <p class="settings-hint snmp-block-lead">Zugang per Community-String (wird bei SNMPv3 nicht verwendet).</p>
       <div class="settings-grid">
         <label>Read Community</label>
-        <input class="settings-input" id="cfg-snmp-read" type="text">
+        <input class="settings-input" id="cfg-snmp-read" type="password" autocomplete="off">
         <label>Write Community</label>
-        <input class="settings-input" id="cfg-snmp-write" type="text">
+        <input class="settings-input" id="cfg-snmp-write" type="password" autocomplete="off">
       </div>
     </div>
 

@@ -14,7 +14,7 @@ Optional: Geräte-Import aus der LANCOM Management Cloud (LMC).
 
 | Tool | Zweck | Paket / Hinweis |
 |------|-------|------------------|
-| **Node.js** ≥ 18 (inkl. **npm**) | Laufzeit und Abhängigkeiten (`express`, `net-snmp`, `ws`, …) | NodeSource (siehe unten) |
+| **Node.js** ≥ 18 (inkl. **npm**) | Laufzeit und Abhängigkeiten (`express`, `net-snmp`, `ws`, `jspdf`, `html2canvas`, …) | NodeSource (siehe unten) |
 | **snmpget / snmpwalk / snmpbulkwalk** | SNMP-Abfragen (werden per Unterprozess genutzt) | `snmp` (apt) |
 | **curl** | NodeSource-Setup-Skript herunterladen | `curl` (apt) |
 | **git** | Quellcode holen / aktualisieren | `git` (apt) |
@@ -272,10 +272,10 @@ chmod +x scripte/start-onsite.sh
 | **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, Standort, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Filter nach Status und Standort. |
 | **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung, Standort-Spalte, Filter nach Status und Standort. |
 | **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Standort-Spalte, Filter nach Status und Standort. |
-| **Netzwerkplan** | Automatischer Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Baum-Layout mit Zoom/Pan/Drag. Standort-Filter und Standort-Anzeige auf jedem Node. |
+| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. |
 | **Scanner** | Subnetz oder IP-Bereich scannen und direkt importieren. Standort kann beim Import zugewiesen werden (vorhandener Standort wählen oder neuen eingeben). |
 | **LMC Import** | Geräteliste aus der LANCOM Management Cloud importieren – liest automatisch den Standort (`siteName`) aus. |
-| **Einstellungen** | SNMP Read/Write Community, SNMP-Version (v1/v2c), RSSI-Schwellwerte – serverseitig persistent. |
+| **Einstellungen** | SNMP (v2c/v3), Communities/Passwörter mit Anzeigen/Verbergen, RSSI-Schwellwerte – serverseitig persistent. |
 | **Gerät (Detail)** | System-Info, Interfaces, MAC/ARP-Tabelle, WLAN-Clients, LLDP-Nachbarn. |
 
 ### Sync-Aktionen (Tab „Geräte")
@@ -301,6 +301,12 @@ chmod +x scripte/start-onsite.sh
 ### Design & Bedienung
 
 - **Tag/Nacht-Modus:** Umschalter (☀️ / 🌙) in der Kopfzeile – Einstellung wird lokal gespeichert.
+
+### Versionshinweise (Auszug)
+
+| Version | Kurzüberblick |
+|---------|----------------|
+| **v0.11.0** | Netzwerkplan: PDF-Export (Karte + LLDP-Tabelle), Kantenfarbe nach Portgeschwindigkeit bei Traffic, Legende theme-konform; Blueprint-Ansicht entfernt. SNMP-Einstellungen: Passwörter/Communities einblenden. Frontend-Bundle inkl. `jspdf` / `html2canvas`. |
 
 ---
 

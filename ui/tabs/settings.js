@@ -10,6 +10,20 @@ export function toggleCfgDevicePasswordVisible() {
   btn.textContent = show ? 'Verbergen' : 'Anzeigen';
 }
 
+const SNMP_SECRET_FIELD_IDS = ['cfg-snmp-read', 'cfg-snmp-write', 'cfg-v3-authpass', 'cfg-v3-privpass'];
+
+export function toggleCfgSnmpSecretsVisible() {
+  const btn = q('cfg-snmp-secrets-toggle');
+  const first = q('cfg-snmp-read');
+  if (!first || !btn) return;
+  const show = first.type === 'password';
+  for (const id of SNMP_SECRET_FIELD_IDS) {
+    const el = q(id);
+    if (el) el.type = show ? 'text' : 'password';
+  }
+  btn.textContent = show ? 'Passwörter verbergen' : 'Passwörter anzeigen';
+}
+
 export function showCfgTab(name) {
   ['snmp','import','rssi','license','devpw','monitoring','alerts','scheduler','ai','grundwerte','traffic'].forEach(t => {
     const tab = q('cfgtab-'+t); if (tab) tab.classList.toggle('active', t===name);
@@ -185,6 +199,14 @@ export async function loadSettings() {
   q('cfg-v3-authpass').value  = S.appSettings.snmpV3AuthPassword  || '';
   q('cfg-v3-privproto').value = S.appSettings.snmpV3PrivProtocol  || 'AES';
   q('cfg-v3-privpass').value  = S.appSettings.snmpV3PrivPassword  || '';
+  {
+    const btn = q('cfg-snmp-secrets-toggle');
+    for (const id of SNMP_SECRET_FIELD_IDS) {
+      const el = q(id);
+      if (el) el.type = 'password';
+    }
+    if (btn) btn.textContent = 'Passwörter anzeigen';
+  }
   // Import-Filter
   const _fOS   = S.appSettings.filterOS   || [];
   const _fType = S.appSettings.filterType || [];

@@ -1127,18 +1127,6 @@ textarea.code-area::-webkit-scrollbar-corner { background: #111827; }
 .topo-select:focus { border-color: var(--focus-ring); }
 .topo-select option { background: var(--bg3); }
 
-/* Blueprint mode */
-#topo-container.bp-mode #topo-svg {
-  background: #0c1f36 !important;
-  background-image: radial-gradient(circle, rgba(99,160,255,.35) 1px, transparent 1px) !important;
-  background-size: 24px 24px !important;
-}
-@keyframes topo-dash-flow { to { stroke-dashoffset: -20; } }
-.topo-bp-flow {
-  animation: topo-dash-flow .55s linear infinite;
-  stroke-dasharray: 10 5;
-}
-
 /* ── Scripting ─────────────────────────────────────────────────────────────── */
 .scripting-layout {
   display: flex;
