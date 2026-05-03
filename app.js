@@ -41303,8 +41303,6 @@ Fehler: ${e2.message}`;
     for (const ent of topoLldpMap[hostIp] || []) {
       if (resolveTopoNeighbor(ent, hostIp) !== peerIp) continue;
       add(ent.localPortName);
-      add(ent.remPortId);
-      add(ent.remPortDesc);
     }
     const hostDev = state_default.deviceStore[hostIp];
     const peerDev = state_default.deviceStore[peerIp];
@@ -41355,6 +41353,7 @@ Fehler: ${e2.message}`;
     }
     const drop = /* @__PURE__ */ new Set();
     for (let i3 = 0; i3 < fdb.length; i3++) {
+      if (drop.has(i3)) continue;
       for (let j2 = i3 + 1; j2 < fdb.length; j2++) {
         if (drop.has(i3) || drop.has(j2)) continue;
         const A2 = fdb[i3], B2 = fdb[j2];
@@ -41362,7 +41361,13 @@ Fehler: ${e2.message}`;
         if (!ma || ma !== mb) continue;
         const eb = edgesBetween(A2.switchIp, B2.switchIp);
         if (!eb.length) continue;
-        if (eb.some((edge) => strictOk(A2, B2, edge))) drop.add(j2);
+        if (eb.some((edge) => strictOk(A2, B2, edge))) {
+          const aVis = !!topoNodes[A2.switchIp];
+          const bVis = !!topoNodes[B2.switchIp];
+          if (aVis && !bVis) drop.add(j2);
+          else if (!aVis && bVis) drop.add(i3);
+          else drop.add(j2);
+        }
       }
     }
     return rest.concat(fdb.filter((_3, i3) => !drop.has(i3)));

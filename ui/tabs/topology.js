@@ -415,8 +415,7 @@ function topoUplinkLabelCandidates(hostIp, peerIp, edge) {
   for (const ent of topoLldpMap[hostIp] || []) {
     if (resolveTopoNeighbor(ent, hostIp) !== peerIp) continue;
     add(ent.localPortName);
-    add(ent.remPortId);
-    add(ent.remPortDesc);
+    // remPortId / remPortDesc = Gegenstelle (Nachbar-Port), nicht lokales ifName → nicht für lokalen FDB-Abgleich
   }
   const hostDev = S.deviceStore[hostIp];
   const peerDev = S.deviceStore[peerIp];
@@ -477,6 +476,7 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
   }
   const drop = new Set();
   for (let i = 0; i < fdb.length; i++) {
+    if (drop.has(i)) continue;
     for (let j = i + 1; j < fdb.length; j++) {
       if (drop.has(i) || drop.has(j)) continue;
       const A = fdb[i], B = fdb[j];
@@ -484,7 +484,13 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
       if (!ma || ma !== mb) continue;
       const eb = edgesBetween(A.switchIp, B.switchIp);
       if (!eb.length) continue;
-      if (eb.some(edge => strictOk(A, B, edge))) drop.add(j);
+      if (eb.some(edge => strictOk(A, B, edge))) {
+        const aVis = !!topoNodes[A.switchIp];
+        const bVis = !!topoNodes[B.switchIp];
+        if (aVis && !bVis) drop.add(j);
+        else if (!aVis && bVis) drop.add(i);
+        else drop.add(j);
+      }
     }
   }
   return rest.concat(fdb.filter((_, i) => !drop.has(i)));

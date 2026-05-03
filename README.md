@@ -306,6 +306,7 @@ chmod +x scripte/start-onsite.sh
 
 | Version | Kurzüberblick |
 |---------|----------------|
+| **v0.11.6** | Netzwerkplan: MAC-/FDB-Dedupe entfernt immer den Treffer, der **nicht** im aktuellen Topologie-Graphen liegt (sonst verschwand das Overlay komplett). LLDP-Kandidaten ohne remPortId/remPortDesc der Gegenstelle (falsche lokale Treffer). |
 | **v0.11.5** | Netzwerkplan: MAC-/FDB-Uplink-Dedupe prüft pro Switch mehrere Port-Labels (LLDP zum Nachbarn, Kanten-Ports, FDB-Ports an denen Nachbar-MACs gelernt sind). |
 | **v0.11.4** | Netzwerkplan: MAC-/FDB-Uplink-Deduplizierung — LLDP-Gegenport oft als MAC; Kantenenden per Nachbar-LLDP auf ifName, etwas toleranteres Port-Matching. |
 | **v0.11.3** | Netzwerkplan: MAC-/FDB-Deduplizierung ohne „eine LLDP-Kante genügt“-Fallback (der echte Access-Port-Treffer neben dem Uplink verschwand). Weiterhin nur bei Port-Match zur Kante; fehlendes `dstPort` im Kantenobjekt wird aus LLDP des Nachbarn ergänzt. |
