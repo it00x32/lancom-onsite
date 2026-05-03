@@ -364,6 +364,26 @@ function topoPortNumTail(p) {
   return m ? parseInt(m[1], 10) : null;
 }
 
+/** Gleiche Regeln wie buildTopoGraph: Gerät erscheint im Netzwerkplan (für Dedupe-Priorität). */
+function topoIpShownInTopoPlan(ip) {
+  if (!ip || String(ip).startsWith('ghost_')) return false;
+  const d = S.deviceStore[ip];
+  if (!d || d.online === false) return false;
+  if (S.topoLocFilter !== 'all' && (d.location || '') !== S.topoLocFilter) return false;
+  if (S.topoHideAccessPoints && isTopoAccessPointType(d.type)) return false;
+  return true;
+}
+
+/** FDB-Portname vs. LLDP-/Uplink-Portbezeichnung (kein loses substring — verwechselt z. B. 1/11 mit 1/1). */
+function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
+  const lp = String(lldpPort || '').trim();
+  if (!lp) return false;
+  const a = topoPortNormKey(fdbPort), b = topoPortNormKey(lldpPort);
+  if (a && b && a === b) return true;
+  const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
+  return na !== null && nb !== null && na === nb;
+}
+
 /** Lokaler Portname auf hostIp zum Nachbarn neighborIp (ifName / LLDP). */
 function topoInferLocalPortTowardNeighbor(hostIp, neighborIp) {
   if (!hostIp || !neighborIp || String(neighborIp).startsWith('ghost_')) return '';
@@ -485,11 +505,17 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
       const eb = edgesBetween(A.switchIp, B.switchIp);
       if (!eb.length) continue;
       if (eb.some(edge => strictOk(A, B, edge))) {
-        const aVis = !!topoNodes[A.switchIp];
-        const bVis = !!topoNodes[B.switchIp];
-        if (aVis && !bVis) drop.add(j);
-        else if (!aVis && bVis) drop.add(i);
-        else drop.add(j);
+        const aPlan = topoIpShownInTopoPlan(A.switchIp);
+        const bPlan = topoIpShownInTopoPlan(B.switchIp);
+        const aNode = !!topoNodes[A.switchIp];
+        const bNode = !!topoNodes[B.switchIp];
+        if (aPlan && !bPlan) drop.add(j);
+        else if (!aPlan && bPlan) drop.add(i);
+        else if (aPlan && bPlan) {
+          if (aNode && !bNode) drop.add(j);
+          else if (!aNode && bNode) drop.add(i);
+          else drop.add(j);
+        } else drop.add(j);
       }
     }
   }

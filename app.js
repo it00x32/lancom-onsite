@@ -41259,6 +41259,26 @@ Fehler: ${e2.message}`;
   function topoIsMacLikePortLabel(s3) {
     return /^([0-9a-fA-F]{2}[:\- ]){5}[0-9a-fA-F]{2}$/.test(String(s3 || "").trim());
   }
+  function topoPortNumTail(p3) {
+    const m4 = String(p3 || "").match(/(\d+)\s*[a-z]?\s*$/i);
+    return m4 ? parseInt(m4[1], 10) : null;
+  }
+  function topoIpShownInTopoPlan(ip) {
+    if (!ip || String(ip).startsWith("ghost_")) return false;
+    const d2 = state_default.deviceStore[ip];
+    if (!d2 || d2.online === false) return false;
+    if (state_default.topoLocFilter !== "all" && (d2.location || "") !== state_default.topoLocFilter) return false;
+    if (state_default.topoHideAccessPoints && isTopoAccessPointType(d2.type)) return false;
+    return true;
+  }
+  function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
+    const lp = String(lldpPort || "").trim();
+    if (!lp) return false;
+    const a3 = topoPortNormKey(fdbPort), b2 = topoPortNormKey(lldpPort);
+    if (a3 && b2 && a3 === b2) return true;
+    const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
+    return na !== null && nb !== null && na === nb;
+  }
   function topoInferLocalPortTowardNeighbor(hostIp, neighborIp) {
     if (!hostIp || !neighborIp || String(neighborIp).startsWith("ghost_")) return "";
     for (const ent of topoLldpMap[hostIp] || []) {
@@ -41362,11 +41382,17 @@ Fehler: ${e2.message}`;
         const eb = edgesBetween(A2.switchIp, B2.switchIp);
         if (!eb.length) continue;
         if (eb.some((edge) => strictOk(A2, B2, edge))) {
-          const aVis = !!topoNodes[A2.switchIp];
-          const bVis = !!topoNodes[B2.switchIp];
-          if (aVis && !bVis) drop.add(j2);
-          else if (!aVis && bVis) drop.add(i3);
-          else drop.add(j2);
+          const aPlan = topoIpShownInTopoPlan(A2.switchIp);
+          const bPlan = topoIpShownInTopoPlan(B2.switchIp);
+          const aNode = !!topoNodes[A2.switchIp];
+          const bNode = !!topoNodes[B2.switchIp];
+          if (aPlan && !bPlan) drop.add(j2);
+          else if (!aPlan && bPlan) drop.add(i3);
+          else if (aPlan && bPlan) {
+            if (aNode && !bNode) drop.add(j2);
+            else if (!aNode && bNode) drop.add(i3);
+            else drop.add(j2);
+          } else drop.add(j2);
         }
       }
     }
