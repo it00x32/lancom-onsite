@@ -4,6 +4,7 @@ node_modules/
 /dist/
 license-myself*.json
 data/backups/
+data/devices.json
 # Lokaler Laufzeitstatus (nicht versionieren)
 data/alert-log.json
 data/license.json
