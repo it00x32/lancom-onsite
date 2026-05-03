@@ -41256,28 +41256,43 @@ Fehler: ${e2.message}`;
   function topoPortNormKey(p3) {
     return String(p3 || "").toLowerCase().replace(/\s+/g, "").replace(/[\-_]/g, "");
   }
+  function topoIsMacLikePortLabel(s3) {
+    return /^([0-9a-fA-F]{2}[:\- ]){5}[0-9a-fA-F]{2}$/.test(String(s3 || "").trim());
+  }
   function topoPortNumTail(p3) {
     const m4 = String(p3 || "").match(/(\d+)\s*[a-z]?\s*$/i);
     return m4 ? parseInt(m4[1], 10) : null;
+  }
+  function topoInferLocalPortTowardNeighbor(hostIp, neighborIp) {
+    if (!hostIp || !neighborIp || String(neighborIp).startsWith("ghost_")) return "";
+    for (const ent of topoLldpMap[hostIp] || []) {
+      if (resolveTopoNeighbor(ent, hostIp) === neighborIp && String(ent.localPortName || "").trim()) {
+        return String(ent.localPortName).trim();
+      }
+    }
+    return "";
+  }
+  function topoPortsForLldpEdge(edge) {
+    let sp = String(edge.srcPort || "").trim();
+    let dp = String(edge.dstPort || "").trim();
+    if (!sp || topoIsMacLikePortLabel(sp)) {
+      const t3 = topoInferLocalPortTowardNeighbor(edge.src, edge.tgt);
+      if (t3) sp = t3;
+    }
+    if (!dp || topoIsMacLikePortLabel(dp)) {
+      const t3 = topoInferLocalPortTowardNeighbor(edge.tgt, edge.src);
+      if (t3) dp = t3;
+    }
+    return { srcPort: sp, dstPort: dp };
   }
   function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
     const lp = String(lldpPort || "").trim();
     if (!lp) return false;
     const a3 = topoPortNormKey(fdbPort), b2 = topoPortNormKey(lldpPort);
     if (a3 && b2 && a3 === b2) return true;
+    if (a3 && b2 && Math.min(a3.length, b2.length) >= 4 && (a3.includes(b2) || b2.includes(a3))) return true;
     const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
     return na !== null && na === nb;
-  }
-  function topoEdgeWithInferredDst(edge) {
-    const dp = String(edge.dstPort || "").trim();
-    if (dp || String(edge.tgt || "").startsWith("ghost_")) return edge;
-    const tgt = edge.tgt, src = edge.src;
-    for (const ent of topoLldpMap[tgt] || []) {
-      if (resolveTopoNeighbor(ent, tgt) === src && String(ent.localPortName || "").trim()) {
-        return { ...edge, dstPort: ent.localPortName };
-      }
-    }
-    return edge;
   }
   function dedupeFdbMacAcrossKnownLldpLinks(results) {
     const known = new Set(Object.keys(state_default.deviceStore));
@@ -41296,11 +41311,11 @@ Fehler: ${e2.message}`;
       );
     }
     function strictOk(A2, B2, edge) {
-      const e2 = topoEdgeWithInferredDst(edge);
-      if (A2.switchIp === e2.src && B2.switchIp === e2.tgt) {
+      const e2 = topoPortsForLldpEdge(edge);
+      if (A2.switchIp === edge.src && B2.switchIp === edge.tgt) {
         return topoFdbPortMatchesLldp(A2.port, e2.srcPort) && topoFdbPortMatchesLldp(B2.port, e2.dstPort);
       }
-      if (A2.switchIp === e2.tgt && B2.switchIp === e2.src) {
+      if (A2.switchIp === edge.tgt && B2.switchIp === edge.src) {
         return topoFdbPortMatchesLldp(A2.port, e2.dstPort) && topoFdbPortMatchesLldp(B2.port, e2.srcPort);
       }
       return false;

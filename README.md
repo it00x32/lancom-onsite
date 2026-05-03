@@ -272,7 +272,7 @@ chmod +x scripte/start-onsite.sh
 | **Geräte** | Zentrale Geräteliste mit Online/Offline-Status, Standort, LLDP-Nachbarn, WDS- und L2TPv3-Verbindungsanzahl, MAC-Adressen. Filter nach Status und Standort. |
 | **WiFi Mesh** | Alle WDS-Links über alle LX Access Points – RSSI-Farbkodierung, Standort-Spalte, Filter nach Status und Standort. |
 | **L2TPv3** | Alle L2TP-Endpunkte über alle LX Access Points – UP/DOWN-Status, Standort-Spalte, Filter nach Status und Standort. |
-| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: doppelte FDB-Treffer nur dann zusammengefasst, wenn beide Ports zur selben LLDP-Kante passen (fehlendes Gegenport-Label im Graph wird aus LLDP des Zielgeräts nachgezogen). |
+| **Netzwerkplan** | Topologie-Graph aus LLDP-, WDS- und L2TPv3-Daten. BFS-Layout, Zoom/Pan/Drag, Standort-Filter. PDF-Export der aktuellen Ansicht inkl. LLDP-Tabelle. Bei aktivem **Traffic**-Modus: LLDP-Kantenfarbe nach Portgeschwindigkeit (Stufen). Legende an Hell-/Dunkeltheme angepasst. MAC-/IP-Suche: doppelte FDB-Treffer auf demselben LLDP-Uplink werden per Portabgleich zusammengefasst (Gegenport oft ifName statt MAC; abgestimmte Normalisierung). |
 | **Scanner** | Subnetz oder IP-Bereich scannen und direkt importieren. Standort kann beim Import zugewiesen werden (vorhandener Standort wählen oder neuen eingeben). |
 | **LMC Import** | Geräteliste aus der LANCOM Management Cloud importieren – liest automatisch den Standort (`siteName`) aus. |
 | **Einstellungen** | SNMP (v2c/v3), Communities/Passwörter mit Anzeigen/Verbergen, RSSI-Schwellwerte – serverseitig persistent. |
@@ -306,6 +306,7 @@ chmod +x scripte/start-onsite.sh
 
 | Version | Kurzüberblick |
 |---------|----------------|
+| **v0.11.4** | Netzwerkplan: MAC-/FDB-Uplink-Deduplizierung — LLDP-Gegenport oft als MAC gespeichert; für den Abgleich werden beide Kantenenden per Nachbar-LLDP auf `localPortName`/ifName aufgelöst, Port-Matching etwas toleranter (ohne v0.11.2-Ein-Kanten-Fallback). |
 | **v0.11.3** | Netzwerkplan: MAC-/FDB-Deduplizierung ohne „eine LLDP-Kante genügt“-Fallback (der echte Access-Port-Treffer neben dem Uplink verschwand). Weiterhin nur bei Port-Match zur Kante; fehlendes `dstPort` im Kantenobjekt wird aus LLDP des Nachbarn ergänzt. |
 | **v0.11.2** | Netzwerkplan: zu aggressive MAC-/FDB-Deduplizierung (Zwischenstand, durch v0.11.3 ersetzt). |
 | **v0.11.1** | Netzwerkplan: MAC-/IP-Suche blendet doppelte FDB-Treffer aus, wenn dieselbe MAC auf beiden Seiten einer LLDP-Verbindung zwischen zwei bekannten Geräten (passende Ports) erscheint. |

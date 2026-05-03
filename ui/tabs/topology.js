@@ -354,9 +354,40 @@ function topoPortNormKey(p) {
   return String(p || '').toLowerCase().replace(/\s+/g, '').replace(/[\-_]/g, '');
 }
 
+/** LLDP remPortId o.ä.: reine MAC → nicht mit FDB-ifName vergleichbar */
+function topoIsMacLikePortLabel(s) {
+  return /^([0-9a-fA-F]{2}[:\- ]){5}[0-9a-fA-F]{2}$/.test(String(s || '').trim());
+}
+
 function topoPortNumTail(p) {
   const m = String(p || '').match(/(\d+)\s*[a-z]?\s*$/i);
   return m ? parseInt(m[1], 10) : null;
+}
+
+/** Lokaler Portname auf hostIp zum Nachbarn neighborIp (ifName / LLDP). */
+function topoInferLocalPortTowardNeighbor(hostIp, neighborIp) {
+  if (!hostIp || !neighborIp || String(neighborIp).startsWith('ghost_')) return '';
+  for (const ent of topoLldpMap[hostIp] || []) {
+    if (resolveTopoNeighbor(ent, hostIp) === neighborIp && String(ent.localPortName || '').trim()) {
+      return String(ent.localPortName).trim();
+    }
+  }
+  return '';
+}
+
+/** Für FDB-Vergleich: sinnvolle srcPort/dstPort (MAC-artige / leere Gegenports per LLDP ersetzen). */
+function topoPortsForLldpEdge(edge) {
+  let sp = String(edge.srcPort || '').trim();
+  let dp = String(edge.dstPort || '').trim();
+  if (!sp || topoIsMacLikePortLabel(sp)) {
+    const t = topoInferLocalPortTowardNeighbor(edge.src, edge.tgt);
+    if (t) sp = t;
+  }
+  if (!dp || topoIsMacLikePortLabel(dp)) {
+    const t = topoInferLocalPortTowardNeighbor(edge.tgt, edge.src);
+    if (t) dp = t;
+  }
+  return { srcPort: sp, dstPort: dp };
 }
 
 /** FDB-Portname vs. LLDP-Portbezeichnung (gleicher logischer Port trotz unterschiedlicher Schreibweise) */
@@ -365,27 +396,15 @@ function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
   if (!lp) return false;
   const a = topoPortNormKey(fdbPort), b = topoPortNormKey(lldpPort);
   if (a && b && a === b) return true;
+  if (a && b && Math.min(a.length, b.length) >= 4 && (a.includes(b) || b.includes(a))) return true;
   const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
   return na !== null && na === nb;
 }
 
-/** Fehlendes edge.dstPort: lokaler Port des Ziels zum Nachbarn aus LLDP nachziehen (ohne striktes Matching oft leer). */
-function topoEdgeWithInferredDst(edge) {
-  const dp = String(edge.dstPort || '').trim();
-  if (dp || String(edge.tgt || '').startsWith('ghost_')) return edge;
-  const tgt = edge.tgt, src = edge.src;
-  for (const ent of topoLldpMap[tgt] || []) {
-    if (resolveTopoNeighbor(ent, tgt) === src && String(ent.localPortName || '').trim()) {
-      return { ...edge, dstPort: ent.localPortName };
-    }
-  }
-  return edge;
-}
-
 /**
  * Dieselbe MAC erscheint auf zwei Switches in der FDB typischerweise auf dem Uplink zueinander.
- * Nur wenn die FDB-Ports zu derselben LLDP-Kante passen (inkl. nachgezogenem Gegenport), einen Treffer weglassen.
- * Kein Fallback „eine Kante zwischen den Geräten“ — sonst verschwinden echte Access-Port-Treffer neben dem Uplink.
+ * Nur wenn die FDB-Ports zu derselben LLDP-Kante passen (Ports inkl. MAC-artigem Gegenport → ifName per LLDP),
+ * einen Treffer weglassen. Kein reiner „eine Kante genügt“-Fallback (Access-Port + Uplink).
  */
 function dedupeFdbMacAcrossKnownLldpLinks(results) {
   const known = new Set(Object.keys(S.deviceStore));
@@ -408,11 +427,11 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
     );
   }
   function strictOk(A, B, edge) {
-    const e = topoEdgeWithInferredDst(edge);
-    if (A.switchIp === e.src && B.switchIp === e.tgt) {
+    const e = topoPortsForLldpEdge(edge);
+    if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
       return topoFdbPortMatchesLldp(A.port, e.srcPort) && topoFdbPortMatchesLldp(B.port, e.dstPort);
     }
-    if (A.switchIp === e.tgt && B.switchIp === e.src) {
+    if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
       return topoFdbPortMatchesLldp(A.port, e.dstPort) && topoFdbPortMatchesLldp(B.port, e.srcPort);
     }
     return false;
