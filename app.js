@@ -41250,6 +41250,57 @@ Fehler: ${e2.message}`;
     const el = q("topo-status");
     if (el) el.textContent = msg;
   }
+  function topoMacNormKey(m4) {
+    return String(m4 || "").toLowerCase().replace(/[^0-9a-f]/g, "");
+  }
+  function topoPortNormKey(p3) {
+    return String(p3 || "").toLowerCase().replace(/\s+/g, "").replace(/[\-_]/g, "");
+  }
+  function topoPortNumTail(p3) {
+    const m4 = String(p3 || "").match(/(\d+)\s*[a-z]?\s*$/i);
+    return m4 ? parseInt(m4[1], 10) : null;
+  }
+  function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
+    const lp = String(lldpPort || "").trim();
+    if (!lp) return false;
+    const a3 = topoPortNormKey(fdbPort), b2 = topoPortNormKey(lldpPort);
+    if (a3 && b2 && a3 === b2) return true;
+    const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
+    return na !== null && na === nb;
+  }
+  function dedupeFdbMacAcrossKnownLldpLinks(results) {
+    const known = new Set(Object.keys(state_default.deviceStore));
+    const fdb = [];
+    const rest = [];
+    for (const r2 of results) {
+      if (r2.type === "fdb") fdb.push(r2);
+      else rest.push(r2);
+    }
+    const lldpEdges = topoEdges.filter(
+      (e2) => !e2.type && !String(e2.src).startsWith("ghost_") && !String(e2.tgt).startsWith("ghost_") && known.has(e2.src) && known.has(e2.tgt) && String(e2.srcPort || "").trim() && String(e2.dstPort || "").trim()
+    );
+    const drop = /* @__PURE__ */ new Set();
+    for (let i3 = 0; i3 < fdb.length; i3++) {
+      for (let j2 = i3 + 1; j2 < fdb.length; j2++) {
+        if (drop.has(i3) || drop.has(j2)) continue;
+        const A2 = fdb[i3], B2 = fdb[j2];
+        const ma = topoMacNormKey(A2.mac), mb = topoMacNormKey(B2.mac);
+        if (!ma || ma !== mb) continue;
+        const edge = lldpEdges.find(
+          (e2) => e2.src === A2.switchIp && e2.tgt === B2.switchIp || e2.src === B2.switchIp && e2.tgt === A2.switchIp
+        );
+        if (!edge) continue;
+        let ok = false;
+        if (A2.switchIp === edge.src && B2.switchIp === edge.tgt) {
+          ok = topoFdbPortMatchesLldp(A2.port, edge.srcPort) && topoFdbPortMatchesLldp(B2.port, edge.dstPort);
+        } else if (A2.switchIp === edge.tgt && B2.switchIp === edge.src) {
+          ok = topoFdbPortMatchesLldp(A2.port, edge.dstPort) && topoFdbPortMatchesLldp(B2.port, edge.srcPort);
+        }
+        if (ok) drop.add(j2);
+      }
+    }
+    return rest.concat(fdb.filter((_3, i3) => !drop.has(i3)));
+  }
   function searchTopoMac(val) {
     topoMacSearch = val.trim().toLowerCase();
     q("topo-mac-clear").style.display = topoMacSearch ? "" : "none";
@@ -41278,6 +41329,7 @@ Fehler: ${e2.message}`;
           }
         });
       });
+      topoMacResults = dedupeFdbMacAcrossKnownLldpLinks(topoMacResults);
     }
     renderTopoSvg();
     if (topoMacSearch.length >= 4) {

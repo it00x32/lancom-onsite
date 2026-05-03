@@ -345,6 +345,74 @@ function setTopoStatus(msg) {
   if (el) el.textContent = msg;
 }
 
+/** MAC nur hex/klein für Vergleich */
+function topoMacNormKey(m) {
+  return String(m || '').toLowerCase().replace(/[^0-9a-f]/g, '');
+}
+
+function topoPortNormKey(p) {
+  return String(p || '').toLowerCase().replace(/\s+/g, '').replace(/[\-_]/g, '');
+}
+
+function topoPortNumTail(p) {
+  const m = String(p || '').match(/(\d+)\s*[a-z]?\s*$/i);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/** FDB-Portname vs. LLDP-Portbezeichnung (gleicher logischer Port trotz unterschiedlicher Schreibweise) */
+function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
+  const lp = String(lldpPort || '').trim();
+  if (!lp) return false;
+  const a = topoPortNormKey(fdbPort), b = topoPortNormKey(lldpPort);
+  if (a && b && a === b) return true;
+  const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
+  return na !== null && na === nb;
+}
+
+/**
+ * Dieselbe MAC erscheint auf zwei Switches in der FDB typischerweise auf dem Uplink zueinander.
+ * Wenn es genau die LLDP-Kante zwischen zwei bekannten Geräten ist (Ports passen), einen Treffer weglassen.
+ */
+function dedupeFdbMacAcrossKnownLldpLinks(results) {
+  const known = new Set(Object.keys(S.deviceStore));
+  const fdb = [];
+  const rest = [];
+  for (const r of results) {
+    if (r.type === 'fdb') fdb.push(r);
+    else rest.push(r);
+  }
+  const lldpEdges = topoEdges.filter(e =>
+    !e.type
+    && !String(e.src).startsWith('ghost_')
+    && !String(e.tgt).startsWith('ghost_')
+    && known.has(e.src)
+    && known.has(e.tgt)
+    && String(e.srcPort || '').trim()
+    && String(e.dstPort || '').trim()
+  );
+  const drop = new Set();
+  for (let i = 0; i < fdb.length; i++) {
+    for (let j = i + 1; j < fdb.length; j++) {
+      if (drop.has(i) || drop.has(j)) continue;
+      const A = fdb[i], B = fdb[j];
+      const ma = topoMacNormKey(A.mac), mb = topoMacNormKey(B.mac);
+      if (!ma || ma !== mb) continue;
+      const edge = lldpEdges.find(e =>
+        (e.src === A.switchIp && e.tgt === B.switchIp) || (e.src === B.switchIp && e.tgt === A.switchIp)
+      );
+      if (!edge) continue;
+      let ok = false;
+      if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
+        ok = topoFdbPortMatchesLldp(A.port, edge.srcPort) && topoFdbPortMatchesLldp(B.port, edge.dstPort);
+      } else if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
+        ok = topoFdbPortMatchesLldp(A.port, edge.dstPort) && topoFdbPortMatchesLldp(B.port, edge.srcPort);
+      }
+      if (ok) drop.add(j);
+    }
+  }
+  return rest.concat(fdb.filter((_, i) => !drop.has(i)));
+}
+
 export function searchTopoMac(val) {
   topoMacSearch = val.trim().toLowerCase();
   q('topo-mac-clear').style.display = topoMacSearch ? '' : 'none';
@@ -378,6 +446,7 @@ export function searchTopoMac(val) {
         }
       });
     });
+    topoMacResults = dedupeFdbMacAcrossKnownLldpLinks(topoMacResults);
   }
   renderTopoSvg();
   if (topoMacSearch.length >= 4) {
