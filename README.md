@@ -306,7 +306,8 @@ chmod +x scripte/start-onsite.sh
 
 | Version | Kurzüberblick |
 |---------|----------------|
-| **v0.11.4** | Netzwerkplan: MAC-/FDB-Uplink-Deduplizierung — LLDP-Gegenport oft als MAC gespeichert; für den Abgleich werden beide Kantenenden per Nachbar-LLDP auf `localPortName`/ifName aufgelöst, Port-Matching etwas toleranter (ohne v0.11.2-Ein-Kanten-Fallback). |
+| **v0.11.5** | Netzwerkplan: MAC-/FDB-Uplink-Dedupe prüft pro Switch mehrere Port-Labels (LLDP zum Nachbarn, Kanten-Ports, FDB-Ports an denen Nachbar-MACs gelernt sind). |
+| **v0.11.4** | Netzwerkplan: MAC-/FDB-Uplink-Deduplizierung — LLDP-Gegenport oft als MAC; Kantenenden per Nachbar-LLDP auf ifName, etwas toleranteres Port-Matching. |
 | **v0.11.3** | Netzwerkplan: MAC-/FDB-Deduplizierung ohne „eine LLDP-Kante genügt“-Fallback (der echte Access-Port-Treffer neben dem Uplink verschwand). Weiterhin nur bei Port-Match zur Kante; fehlendes `dstPort` im Kantenobjekt wird aus LLDP des Nachbarn ergänzt. |
 | **v0.11.2** | Netzwerkplan: zu aggressive MAC-/FDB-Deduplizierung (Zwischenstand, durch v0.11.3 ersetzt). |
 | **v0.11.1** | Netzwerkplan: MAC-/IP-Suche blendet doppelte FDB-Treffer aus, wenn dieselbe MAC auf beiden Seiten einer LLDP-Verbindung zwischen zwei bekannten Geräten (passende Ports) erscheint. |
