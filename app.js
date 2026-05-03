@@ -41268,6 +41268,17 @@ Fehler: ${e2.message}`;
     const na = topoPortNumTail(fdbPort), nb = topoPortNumTail(lldpPort);
     return na !== null && na === nb;
   }
+  function topoEdgeWithInferredDst(edge) {
+    const dp = String(edge.dstPort || "").trim();
+    if (dp || String(edge.tgt || "").startsWith("ghost_")) return edge;
+    const tgt = edge.tgt, src = edge.src;
+    for (const ent of topoLldpMap[tgt] || []) {
+      if (resolveTopoNeighbor(ent, tgt) === src && String(ent.localPortName || "").trim()) {
+        return { ...edge, dstPort: ent.localPortName };
+      }
+    }
+    return edge;
+  }
   function dedupeFdbMacAcrossKnownLldpLinks(results) {
     const known = new Set(Object.keys(state_default.deviceStore));
     const fdb = [];
@@ -41285,11 +41296,12 @@ Fehler: ${e2.message}`;
       );
     }
     function strictOk(A2, B2, edge) {
-      if (A2.switchIp === edge.src && B2.switchIp === edge.tgt) {
-        return topoFdbPortMatchesLldp(A2.port, edge.srcPort) && topoFdbPortMatchesLldp(B2.port, edge.dstPort);
+      const e2 = topoEdgeWithInferredDst(edge);
+      if (A2.switchIp === e2.src && B2.switchIp === e2.tgt) {
+        return topoFdbPortMatchesLldp(A2.port, e2.srcPort) && topoFdbPortMatchesLldp(B2.port, e2.dstPort);
       }
-      if (A2.switchIp === edge.tgt && B2.switchIp === edge.src) {
-        return topoFdbPortMatchesLldp(A2.port, edge.dstPort) && topoFdbPortMatchesLldp(B2.port, edge.srcPort);
+      if (A2.switchIp === e2.tgt && B2.switchIp === e2.src) {
+        return topoFdbPortMatchesLldp(A2.port, e2.dstPort) && topoFdbPortMatchesLldp(B2.port, e2.srcPort);
       }
       return false;
     }
@@ -41302,9 +41314,7 @@ Fehler: ${e2.message}`;
         if (!ma || ma !== mb) continue;
         const eb = edgesBetween(A2.switchIp, B2.switchIp);
         if (!eb.length) continue;
-        const strict = eb.some((edge) => strictOk(A2, B2, edge));
-        if (strict) drop.add(j2);
-        else if (eb.length === 1) drop.add(j2);
+        if (eb.some((edge) => strictOk(A2, B2, edge))) drop.add(j2);
       }
     }
     return rest.concat(fdb.filter((_3, i3) => !drop.has(i3)));

@@ -369,11 +369,23 @@ function topoFdbPortMatchesLldp(fdbPort, lldpPort) {
   return na !== null && na === nb;
 }
 
+/** Fehlendes edge.dstPort: lokaler Port des Ziels zum Nachbarn aus LLDP nachziehen (ohne striktes Matching oft leer). */
+function topoEdgeWithInferredDst(edge) {
+  const dp = String(edge.dstPort || '').trim();
+  if (dp || String(edge.tgt || '').startsWith('ghost_')) return edge;
+  const tgt = edge.tgt, src = edge.src;
+  for (const ent of topoLldpMap[tgt] || []) {
+    if (resolveTopoNeighbor(ent, tgt) === src && String(ent.localPortName || '').trim()) {
+      return { ...edge, dstPort: ent.localPortName };
+    }
+  }
+  return edge;
+}
+
 /**
  * Dieselbe MAC erscheint auf zwei Switches in der FDB typischerweise auf dem Uplink zueinander.
- * Wenn es die LLDP-Kante zwischen zwei bekannten Geräten ist, einen Treffer weglassen:
- * zuerst strikt (Ports passen zu LLDP), sonst Fallback nur bei genau einer LLDP-Kante zwischen dem Paar
- * (z. B. fehlendes dstPort oder abweichende FDB-Portbezeichnung).
+ * Nur wenn die FDB-Ports zu derselben LLDP-Kante passen (inkl. nachgezogenem Gegenport), einen Treffer weglassen.
+ * Kein Fallback „eine Kante zwischen den Geräten“ — sonst verschwinden echte Access-Port-Treffer neben dem Uplink.
  */
 function dedupeFdbMacAcrossKnownLldpLinks(results) {
   const known = new Set(Object.keys(S.deviceStore));
@@ -396,11 +408,12 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
     );
   }
   function strictOk(A, B, edge) {
-    if (A.switchIp === edge.src && B.switchIp === edge.tgt) {
-      return topoFdbPortMatchesLldp(A.port, edge.srcPort) && topoFdbPortMatchesLldp(B.port, edge.dstPort);
+    const e = topoEdgeWithInferredDst(edge);
+    if (A.switchIp === e.src && B.switchIp === e.tgt) {
+      return topoFdbPortMatchesLldp(A.port, e.srcPort) && topoFdbPortMatchesLldp(B.port, e.dstPort);
     }
-    if (A.switchIp === edge.tgt && B.switchIp === edge.src) {
-      return topoFdbPortMatchesLldp(A.port, edge.dstPort) && topoFdbPortMatchesLldp(B.port, edge.srcPort);
+    if (A.switchIp === e.tgt && B.switchIp === e.src) {
+      return topoFdbPortMatchesLldp(A.port, e.dstPort) && topoFdbPortMatchesLldp(B.port, e.srcPort);
     }
     return false;
   }
@@ -413,9 +426,7 @@ function dedupeFdbMacAcrossKnownLldpLinks(results) {
       if (!ma || ma !== mb) continue;
       const eb = edgesBetween(A.switchIp, B.switchIp);
       if (!eb.length) continue;
-      const strict = eb.some(edge => strictOk(A, B, edge));
-      if (strict) drop.add(j);
-      else if (eb.length === 1) drop.add(j);
+      if (eb.some(edge => strictOk(A, B, edge))) drop.add(j);
     }
   }
   return rest.concat(fdb.filter((_, i) => !drop.has(i)));
