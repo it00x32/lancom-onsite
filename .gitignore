@@ -3,6 +3,8 @@ node_modules/
 *.original
 /dist/
 license-myself*.json
+# Lokale SNMP-/UI-Einstellungen (nicht versionieren — Vorlage: data/settings.example.json)
+data/settings.json
 data/backups/
 data/devices.json
 # Lokaler Laufzeitstatus (nicht versionieren)

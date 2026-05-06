@@ -81,6 +81,14 @@ cd onsite
 npm install --omit=dev
 ```
 
+**Einstellungen (SNMP, …):** `data/settings.json` liegt **nicht** im Repository (lokal / geheim). Beim **ersten** Setup aus der Vorlage anlegen — vorhandene Datei wird **nicht** überschrieben (`cp -n`):
+
+```bash
+cp -n data/settings.example.json data/settings.json
+```
+
+Fehlt die Datei, nutzt der Server die **Standardwerte** aus dem Code (`src/data.js`); die UI speichert beim ersten Speichern eine echte `data/settings.json`.
+
 Das Repository enthält ein **vorgebündeltes** `app.js` (esbuild aus `ui/`). Für einen reinen Betrieb reicht **`npm install --omit=dev`** meist aus.
 
 **Nach einem `git pull`, der `ui/` oder die Bundling-Konfiguration ändert**, das Frontend neu bauen und den Server neu starten:
@@ -156,6 +164,8 @@ Voraussetzung: OnSite wurde wie unter [Installation (Ubuntu / Debian)](#installa
    *(Wenn euer lokaler Branch bereits `origin/master` trackt, reicht oft **`git pull`**.)*
 
    **Hinweis:** Lokale Änderungen an getrackten Dateien können zu Merge-Konflikten führen — vorher mit `git status` prüfen; eigene Anpassungen ggf. committen, stashen oder sichern.
+
+   **`data/settings.json`:** Ab Versionen, die diese Datei **aus dem Repository entfernen**, kann `git pull` die **getrackte** Kopie im Arbeitsverzeichnis löschen. Vor dem Update **sichern** (`cp data/settings.json ~/backup-onsite-settings.json`), nach dem Pull bei Bedarf zurückspielen — die Datei ist **gitignore** und wird nicht überschrieben, solange ihr sie nach dem Pull wieder anlegt bzw. aus dem Backup kopiert.
 
 4. **Abhängigkeiten und Frontend-Build:** `npm install` zieht auch **esbuild** (devDependency), das für den Build nötig ist. **`npm run build`** erzeugt das gebündelte **`app.js`** aus `ui/`. Nach jedem Update zur Sicherheit ausführen (auch wenn sich nur das Backend geändert hat — schadet nicht):
 
@@ -359,7 +369,8 @@ Standard: alle Laufzeitdaten unter **`data/`** im Projektverzeichnis (lokal, nic
 
 | Datei / Bereich | Inhalt (Auszug) |
 |-----------------|-------------------|
-| `data/settings.json` | SNMP-Einstellungen, RSSI-Schwellwerte, … |
+| `data/settings.example.json` | **Vorlage** für SNMP/UI-Einstellungen (ohne Geheimnisse) → lokal nach `data/settings.json` kopieren |
+| `data/settings.json` | **Lokal**, nicht im Git — SNMP-Communities, v3-Passwörter, Gerätepasswort, … |
 | `data/devices.json` | Geräteliste, LLDP/WDS/L2TP, Standorte |
 | weitere JSON-Dateien | Traps, Monitoring, NAC, Roaming, … je nach Nutzung |
 

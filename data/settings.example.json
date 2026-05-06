@@ -1,0 +1,110 @@
+{
+  "snmpReadCommunity": "public",
+  "snmpWriteCommunity": "private",
+  "snmpVersion": "2c",
+  "rssiGreen": 80,
+  "rssiYellow": 50,
+  "rssiOrange": 0,
+  "lastScanSubnet": "",
+  "snmpV3SecurityName": "",
+  "snmpV3SecurityLevel": "authPriv",
+  "snmpV3AuthProtocol": "SHA",
+  "snmpV3AuthPassword": "",
+  "snmpV3PrivProtocol": "AES",
+  "snmpV3PrivPassword": "",
+  "filterOS": [],
+  "filterType": [],
+  "lmcHost": "cloud.lancom.de",
+  "alertsEnabled": false,
+  "alertCooldownSec": 300,
+  "alertMonitorIntervalMin": 5,
+  "alertEmail": {
+    "enabled": false,
+    "host": "",
+    "port": 587,
+    "secure": false,
+    "user": "",
+    "pass": "",
+    "from": "",
+    "to": ""
+  },
+  "alertWebhook": {
+    "enabled": false,
+    "url": "",
+    "type": "generic"
+  },
+  "alertTelegram": {
+    "enabled": false,
+    "botToken": "",
+    "chatId": "",
+    "silent": false
+  },
+  "alertRules": {
+    "offline": true,
+    "online": true,
+    "trap": false,
+    "trapFilter": "",
+    "tempThreshold": 0,
+    "loop": true
+  },
+  "scheduledScanHours": 0,
+  "scheduledScanSubnet": "",
+  "scheduledAutoSave": false,
+  "aiProvider": "gemini",
+  "aiEndpoint": "",
+  "aiApiKey": "",
+  "aiModel": "",
+  "trafficPollInterval": 60,
+  "trafficHistoryEnabled": true,
+  "trafficRetentionHours": 24,
+  "trafficAutoStart": false,
+  "trafficWarnThreshold": 80,
+  "devicePassword": "",
+  "autoSyncMinutes": 0,
+  "notifyOffline": false,
+  "powerPricePerKwh": 0.3,
+  "filterOSOptions": [
+    {
+      "v": "LCOS",
+      "on": false
+    },
+    {
+      "v": "LCOS LX",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 3",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 4",
+      "on": false
+    },
+    {
+      "v": "LCOS SX 5",
+      "on": false
+    },
+    {
+      "v": "LCOS FX",
+      "on": false
+    }
+  ],
+  "filterTypeOptions": [
+    {
+      "v": "Router",
+      "on": false
+    },
+    {
+      "v": "Access Point",
+      "on": false
+    },
+    {
+      "v": "Switch",
+      "on": false
+    },
+    {
+      "v": "Firewall",
+      "on": false
+    }
+  ]
+}

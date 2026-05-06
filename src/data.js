@@ -65,6 +65,24 @@ const DEFAULT_SETTINGS = {
   trafficRetentionHours: 24,
   trafficAutoStart: false,
   trafficWarnThreshold: 80,
+  devicePassword: '',
+  autoSyncMinutes: 0,
+  notifyOffline: false,
+  powerPricePerKwh: 0.3,
+  filterOSOptions: [
+    { v: 'LCOS', on: false },
+    { v: 'LCOS LX', on: false },
+    { v: 'LCOS SX 3', on: false },
+    { v: 'LCOS SX 4', on: false },
+    { v: 'LCOS SX 5', on: false },
+    { v: 'LCOS FX', on: false },
+  ],
+  filterTypeOptions: [
+    { v: 'Router', on: false },
+    { v: 'Access Point', on: false },
+    { v: 'Switch', on: false },
+    { v: 'Firewall', on: false },
+  ],
 };
 
 let _settingsCache  = null;
