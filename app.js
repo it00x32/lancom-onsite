@@ -40896,6 +40896,118 @@ Fehler: ${e2.message}`;
 
   // ui/tabs/topology.js
   var import_html2canvas = __toESM(require_html2canvas());
+  var ONSITE_PDF = {
+    marginMm: 10,
+    titlePt: 12,
+    metaPt: 9,
+    metaRgb: [71, 85, 105],
+    titleRgb: [15, 23, 42],
+    captureBg: "#eef2f7",
+    tableBodyPt: 7,
+    tableHeadPt: 7.5,
+    tablePadMm: 1,
+    headFill: [37, 99, 235]
+  };
+  function onsitePdfNewDoc() {
+    const doc = new E({ unit: "mm", format: "a4", orientation: "landscape" });
+    doc.setFont("helvetica", "normal");
+    return doc;
+  }
+  function onsitePdfDrawCoverHeader(doc, title, metaLines) {
+    const m4 = ONSITE_PDF.marginMm;
+    const [tr, tg, tb] = ONSITE_PDF.titleRgb;
+    const [mr, mg, mb] = ONSITE_PDF.metaRgb;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(ONSITE_PDF.titlePt);
+    doc.setTextColor(tr, tg, tb);
+    doc.text(title, m4, m4 + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(ONSITE_PDF.metaPt);
+    doc.setTextColor(mr, mg, mb);
+    let y3 = m4 + 6 + 5;
+    for (const line of metaLines) {
+      if (line) {
+        doc.text(line, m4, y3);
+        y3 += 4.2;
+      }
+    }
+    doc.setTextColor(0, 0, 0);
+    return y3 + 2.5;
+  }
+  function onsitePdfHtml2canvasOpts() {
+    return {
+      scale: 2,
+      backgroundColor: ONSITE_PDF.captureBg,
+      logging: false,
+      useCORS: true,
+      allowTaint: true
+    };
+  }
+  function onsitePdfAddScreenshot(doc, imgData, imgTopY) {
+    const m4 = ONSITE_PDF.marginMm;
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const maxW = pageW - 2 * m4;
+    const maxH = pageH - imgTopY - m4;
+    const imgProps = doc.getImageProperties(imgData);
+    let w2 = maxW;
+    let h4 = imgProps.height * w2 / imgProps.width;
+    if (h4 > maxH) {
+      h4 = maxH;
+      w2 = imgProps.width * h4 / imgProps.height;
+    }
+    doc.addImage(imgData, "PNG", m4, imgTopY, w2, h4);
+  }
+  function onsitePdfRunAutoTable(doc, head, body, startY) {
+    const m4 = ONSITE_PDF.marginMm;
+    const y0 = startY != null ? startY : m4 + 7;
+    const [hr, hg, hb] = ONSITE_PDF.headFill;
+    autoTable(doc, {
+      head,
+      body,
+      startY: y0,
+      styles: {
+        fontSize: ONSITE_PDF.tableBodyPt,
+        cellPadding: ONSITE_PDF.tablePadMm,
+        overflow: "linebreak",
+        lineColor: [226, 232, 240],
+        lineWidth: 0.05,
+        textColor: [30, 41, 59]
+      },
+      headStyles: {
+        fillColor: [hr, hg, hb],
+        textColor: 255,
+        fontStyle: "bold",
+        fontSize: ONSITE_PDF.tableHeadPt,
+        cellPadding: ONSITE_PDF.tablePadMm + 0.15
+      },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: m4, right: m4, top: m4 },
+      tableLineWidth: 0.12,
+      tableLineColor: [203, 213, 225]
+    });
+  }
+  function onsitePdfSecondPageIntro(doc, line) {
+    const m4 = ONSITE_PDF.marginMm;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(ONSITE_PDF.metaPt + 0.5);
+    doc.setTextColor(ONSITE_PDF.titleRgb[0], ONSITE_PDF.titleRgb[1], ONSITE_PDF.titleRgb[2]);
+    doc.text(line, m4, m4 + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+  }
+  function onsitePdfSecondPageEmptyMsg(doc, message, startY) {
+    const m4 = ONSITE_PDF.marginMm;
+    const [mr, mg, mb] = ONSITE_PDF.metaRgb;
+    const pageW = doc.internal.pageSize.getWidth();
+    const y0 = startY != null ? startY : m4 + 12;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(mr, mg, mb);
+    const lines = doc.splitTextToSize(message, pageW - 2 * m4);
+    doc.text(lines, m4, y0);
+    doc.setTextColor(0, 0, 0);
+  }
   var topoNodes = {};
   var topoEdges = [];
   var topoLldpMap = {};
@@ -41390,7 +41502,7 @@ Fehler: ${e2.message}`;
     const W2 = 120, H2 = 36, step = W2 / (pts.length - 1);
     const spark = (key2) => pts.map((p3, i3) => `${(i3 * step).toFixed(1)},${(H2 - p3[key2] / MAX * H2).toFixed(1)}`).join(" ");
     const util = iface.utilPct.toFixed(1);
-    const spd = iface.speedBps ? ` \xB7 ${formatBps(iface.speedBps)}` : "";
+    const speedLine = iface.speedBps ? `<span style="color:#94a3b8;grid-column:1/-1">${h(formatBps(iface.speedBps))}</span>` : "";
     const devName = state_default.deviceStore[src]?.name || src;
     const histKey = `${src}|${srcPort}`;
     const hist2 = trafficHistory[histKey] || [];
@@ -41408,7 +41520,8 @@ Fehler: ${e2.message}`;
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
       <span style="color:#f97316">TX: ${h(formatBps(iface.outBps))}</span>
       <span style="color:#22c55e">RX: ${h(formatBps(iface.inBps))}</span>
-      <span style="color:#94a3b8;grid-column:1/-1">${util}% Auslastung${h(spd)}</span>
+      ${speedLine}
+      <span style="color:#94a3b8;grid-column:1/-1">${util}% Auslastung</span>
     </div>`;
     tt2.style.display = "block";
     tt2.style.left = event.clientX + 16 + "px";
@@ -41500,6 +41613,10 @@ Fehler: ${e2.message}`;
           const ts2 = `text-anchor="middle" font-size="8" font-weight="700" font-family="monospace,system-ui" paint-order="stroke" stroke="${tt2.portStroke}" stroke-width="3"`;
           svg2 += `<text x="${lx.toFixed(1)}" y="${(ly - 6).toFixed(1)}" ${ts2} fill="#f97316">TX ${h(formatBps(iface.outBps))}</text>`;
           svg2 += `<text x="${lx.toFixed(1)}" y="${(ly + 5).toFixed(1)}" ${ts2} fill="#22c55e">RX ${h(formatBps(iface.inBps))}</text>`;
+          if (iface.speedBps > 0) {
+            const tss = `text-anchor="middle" font-size="7" font-weight="600" font-family="monospace,system-ui" paint-order="stroke" stroke="${tt2.portStroke}" stroke-width="2.5"`;
+            svg2 += `<text x="${lx.toFixed(1)}" y="${(ly + 15).toFixed(1)}" ${tss} fill="#94a3b8">${h(formatBps(iface.speedBps))}</text>`;
+          }
         }
       }
       const ts = `font-size="10" font-weight="600" fill="${tt2.nodePort}" font-family="system-ui,sans-serif" paint-order="stroke" stroke="${tt2.portStroke}" stroke-width="4" stroke-linejoin="round" dominant-baseline="middle"`;
@@ -41678,11 +41795,12 @@ Fehler: ${e2.message}`;
           <span style="font-weight:600;color:var(--text1)">${h(other?.name || otherId)}</span>
           <span style="color:var(--text3)">${h(myPort || "\u2013")}</span>
         </div>
-        <div style="display:flex;gap:12px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:baseline">
           <span style="color:#f97316">TX: ${h(formatBps(txBps))}</span>
           <span style="color:#22c55e">RX: ${h(formatBps(rxBps))}</span>
           <span style="color:#64748b">${iface.utilPct.toFixed(1)}%</span>
         </div>
+        ${iface.speedBps > 0 ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">${h(formatBps(iface.speedBps))}</div>` : ""}
       </div>`;
       });
       if (trafficRows) {
@@ -42045,9 +42163,7 @@ Fehler: ${e2.message}`;
       alert(e2.message || "Entfernen fehlgeschlagen");
     }
   }
-  function renderClients() {
-    ensureNacAllowlistLoaded();
-    bindClientsNacClickOnce();
+  function getExplorerFilteredContext() {
     const srch = (q("clients-search")?.value || "").toLowerCase();
     const filtered = state_default.clientsData.filter((r2) => {
       if (state_default.clientsFilter !== "all" && r2.type !== state_default.clientsFilter) return false;
@@ -42057,6 +42173,18 @@ Fehler: ${e2.message}`;
       }
       return true;
     });
+    const portMacCount = {};
+    state_default.clientsData.filter((r2) => r2.type === "fdb" && r2.port).forEach((r2) => {
+      const key = (r2.sourceName || "") + "|" + r2.port;
+      portMacCount[key] = (portMacCount[key] || 0) + 1;
+    });
+    const uplinkThreshold = parseInt(q("uplink-threshold")?.value, 10) || 3;
+    return { filtered, portMacCount, uplinkThreshold };
+  }
+  function renderClients() {
+    ensureNacAllowlistLoaded();
+    bindClientsNacClickOnce();
+    const { filtered, portMacCount, uplinkThreshold: UPLINK_THRESHOLD } = getExplorerFilteredContext();
     const tbody = q("tbl-clients")?.querySelector("tbody");
     if (!tbody) return;
     setBadge("clients", state_default.clientsData.length || null);
@@ -42065,12 +42193,6 @@ Fehler: ${e2.message}`;
       tbody.innerHTML = `<tr><td colspan="11" class="empty">${state_default.clientsData.length ? "Keine Eintr\xE4ge f\xFCr diesen Filter" : '\u201EWLAN Clients" im Ger\xE4te-Tab starten um Daten zu laden'}</td></tr>`;
       return;
     }
-    const portMacCount = {};
-    state_default.clientsData.filter((r2) => r2.type === "fdb" && r2.port).forEach((r2) => {
-      const key = (r2.sourceName || "") + "|" + r2.port;
-      portMacCount[key] = (portMacCount[key] || 0) + 1;
-    });
-    const UPLINK_THRESHOLD = parseInt(q("uplink-threshold")?.value, 10) || 3;
     tbody.innerHTML = filtered.map((r2) => {
       const typeTag = r2.type === "wlan" ? `<span class="badge badge-blue">WLAN</span>` : `<span class="badge badge-gray">Switch-MAC</span>`;
       const sig = r2.signal != null && r2.signal !== "" ? parseInt(r2.signal) : null;
@@ -42427,32 +42549,14 @@ Fehler: ${e2.message}`;
         st2.className = "status-bar";
         st2.textContent = "PDF wird erstellt\u2026";
       }
-      const bgVar = getComputedStyle(document.documentElement).getPropertyValue("--bg2").trim();
-      const canvas = await (0, import_html2canvas.default)(ctr, {
-        scale: 2,
-        backgroundColor: bgVar || "#f0f4f8",
-        logging: false,
-        useCORS: true,
-        allowTaint: true
-      });
+      const canvas = await (0, import_html2canvas.default)(ctr, onsitePdfHtml2canvasOpts());
       const imgData = canvas.toDataURL("image/png");
-      const doc = new E({ unit: "mm", format: "a4", orientation: "landscape" });
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 10;
-      doc.setFontSize(11);
-      doc.text("OnSite \u2013 Netzwerkplan", margin, margin + 4);
-      const imgTop = margin + 12;
-      const maxW = pageW - 2 * margin;
-      const maxH = pageH - imgTop - margin;
-      const imgProps = doc.getImageProperties(imgData);
-      let w2 = maxW;
-      let h4 = imgProps.height * w2 / imgProps.width;
-      if (h4 > maxH) {
-        h4 = maxH;
-        w2 = imgProps.width * h4 / imgProps.height;
-      }
-      doc.addImage(imgData, "PNG", margin, imgTop, w2, h4);
+      const doc = onsitePdfNewDoc();
+      const tsHuman = (/* @__PURE__ */ new Date()).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
+      const imgTop = onsitePdfDrawCoverHeader(doc, "OnSite \u2013 Netzwerkplan", [
+        `Kartenansicht \xB7 ${tsHuman}`
+      ]);
+      onsitePdfAddScreenshot(doc, imgData, imgTop);
       const head = [[
         "Quellger\xE4t",
         "Quell-IP",
@@ -42468,21 +42572,128 @@ Fehler: ${e2.message}`;
       ]];
       const body = collectTopoLldpTableBody();
       doc.addPage("a4", "landscape");
+      onsitePdfSecondPageIntro(doc, "LLDP-Detailtabelle (alle Ger\xE4te)");
       if (!body.length) {
-        doc.setFontSize(10);
-        doc.text("Keine LLDP-Daten in der Ger\xE4teliste \u2013 bitte unter Ger\xE4te \u201ELLDP\u201C synchronisieren.", margin, margin + 8);
+        onsitePdfSecondPageEmptyMsg(
+          doc,
+          "Keine LLDP-Daten in der Ger\xE4teliste \u2013 bitte unter Ger\xE4te \u201ELLDP\u201C synchronisieren.",
+          ONSITE_PDF.marginMm + 11
+        );
       } else {
-        autoTable(doc, {
-          head,
-          body,
-          startY: margin + 2,
-          styles: { fontSize: 6.5, cellPadding: 0.8, overflow: "linebreak" },
-          headStyles: { fillColor: [37, 99, 235], fontSize: 7 },
-          margin: { left: margin, right: margin, top: margin }
-        });
+        onsitePdfRunAutoTable(doc, head, body, ONSITE_PDF.marginMm + 10);
       }
       const ts = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").slice(0, 19);
       doc.save(`netzwerkplan-${ts}.pdf`);
+      if (st2) {
+        st2.className = "status-bar ok";
+        st2.textContent = "PDF gespeichert.";
+        setTimeout(clearSt, 5e3);
+      }
+    } catch (e2) {
+      console.error(e2);
+      setErr("Fehler: " + (e2.message || String(e2)));
+    }
+  }
+  function collectClientsPdfTableBody(filtered, portMacCount, uplinkThreshold) {
+    const rows = [];
+    for (const r2 of filtered) {
+      const portKey = (r2.sourceName || "") + "|" + r2.port;
+      const isUplink = r2.type === "fdb" && r2.port && (portMacCount[portKey] || 0) >= uplinkThreshold;
+      let ssidPort = "\u2014";
+      if (r2.type === "wlan") ssidPort = r2.ssid || "\u2014";
+      else if (r2.port) ssidPort = r2.port + (isUplink ? ` (${portMacCount[portKey]} MACs, Uplink)` : "");
+      const chanStr = r2.channel ? r2.chanWidth ? `CH ${r2.channel} (${String(r2.chanWidth)})` : `CH ${r2.channel}` : "\u2014";
+      const sig = r2.type === "wlan" && r2.signal != null && r2.signal !== "" ? parseInt(r2.signal, 10) : null;
+      const sigStr = sig !== null && !Number.isNaN(sig) ? `${sig} dBm` : "\u2014";
+      const nacEntry = lookupNacEntry(r2.mac);
+      let nacLabel = "\u2014";
+      let nacList = "nicht freigegeben";
+      if (nacEntry) {
+        nacList = "freigegeben";
+        const labelTrim = String(nacEntry.label || "").trim();
+        if (labelTrim) nacLabel = labelTrim + (nacEntry.vlan != null && nacEntry.vlan !== "" ? ` (VLAN ${nacEntry.vlan})` : "");
+        else nacLabel = "(ohne Bezeichnung)";
+      }
+      rows.push([
+        r2.sourceName || "",
+        r2.type === "wlan" ? "WLAN" : "Switch-MAC",
+        r2.mac || "",
+        r2.ip || "\u2014",
+        r2.hostname || "\u2014",
+        ssidPort,
+        r2.band || "\u2014",
+        r2.type === "wlan" ? chanStr : "\u2014",
+        sigStr,
+        nacLabel,
+        nacList
+      ]);
+    }
+    return rows;
+  }
+  async function exportClientsPdf() {
+    const st2 = q("clients-pdf-status");
+    const setErr = (msg) => {
+      if (st2) {
+        st2.className = "status-bar error";
+        st2.textContent = msg;
+      } else alert(msg);
+    };
+    const clearSt = () => {
+      if (st2) {
+        st2.textContent = "";
+        st2.className = "status-bar";
+      }
+    };
+    try {
+      ensureNacAllowlistLoaded();
+      if (nacAllowlistFetchPromise) {
+        await nacAllowlistFetchPromise.catch(() => {
+        });
+      }
+      renderClients();
+      await new Promise((r2) => requestAnimationFrame(() => requestAnimationFrame(r2)));
+      if (!q("tbl-clients")) {
+        setErr("Client Explorer nicht gefunden.");
+        return;
+      }
+      if (st2) {
+        st2.className = "status-bar";
+        st2.textContent = "PDF wird erstellt\u2026";
+      }
+      const { filtered, portMacCount, uplinkThreshold } = getExplorerFilteredContext();
+      const body = collectClientsPdfTableBody(filtered, portMacCount, uplinkThreshold);
+      const head = [[
+        "Quelle",
+        "Typ",
+        "MAC-Adresse",
+        "IP-Adresse",
+        "Hostname",
+        "SSID / Port",
+        "Band",
+        "Kanal",
+        "Signal",
+        "NAC-Bezeichnung",
+        "NAC-Liste"
+      ]];
+      const doc = onsitePdfNewDoc();
+      const filterLabel = state_default.clientsFilter === "all" ? "Alle" : state_default.clientsFilter === "wlan" ? "WLAN" : "Switch-MAC";
+      const srchRaw = (q("clients-search")?.value || "").trim();
+      const tsHuman = (/* @__PURE__ */ new Date()).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
+      const tableStartY = onsitePdfDrawCoverHeader(doc, "OnSite \u2013 Client Explorer", [
+        `Filter: ${filterLabel}${srchRaw ? ` \xB7 Suche: \u201E${srchRaw}"` : ""}`,
+        `Export \xB7 ${tsHuman}`
+      ]);
+      if (!body.length) {
+        onsitePdfSecondPageEmptyMsg(
+          doc,
+          state_default.clientsData.length ? "Keine Eintr\xE4ge f\xFCr den aktuellen Filter \u2013 Filter oder Suche anpassen." : "Keine Client-Daten \u2013 zuerst \u201EWLAN Clients\u201C im Ger\xE4te-Tab oder Switch-MAC synchronisieren.",
+          tableStartY + 2
+        );
+      } else {
+        onsitePdfRunAutoTable(doc, head, body, tableStartY);
+      }
+      const ts = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      doc.save(`client-explorer-${ts}.pdf`);
       if (st2) {
         st2.className = "status-bar ok";
         st2.textContent = "PDF gespeichert.";
@@ -46491,6 +46702,7 @@ Fortfahren?`)) return;
   window.topoSetRootFromDetail = topoSetRootFromDetail;
   window.topoCloseDetail = topoCloseDetail;
   window.exportTopoPdf = exportTopoPdf;
+  window.exportClientsPdf = exportClientsPdf;
   window.wifiPlanZoom = wifiPlanZoom;
   window.wifiPlanFit = wifiPlanFit;
   window.wpResetLayout = wpResetLayout;

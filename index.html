@@ -192,10 +192,12 @@
     <input type="number" id="uplink-threshold" value="3" min="1" max="99" oninput="renderClients()" style="width:52px;text-align:center" class="search-input">
     <label style="font-size:12px;color:var(--text2)">MACs</label>
     <div class="sep"></div>
+    <span id="clients-pdf-status" class="status-bar" style="min-height:18px;align-self:center"></span>
+    <button class="btn btn-sm btn-ghost" onclick="exportClientsPdf()" title="Gefilterte Client-Tabelle als PDF (nur Tabellenblätter)">↓ PDF</button>
     <button class="btn btn-sm btn-danger" onclick="clearClientsData()">Liste leeren</button>
   </div>
   <p style="font-size:11px;color:var(--text3);margin:0 0 10px;line-height:1.45;max-width:920px">Hinweis: <strong>keine Live-Daten</strong> — die Tabelle zeigt den letzten Abgleich („WLAN Clients“ / Switch-MAC). Nach <strong>Status</strong> am Gerät werden Einträge von <strong>offline</strong> Geräten ausgeblendet; ein neuer WLAN-Abgleich leert veraltete Client-Listen.</p>
-  <div class="table-wrap">
+  <div class="table-wrap" id="clients-export-area">
     <div class="table-title">Client Explorer <span class="cnt" id="cnt-clients"></span></div>
     <div style="overflow-x:auto">
       <table id="tbl-clients">

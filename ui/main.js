@@ -20,7 +20,7 @@ import { lmcTest, lmcDisconnect, lmcSync, saveLmcResults, showLmcTab, startRollo
 import { activationCreate, loadActivationTokens, setActivationStatus, activationDelete } from './tabs/lmc.js';
 import { loadAddins, createAddin, uploadAllAddins, openAddinEditor, closeAddinEditor, saveAddin, saveAndUploadAddin, renderAddinVars, insertVarAtCursor, fetchGlobalVars, renderGlobalVarsList, addGlobalVar, syncVarsToCloud, setAddinSearch, setAddinFilterOs } from './tabs/addins.js';
 import { openDeviceDetail, showStab, queryDetail, toggleIfaceAdmin, renderScriptOutputHtml, stopSparkPoll } from './tabs/detail.js';
-import { buildTopoFromStore, renderTopoSvg, topoChangeRoot, topoZoom, topoFit, toggleTraffic, searchTopoMac, clearTopoMacSearch, topoBgDragStart, topoMouseMove, topoMouseUp, topoWheel, topoSetRootFromDetail, topoCloseDetail, syncTopologyAll, syncWdsAll, syncL2tpAll, setClientsFilter, clearClientsData, renderClients, clientsAddMacToNac, clientsRemoveMacFromNac, geraeteSync, resolveTopoNeighbor, topoNodeDragStart, topoNodeClick, openTopoWithMac, trafficEdgeHover, trafficEdgeLeave, exportTopoPdf } from './tabs/topology.js';
+import { buildTopoFromStore, renderTopoSvg, topoChangeRoot, topoZoom, topoFit, toggleTraffic, searchTopoMac, clearTopoMacSearch, topoBgDragStart, topoMouseMove, topoMouseUp, topoWheel, topoSetRootFromDetail, topoCloseDetail, syncTopologyAll, syncWdsAll, syncL2tpAll, setClientsFilter, clearClientsData, renderClients, clientsAddMacToNac, clientsRemoveMacFromNac, geraeteSync, resolveTopoNeighbor, topoNodeDragStart, topoNodeClick, openTopoWithMac, trafficEdgeHover, trafficEdgeLeave, exportTopoPdf, exportClientsPdf } from './tabs/topology.js';
 import { showTab, toggleGroup, initMenuGroups } from './tabs/nav.js';
 import { wifiPlanZoom, wifiPlanFit, wpResetLayout, wpSetBandFilter, wpBgDragStart, wpMouseMove, wpMouseUp, wpWheel, renderWifiPlan } from './tabs/wifi-plan.js';
 import { loadScriptList, renderScriptList, renderScriptDevices, scriptNew, scriptSelectAll, scriptSelectDevicesByLocation, scriptAddCustomIp, scriptSave, scriptDelete, scriptRun } from './tabs/scripting.js';
@@ -216,6 +216,7 @@ window.topoWheel = topoWheel;
 window.topoSetRootFromDetail = topoSetRootFromDetail;
 window.topoCloseDetail = topoCloseDetail;
 window.exportTopoPdf = exportTopoPdf;
+window.exportClientsPdf = exportClientsPdf;
 window.wifiPlanZoom = wifiPlanZoom;
 window.wifiPlanFit = wifiPlanFit;
 window.wpResetLayout = wpResetLayout;

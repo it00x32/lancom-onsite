@@ -89,7 +89,10 @@ function readSettings() {
   return _settingsCache;
 }
 function writeSettings(data) {
-  _settingsCache = { ...DEFAULT_SETTINGS, ...data };
+  const patch = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  // Merge onto current persisted settings so partial POSTs (e.g. lastScanSubnet only)
+  // do not reset omitted keys to DEFAULT_SETTINGS (SNMP v3 passwords would otherwise clear).
+  _settingsCache = { ...readSettings(), ...patch };
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(_settingsCache, null, 2));
 }
 function readDevices() {

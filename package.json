@@ -1,6 +1,6 @@
 {
   "name": "onsite",
-  "version": "0.11.9",
+  "version": "0.11.14",
   "description": "OnSite – lokales SNMP-Dashboard",
   "main": "server.js",
   "bin": {
@@ -20,6 +20,9 @@
   "scripts": {
     "build": "esbuild ui/main.js --bundle --format=iife --outfile=app.js --target=es2020",
     "watch": "esbuild ui/main.js --bundle --format=iife --outfile=app.js --target=es2020 --watch",
+    "check": "npm run build && node --check server.js && node scripts/check-src-syntax.js",
+    "smoke": "bash scripts/smoke.sh",
+    "daemon": "bash scripts/onsite-daemon.sh",
     "start": "node server.js",
     "dev": "npm run build && node server.js",
     "freeradius:up": "docker compose -f docker-compose.freeradius.yml up -d",

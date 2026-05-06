@@ -86,7 +86,7 @@ function requireLicense(req, res, next) {
 }
 
 function registerRoutes(app) {
-  const ALLOWED_WITHOUT_LICENSE = ['/license', '/version'];
+  const ALLOWED_WITHOUT_LICENSE = ['/license', '/version', '/health'];
   app.use('/api', (req, res, next) => {
     if (ALLOWED_WITHOUT_LICENSE.includes(req.path)) return next();
     requireLicense(req, res, next);
@@ -292,6 +292,8 @@ function registerRoutes(app) {
   });
 
   app.get('/api/version',  (req, res) => res.json({ version: APP_VERSION }));
+  app.get('/api/health', (req, res) =>
+    res.json({ ok: true, service: 'onsite', version: APP_VERSION }));
 
   app.get('/api/criteria',  (req, res) => res.json(readCriteria()));
   app.post('/api/criteria', (req, res) => { try { writeCriteria(req.body); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
