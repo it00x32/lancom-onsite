@@ -498,6 +498,20 @@
   <div class="toolbar">
     <span style="font-size:13px;font-weight:700;color:var(--text)">Netzwerkplan</span>
     <select id="topo-root-select" class="topo-select" onchange="topoChangeRoot()" style="min-width:160px;" title="Startgerät (Wurzel)"></select>
+    <label style="font-size:12px;color:var(--text2);white-space:nowrap;margin-left:2px" for="topo-depth-select">Ebenen</label>
+    <select id="topo-depth-select" class="topo-select" onchange="setTopoMaxDepth(this.value)" style="width:88px" title="Ab Startknoten: 1 = nur direkt verbundene Geräte, 2 = zwei Sprünge, … · „Alle“ = gesamter Graph">
+      <option value="0">Alle</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="10">10</option>
+      <option value="12">12</option>
+    </select>
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(1.25)" title="Vergrößern">＋</button>
     <button class="btn btn-sm btn-ghost" onclick="topoZoom(0.8)" title="Verkleinern">－</button>
     <button class="btn btn-sm btn-ghost" onclick="topoFit()" title="Ansicht anpassen">⊡</button>

@@ -141,6 +141,9 @@ let topoMacResults = [];   // [{switchIp, switchName, port, mac, ip}]
 let topoTx = 0, topoTy = 0, topoScale = 1;
 let topoDragNode = null, topoPan = null, topoWasDrag = false;
 let topoRootId = '', topoDetailId = null;
+/** Vor Ebenen-Filter: alle Startknoten-Kandidaten + Gradzahl (für Dropdown / Fallback-Wurzel) */
+let topoSelCandidateIds = [];
+let topoSelRootDeg = {};
 let trafficEnabled = false;
 let trafficData    = {}; // ip → { ifName → { inBps, outBps, speedBps, utilPct } }
 let trafficHistory = {}; // edgeKey → [{inBps, outBps}, ...] (max 12)
@@ -296,6 +299,61 @@ export function buildTopoGraph(lldpMap) {
   });
 }
 
+function topoDefaultRootNonGhost() {
+  const devIds = Object.keys(topoNodes).filter((id) => !topoNodes[id].ghost);
+  if (!devIds.length) return '';
+  const deg = {};
+  devIds.forEach((id) => { deg[id] = 0; });
+  topoEdges.forEach((e) => {
+    if (deg[e.src] !== undefined) deg[e.src]++;
+    if (deg[e.tgt] !== undefined) deg[e.tgt]++;
+  });
+  return [...devIds].sort((a, b) => deg[b] - deg[a])[0] || devIds[0];
+}
+
+/**
+ * Nur den Teilbaum bis maxDepth Kanten (kürzester Pfad) vom Startknoten.
+ * maxDepth 1 = Wurzel + direkt verbundene Knoten; 2 = plus nächster Ring usw.
+ */
+function topoApplyMaxDepth(rootId, maxDepth) {
+  const lim = Math.floor(Number(maxDepth));
+  if (!lim || lim < 1 || lim > 64 || !rootId || !topoNodes[rootId]) return;
+
+  const ids = Object.keys(topoNodes);
+  const adj = {};
+  ids.forEach((id) => { adj[id] = []; });
+  topoEdges.forEach((e) => {
+    if (topoNodes[e.src] && topoNodes[e.tgt]) {
+      adj[e.src].push(e.tgt);
+      adj[e.tgt].push(e.src);
+    }
+  });
+
+  const dist = new Map([[rootId, 0]]);
+  const queue = [rootId];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const u = queue[qi];
+    const du = dist.get(u);
+    if (du >= lim) continue;
+    for (const v of adj[u] || []) {
+      if (!dist.has(v)) {
+        dist.set(v, du + 1);
+        queue.push(v);
+      }
+    }
+  }
+
+  const keep = new Set();
+  dist.forEach((d, id) => {
+    if (d <= lim) keep.add(id);
+  });
+
+  ids.forEach((id) => {
+    if (!keep.has(id)) delete topoNodes[id];
+  });
+  topoEdges = topoEdges.filter((e) => keep.has(e.src) && keep.has(e.tgt));
+}
+
 // ── BFS Tree Layout ───────────────────────────────────────────────────────────
 export function layoutTopo(rootId) {
   const ids = Object.keys(topoNodes);
@@ -355,26 +413,49 @@ export function layoutTopo(rootId) {
 
 // ── Root selector ─────────────────────────────────────────────────────────────
 export function buildTopoSelector() {
-  const devIds = Object.keys(topoNodes).filter(id => !topoNodes[id].ghost);
-  if (!devIds.length) return;
-  if (!devIds.includes(topoRootId)) {
-    const deg = {};
-    devIds.forEach(id => { deg[id] = 0; });
-    topoEdges.forEach(e => { if (deg[e.src]!==undefined) deg[e.src]++; if (deg[e.tgt]!==undefined) deg[e.tgt]++; });
-    topoRootId = [...devIds].sort((a,b) => deg[b]-deg[a])[0] || devIds[0];
+  const cand = (topoSelCandidateIds && topoSelCandidateIds.length)
+    ? [...topoSelCandidateIds]
+    : Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);
+  if (!cand.length) return;
+
+  function labelFor(ip) {
+    const n = topoNodes[ip];
+    if (n?.name) return n.name;
+    const d = S.deviceStore[ip];
+    return d ? (d.name || ip) : ip;
   }
-  const sorted = [...devIds].sort((a,b) => (topoNodes[a].name||'').localeCompare(topoNodes[b].name||''));
+
+  if (!cand.includes(topoRootId)) {
+    topoRootId = [...cand].sort((a, b) => (topoSelRootDeg[b] || 0) - (topoSelRootDeg[a] || 0))[0] || cand[0];
+  }
+  const sorted = [...cand].sort((a, b) => labelFor(a).localeCompare(labelFor(b)));
   const sel = q('topo-root-select');
-  sel.innerHTML = sorted.map(id =>
-    `<option value="${h(id)}"${id===topoRootId?' selected':''}>${h(topoNodes[id].name)}</option>`
+  sel.innerHTML = sorted.map((id) =>
+    `<option value="${h(id)}"${id === topoRootId ? ' selected' : ''}>${h(labelFor(id))}</option>`
   ).join('');
 }
 
 export function topoChangeRoot() {
   topoRootId = q('topo-root-select').value;
+  if (S.topoMaxDepth > 0) {
+    buildTopoFromStore();
+    return;
+  }
   layoutTopo(topoRootId);
   renderTopoSvg();
   setTimeout(topoFit, 50);
+}
+
+/** Ebenen-Limit für den Netzwerkplan (0 = alle). Wird in localStorage gespeichert. */
+export function setTopoMaxDepth(val) {
+  let d = parseInt(String(val), 10);
+  if (!Number.isFinite(d) || d < 0) d = 0;
+  if (d > 64) d = 64;
+  S.topoMaxDepth = d;
+  try { localStorage.setItem('onsite_topo_max_depth', String(d)); } catch (_) {}
+  const sel = q('topo-depth-select');
+  if (sel) sel.value = String(d);
+  buildTopoFromStore();
 }
 
 // ── Theme-aware SVG colours ───────────────────────────────────────────────────
@@ -971,7 +1052,12 @@ export function topoCloseDetail() { q('topo-detail').style.display='none'; topoD
 export function topoSetRootFromDetail() {
   if (!topoDetailId || topoNodes[topoDetailId]?.ghost) return;
   topoRootId = topoDetailId;
-  q('topo-root-select').value = topoRootId;
+  const rs = q('topo-root-select');
+  if (rs) rs.value = topoRootId;
+  if (S.topoMaxDepth > 0) {
+    buildTopoFromStore();
+    return;
+  }
   layoutTopo(topoRootId);
   renderTopoSvg();
   setTimeout(topoFit, 50);
@@ -1640,7 +1726,26 @@ export function buildTopoFromStore() {
     topoEdges = topoEdges.filter(e => !removeIds.has(e.src) && !removeIds.has(e.tgt));
   }
 
+  topoSelCandidateIds = Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);
+  topoSelRootDeg = {};
+  topoSelCandidateIds.forEach((id) => { topoSelRootDeg[id] = 0; });
+  topoEdges.forEach((e) => {
+    if (topoSelRootDeg[e.src] !== undefined) topoSelRootDeg[e.src]++;
+    if (topoSelRootDeg[e.tgt] !== undefined) topoSelRootDeg[e.tgt]++;
+  });
+
+  if (S.topoMaxDepth > 0) {
+    let rootForLimit = topoRootId;
+    if (!topoNodes[rootForLimit] || topoNodes[rootForLimit].ghost) {
+      rootForLimit = topoDefaultRootNonGhost();
+      if (rootForLimit) topoRootId = rootForLimit;
+    }
+    if (rootForLimit) topoApplyMaxDepth(rootForLimit, S.topoMaxDepth);
+  }
+
   buildTopoSelector();
+  const depthSel = q('topo-depth-select');
+  if (depthSel) depthSel.value = String(S.topoMaxDepth);
   layoutTopo(topoRootId);
   renderTopoSvg();
   setTimeout(topoFit, 60);

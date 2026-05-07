@@ -19462,6 +19462,15 @@
         return false;
       }
     })(),
+    /** Netzwerkplan: 0 = ohne Limit, sonst nur Knoten bis N Kanten vom Startknoten (kürzester Pfad) */
+    topoMaxDepth: (() => {
+      try {
+        const v3 = parseInt(localStorage.getItem("onsite_topo_max_depth") || "0", 10);
+        return Number.isFinite(v3) && v3 >= 0 && v3 <= 64 ? v3 : 0;
+      } catch (e2) {
+        return 0;
+      }
+    })(),
     /** Netzwerkplan: nicht verwaltete Knoten (LLDP-„Geist“, L2TP ohne Gerät) ausblenden */
     topoHideUnmanaged: (() => {
       try {
@@ -19779,10 +19788,18 @@
     return detectDeviceType(osStr, model);
   }
   function detectDeviceType(os, sysDescr) {
-    if ((os || "").startsWith("LCOS LX")) return "lx-ap";
-    if ((os || "").startsWith("LCOS SX")) return "switch";
-    if ((os || "").startsWith("LCOS FX")) return "firewall";
-    if ((os || "").startsWith("LCOS")) {
+    let o3 = (os || "").trim();
+    if (!o3 || o3 === "LANCOM") {
+      const desc = (sysDescr || "").toUpperCase();
+      if (desc.includes("LCOS SX")) o3 = "LCOS SX";
+      else if (desc.includes("LCOS LX")) o3 = "LCOS LX";
+      else if (desc.includes("LCOS FX")) o3 = "LCOS FX";
+      else if (desc.includes("LCOS")) o3 = "LCOS";
+    }
+    if (o3.startsWith("LCOS LX")) return "lx-ap";
+    if (o3.startsWith("LCOS SX")) return "switch";
+    if (o3.startsWith("LCOS FX")) return "firewall";
+    if (o3.startsWith("LCOS")) {
       const c4 = state_default.appCriteria || { typeCriteria: [] };
       const desc = (sysDescr || "").toUpperCase();
       for (const rule of c4.typeCriteria) {
@@ -23942,8 +23959,10 @@ Fehler: ${e2.message}`;
     tr.dataset.ip = dev.ip;
     tr.dataset.os = dev.os || "";
     tr.dataset.mac = dev.mac || "";
+    if (known) tr.dataset.storeIp = knownDev.ip;
     if (known) tr.style.cssText = "background:rgba(34,197,94,.07)";
     if (!known) q("btn-rollout-all").style.display = "";
+    const mergeBtn = known && dev.os ? `<button type="button" class="btn btn-sm btn-ghost" onclick="rolloutMergeScanOsFromRow(this)" title="OS und Ger\xE4tetyp in die Ger\xE4teliste schreiben (ohne Rollout/SSH)" style="white-space:nowrap">OS/Typ \xFCbernehmen</button>` : "";
     tr.innerHTML = `
     <td style="font-family:var(--mono);font-size:12px">
       ${h(dev.ip)}
@@ -23954,9 +23973,47 @@ Fehler: ${e2.message}`;
     <td style="font-size:12px;color:var(--text3)">${h(dev.hostname || "\u2013")}</td>
     <td>${dev.os ? `<span class="badge ${OS_BADGE[dev.os] || "badge-gray"}">${h(dev.os)}</span>` : '<span style="font-size:11px;color:var(--text3)">\u2013</span>'}</td>
     <td>
-      ${!known ? `<button class="btn btn-sm" onclick="rolloutSetPassword('${dev.ip}', '${h(dev.os || "")}', '${h(dev.mac || "")}', this)" style="white-space:nowrap">Rollout</button>` : ""}
+      ${!known ? `<button class="btn btn-sm" onclick="rolloutSetPassword('${dev.ip}', '${h(dev.os || "")}', '${h(dev.mac || "")}', this)" style="white-space:nowrap">Rollout</button>` : mergeBtn}
     </td>`;
     tbody.appendChild(tr);
+  }
+  async function rolloutMergeScanOsFromRow(btn) {
+    const tr = btn && btn.closest ? btn.closest("tr") : null;
+    if (!tr) return;
+    const storeIp = (tr.dataset.storeIp || tr.dataset.ip || "").trim();
+    const os = (tr.dataset.os || "").trim();
+    const scanMac = (tr.dataset.mac || "").trim();
+    if (!storeIp) return;
+    if (!os) {
+      setRolloutStatus("Kein Betriebssystem im Scan \u2013 nichts zu \xFCbernehmen.", "error");
+      return;
+    }
+    const existing = state_default.deviceStore[storeIp];
+    if (!existing) {
+      setRolloutStatus("Ger\xE4t nicht in der Ger\xE4teliste.", "error");
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const type = detectDeviceType(os, existing.sysDescr || "");
+      const merged = {
+        ...existing,
+        os,
+        type,
+        online: true,
+        lastSeen: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      if (scanMac && !merged.mac) merged.mac = scanMac;
+      await window.saveDevice?.(merged);
+      await window.loadDevices?.();
+      window.renderDevices?.();
+      setRolloutStatus(`${storeIp}: OS/Typ aus MAC-Scan \xFCbernommen (${os}).`, "ok");
+      const cell = tr.querySelector("td:last-child");
+      if (cell) cell.innerHTML = '<span style="color:var(--green);font-size:11px">\u2713 in Ger\xE4teliste</span>';
+    } catch (e2) {
+      setRolloutStatus(e2.message || String(e2), "error");
+      btn.disabled = false;
+    }
   }
   async function rolloutSetPassword(ip, os, mac, btn) {
     if (!state_default.appSettings.devicePassword) {
@@ -23987,7 +24044,22 @@ Fehler: ${e2.message}`;
       if (d2.ok) {
         let savedOk = false;
         if (d2.snmpDevice) {
-          const entry = buildScanDeviceEntry2(d2.snmpDevice);
+          const snmp = d2.snmpDevice;
+          const httpOs = (os || "").trim();
+          const snmpOs = (snmp.os || "").trim();
+          const mergedOs = snmpOs && snmpOs !== "LANCOM" ? snmpOs : httpOs || snmpOs;
+          let entry = buildScanDeviceEntry2({ ...snmp, os: mergedOs });
+          const existing = state_default.deviceStore[ip];
+          if (existing) entry = { ...existing, ...entry };
+          let inferred = detectDeviceType(entry.os, entry.sysDescr);
+          if (inferred === "unknown" && existing && existing.type && existing.type !== "unknown") {
+            entry.type = existing.type;
+          }
+          if (inferred === "unknown" && existing && existing.os) {
+            entry.os = existing.os;
+            inferred = detectDeviceType(entry.os, entry.sysDescr);
+            if (inferred !== "unknown") entry.type = inferred;
+          }
           await window.saveDevice?.(entry);
           await window.loadDevices?.();
           window.renderDevices?.();
@@ -41028,6 +41100,8 @@ Fehler: ${e2.message}`;
   var topoWasDrag = false;
   var topoRootId = "";
   var topoDetailId = null;
+  var topoSelCandidateIds = [];
+  var topoSelRootDeg = {};
   var trafficEnabled = false;
   var trafficData = {};
   var trafficHistory = {};
@@ -41193,6 +41267,55 @@ Fehler: ${e2.message}`;
       });
     });
   }
+  function topoDefaultRootNonGhost() {
+    const devIds = Object.keys(topoNodes).filter((id) => !topoNodes[id].ghost);
+    if (!devIds.length) return "";
+    const deg = {};
+    devIds.forEach((id) => {
+      deg[id] = 0;
+    });
+    topoEdges.forEach((e2) => {
+      if (deg[e2.src] !== void 0) deg[e2.src]++;
+      if (deg[e2.tgt] !== void 0) deg[e2.tgt]++;
+    });
+    return [...devIds].sort((a3, b2) => deg[b2] - deg[a3])[0] || devIds[0];
+  }
+  function topoApplyMaxDepth(rootId, maxDepth) {
+    const lim = Math.floor(Number(maxDepth));
+    if (!lim || lim < 1 || lim > 64 || !rootId || !topoNodes[rootId]) return;
+    const ids = Object.keys(topoNodes);
+    const adj = {};
+    ids.forEach((id) => {
+      adj[id] = [];
+    });
+    topoEdges.forEach((e2) => {
+      if (topoNodes[e2.src] && topoNodes[e2.tgt]) {
+        adj[e2.src].push(e2.tgt);
+        adj[e2.tgt].push(e2.src);
+      }
+    });
+    const dist = /* @__PURE__ */ new Map([[rootId, 0]]);
+    const queue = [rootId];
+    for (let qi = 0; qi < queue.length; qi++) {
+      const u3 = queue[qi];
+      const du = dist.get(u3);
+      if (du >= lim) continue;
+      for (const v3 of adj[u3] || []) {
+        if (!dist.has(v3)) {
+          dist.set(v3, du + 1);
+          queue.push(v3);
+        }
+      }
+    }
+    const keep = /* @__PURE__ */ new Set();
+    dist.forEach((d2, id) => {
+      if (d2 <= lim) keep.add(id);
+    });
+    ids.forEach((id) => {
+      if (!keep.has(id)) delete topoNodes[id];
+    });
+    topoEdges = topoEdges.filter((e2) => keep.has(e2.src) && keep.has(e2.tgt));
+  }
   function layoutTopo(rootId) {
     const ids = Object.keys(topoNodes);
     if (!ids.length) return {};
@@ -41256,30 +41379,45 @@ Fehler: ${e2.message}`;
     return { level, byLevel, unconnected, maxLvl };
   }
   function buildTopoSelector() {
-    const devIds = Object.keys(topoNodes).filter((id) => !topoNodes[id].ghost);
-    if (!devIds.length) return;
-    if (!devIds.includes(topoRootId)) {
-      const deg = {};
-      devIds.forEach((id) => {
-        deg[id] = 0;
-      });
-      topoEdges.forEach((e2) => {
-        if (deg[e2.src] !== void 0) deg[e2.src]++;
-        if (deg[e2.tgt] !== void 0) deg[e2.tgt]++;
-      });
-      topoRootId = [...devIds].sort((a3, b2) => deg[b2] - deg[a3])[0] || devIds[0];
+    const cand = topoSelCandidateIds && topoSelCandidateIds.length ? [...topoSelCandidateIds] : Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);
+    if (!cand.length) return;
+    function labelFor(ip) {
+      const n2 = topoNodes[ip];
+      if (n2?.name) return n2.name;
+      const d2 = state_default.deviceStore[ip];
+      return d2 ? d2.name || ip : ip;
     }
-    const sorted = [...devIds].sort((a3, b2) => (topoNodes[a3].name || "").localeCompare(topoNodes[b2].name || ""));
+    if (!cand.includes(topoRootId)) {
+      topoRootId = [...cand].sort((a3, b2) => (topoSelRootDeg[b2] || 0) - (topoSelRootDeg[a3] || 0))[0] || cand[0];
+    }
+    const sorted = [...cand].sort((a3, b2) => labelFor(a3).localeCompare(labelFor(b2)));
     const sel = q("topo-root-select");
     sel.innerHTML = sorted.map(
-      (id) => `<option value="${h(id)}"${id === topoRootId ? " selected" : ""}>${h(topoNodes[id].name)}</option>`
+      (id) => `<option value="${h(id)}"${id === topoRootId ? " selected" : ""}>${h(labelFor(id))}</option>`
     ).join("");
   }
   function topoChangeRoot() {
     topoRootId = q("topo-root-select").value;
+    if (state_default.topoMaxDepth > 0) {
+      buildTopoFromStore();
+      return;
+    }
     layoutTopo(topoRootId);
     renderTopoSvg();
     setTimeout(topoFit, 50);
+  }
+  function setTopoMaxDepth(val) {
+    let d2 = parseInt(String(val), 10);
+    if (!Number.isFinite(d2) || d2 < 0) d2 = 0;
+    if (d2 > 64) d2 = 64;
+    state_default.topoMaxDepth = d2;
+    try {
+      localStorage.setItem("onsite_topo_max_depth", String(d2));
+    } catch (_3) {
+    }
+    const sel = q("topo-depth-select");
+    if (sel) sel.value = String(d2);
+    buildTopoFromStore();
   }
   function topoTheme() {
     const dark = document.documentElement.dataset.theme === "dark";
@@ -41818,7 +41956,12 @@ Fehler: ${e2.message}`;
   function topoSetRootFromDetail() {
     if (!topoDetailId || topoNodes[topoDetailId]?.ghost) return;
     topoRootId = topoDetailId;
-    q("topo-root-select").value = topoRootId;
+    const rs = q("topo-root-select");
+    if (rs) rs.value = topoRootId;
+    if (state_default.topoMaxDepth > 0) {
+      buildTopoFromStore();
+      return;
+    }
     layoutTopo(topoRootId);
     renderTopoSvg();
     setTimeout(topoFit, 50);
@@ -42477,7 +42620,26 @@ Fehler: ${e2.message}`;
       });
       topoEdges = topoEdges.filter((e2) => !removeIds.has(e2.src) && !removeIds.has(e2.tgt));
     }
+    topoSelCandidateIds = Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);
+    topoSelRootDeg = {};
+    topoSelCandidateIds.forEach((id) => {
+      topoSelRootDeg[id] = 0;
+    });
+    topoEdges.forEach((e2) => {
+      if (topoSelRootDeg[e2.src] !== void 0) topoSelRootDeg[e2.src]++;
+      if (topoSelRootDeg[e2.tgt] !== void 0) topoSelRootDeg[e2.tgt]++;
+    });
+    if (state_default.topoMaxDepth > 0) {
+      let rootForLimit = topoRootId;
+      if (!topoNodes[rootForLimit] || topoNodes[rootForLimit].ghost) {
+        rootForLimit = topoDefaultRootNonGhost();
+        if (rootForLimit) topoRootId = rootForLimit;
+      }
+      if (rootForLimit) topoApplyMaxDepth(rootForLimit, state_default.topoMaxDepth);
+    }
     buildTopoSelector();
+    const depthSel = q("topo-depth-select");
+    if (depthSel) depthSel.value = String(state_default.topoMaxDepth);
     layoutTopo(topoRootId);
     renderTopoSvg();
     setTimeout(topoFit, 60);
@@ -46658,6 +46820,7 @@ Fortfahren?`)) return;
   window.stopRolloutScan = stopRolloutScan;
   window.rolloutAll = rolloutAll;
   window.rolloutSetPassword = rolloutSetPassword;
+  window.rolloutMergeScanOsFromRow = rolloutMergeScanOsFromRow;
   window.lmcTest = lmcTest;
   window.lmcDisconnect = lmcDisconnect;
   window.lmcSync = lmcSync;
@@ -46687,6 +46850,7 @@ Fortfahren?`)) return;
   window.buildTopoFromStore = buildTopoFromStore;
   window.renderTopoSvg = renderTopoSvg;
   window.topoChangeRoot = topoChangeRoot;
+  window.setTopoMaxDepth = setTopoMaxDepth;
   window.topoZoom = topoZoom;
   window.topoFit = topoFit;
   window.toggleTraffic = toggleTraffic;

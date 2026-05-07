@@ -19,6 +19,13 @@ const S = {
   topoHideAccessPoints: (() => {
     try { return localStorage.getItem('onsite_topo_hide_ap') === '1'; } catch (e) { return false; }
   })(),
+  /** Netzwerkplan: 0 = ohne Limit, sonst nur Knoten bis N Kanten vom Startknoten (kürzester Pfad) */
+  topoMaxDepth: (() => {
+    try {
+      const v = parseInt(localStorage.getItem('onsite_topo_max_depth') || '0', 10);
+      return Number.isFinite(v) && v >= 0 && v <= 64 ? v : 0;
+    } catch (e) { return 0; }
+  })(),
   /** Netzwerkplan: nicht verwaltete Knoten (LLDP-„Geist“, L2TP ohne Gerät) ausblenden */
   topoHideUnmanaged: (() => {
     try { return localStorage.getItem('onsite_topo_hide_unmanaged') === '1'; } catch (e) { return false; }

@@ -153,8 +153,12 @@ function appendRolloutRow(dev) {
   tr.dataset.ip  = dev.ip;
   tr.dataset.os  = dev.os  || '';
   tr.dataset.mac = dev.mac || '';
+  if (known) tr.dataset.storeIp = knownDev.ip;
   if (known) tr.style.cssText = 'background:rgba(34,197,94,.07)';
   if (!known) q('btn-rollout-all').style.display = '';
+  const mergeBtn = known && dev.os
+    ? `<button type="button" class="btn btn-sm btn-ghost" onclick="rolloutMergeScanOsFromRow(this)" title="OS und Gerätetyp in die Geräteliste schreiben (ohne Rollout/SSH)" style="white-space:nowrap">OS/Typ übernehmen</button>`
+    : '';
   tr.innerHTML = `
     <td style="font-family:var(--mono);font-size:12px">
       ${h(dev.ip)}
@@ -165,9 +169,49 @@ function appendRolloutRow(dev) {
     <td style="font-size:12px;color:var(--text3)">${h(dev.hostname || '–')}</td>
     <td>${dev.os ? `<span class="badge ${OS_BADGE[dev.os]||'badge-gray'}">${h(dev.os)}</span>` : '<span style="font-size:11px;color:var(--text3)">–</span>'}</td>
     <td>
-      ${!known ? `<button class="btn btn-sm" onclick="rolloutSetPassword('${dev.ip}', '${h(dev.os||'')}', '${h(dev.mac||'')}', this)" style="white-space:nowrap">Rollout</button>` : ''}
+      ${!known ? `<button class="btn btn-sm" onclick="rolloutSetPassword('${dev.ip}', '${h(dev.os||'')}', '${h(dev.mac||'')}', this)" style="white-space:nowrap">Rollout</button>` : mergeBtn}
     </td>`;
   tbody.appendChild(tr);
+}
+
+/** Bekanntes Gerät: OS/Typ aus HTTP-MAC-Scan in die Geräteliste schreiben (ohne Rollout). */
+export async function rolloutMergeScanOsFromRow(btn) {
+  const tr = btn && btn.closest ? btn.closest('tr') : null;
+  if (!tr) return;
+  const storeIp = (tr.dataset.storeIp || tr.dataset.ip || '').trim();
+  const os = (tr.dataset.os || '').trim();
+  const scanMac = (tr.dataset.mac || '').trim();
+  if (!storeIp) return;
+  if (!os) {
+    setRolloutStatus('Kein Betriebssystem im Scan – nichts zu übernehmen.', 'error');
+    return;
+  }
+  const existing = S.deviceStore[storeIp];
+  if (!existing) {
+    setRolloutStatus('Gerät nicht in der Geräteliste.', 'error');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const type = detectDeviceType(os, existing.sysDescr || '');
+    const merged = {
+      ...existing,
+      os,
+      type,
+      online: true,
+      lastSeen: new Date().toISOString(),
+    };
+    if (scanMac && !merged.mac) merged.mac = scanMac;
+    await window.saveDevice?.(merged);
+    await window.loadDevices?.();
+    window.renderDevices?.();
+    setRolloutStatus(`${storeIp}: OS/Typ aus MAC-Scan übernommen (${os}).`, 'ok');
+    const cell = tr.querySelector('td:last-child');
+    if (cell) cell.innerHTML = '<span style="color:var(--green);font-size:11px">✓ in Geräteliste</span>';
+  } catch (e) {
+    setRolloutStatus(e.message || String(e), 'error');
+    btn.disabled = false;
+  }
 }
 
 export async function rolloutSetPassword(ip, os, mac, btn) {
@@ -201,7 +245,23 @@ export async function rolloutSetPassword(ip, os, mac, btn) {
     if (d.ok) {
       let savedOk = false;
       if (d.snmpDevice) {
-        const entry = buildScanDeviceEntry(d.snmpDevice);
+        const snmp = d.snmpDevice;
+        const httpOs = (os || '').trim();
+        const snmpOs = (snmp.os || '').trim();
+        // SNMP nach Rollout liefert oft nur "LANCOM"; HTTP-MAC-Scan hatte z. B. "LCOS SX 5"
+        const mergedOs = (snmpOs && snmpOs !== 'LANCOM') ? snmpOs : (httpOs || snmpOs);
+        let entry = buildScanDeviceEntry({ ...snmp, os: mergedOs });
+        const existing = S.deviceStore[ip];
+        if (existing) entry = { ...existing, ...entry };
+        let inferred = detectDeviceType(entry.os, entry.sysDescr);
+        if (inferred === 'unknown' && existing && existing.type && existing.type !== 'unknown') {
+          entry.type = existing.type;
+        }
+        if (inferred === 'unknown' && existing && existing.os) {
+          entry.os = existing.os;
+          inferred = detectDeviceType(entry.os, entry.sysDescr);
+          if (inferred !== 'unknown') entry.type = inferred;
+        }
         await window.saveDevice?.(entry);
         await window.loadDevices?.();
         window.renderDevices?.();

@@ -62,10 +62,19 @@ export function inferLmcDeviceType(os, model, lmcTypeRaw) {
 // Gerätetyp aus OS + sysDescr ermitteln
 // LCOS LX/SX/FX sind durch das OS eindeutig – nur für LCOS werden Kriterien geprüft
 export function detectDeviceType(os, sysDescr) {
-  if ((os || '').startsWith('LCOS LX')) return 'lx-ap';
-  if ((os || '').startsWith('LCOS SX')) return 'switch';
-  if ((os || '').startsWith('LCOS FX')) return 'firewall';
-  if ((os || '').startsWith('LCOS')) {
+  let o = (os || '').trim();
+  // SNMP-Scanner liefert bei manchen Geräten nur "LANCOM" (sysObjectId) statt LCOS-Variante
+  if (!o || o === 'LANCOM') {
+    const desc = (sysDescr || '').toUpperCase();
+    if (desc.includes('LCOS SX')) o = 'LCOS SX';
+    else if (desc.includes('LCOS LX')) o = 'LCOS LX';
+    else if (desc.includes('LCOS FX')) o = 'LCOS FX';
+    else if (desc.includes('LCOS')) o = 'LCOS';
+  }
+  if (o.startsWith('LCOS LX')) return 'lx-ap';
+  if (o.startsWith('LCOS SX')) return 'switch';
+  if (o.startsWith('LCOS FX')) return 'firewall';
+  if (o.startsWith('LCOS')) {
     const c = S.appCriteria || { typeCriteria: [] };
     const desc = (sysDescr || '').toUpperCase();
     for (const rule of c.typeCriteria) {
