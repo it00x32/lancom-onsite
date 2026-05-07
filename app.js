@@ -19479,6 +19479,14 @@
         return false;
       }
     })(),
+    /** Netzwerkplan: Knoten ohne LLDP/WDS/L2TP-Kante ausblenden */
+    topoHideIsolated: (() => {
+      try {
+        return localStorage.getItem("onsite_topo_hide_isolated") === "1";
+      } catch (e2) {
+        return false;
+      }
+    })(),
     meshSort: { col: null, dir: 1 },
     l2tpSort: { col: null, dir: 1 },
     roamSort: { col: null, dir: 1 },
@@ -42525,6 +42533,8 @@ Fehler: ${e2.message}`;
     if (hideApCb) hideApCb.checked = !!state_default.topoHideAccessPoints;
     const hideUnmanagedCb = q("topo-hide-unmanaged");
     if (hideUnmanagedCb) hideUnmanagedCb.checked = !!state_default.topoHideUnmanaged;
+    const hideIsolatedCb = q("topo-hide-isolated");
+    if (hideIsolatedCb) hideIsolatedCb.checked = !!state_default.topoHideIsolated;
     topoLldpMap = {};
     Object.values(state_default.deviceStore).forEach((dev) => {
       if (dev.lldpData?.length) topoLldpMap[dev.ip] = dev.lldpData;
@@ -42619,6 +42629,23 @@ Fehler: ${e2.message}`;
         delete topoNodes[id];
       });
       topoEdges = topoEdges.filter((e2) => !removeIds.has(e2.src) && !removeIds.has(e2.tgt));
+    }
+    if (state_default.topoHideIsolated) {
+      const deg = {};
+      Object.keys(topoNodes).forEach((id) => {
+        deg[id] = 0;
+      });
+      topoEdges.forEach((e2) => {
+        if (topoNodes[e2.src] && topoNodes[e2.tgt]) {
+          deg[e2.src] = (deg[e2.src] || 0) + 1;
+          deg[e2.tgt] = (deg[e2.tgt] || 0) + 1;
+        }
+      });
+      const removeIso = new Set(Object.keys(topoNodes).filter((id) => !deg[id]));
+      removeIso.forEach((id) => {
+        delete topoNodes[id];
+      });
+      topoEdges = topoEdges.filter((e2) => topoNodes[e2.src] && topoNodes[e2.tgt]);
     }
     topoSelCandidateIds = Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);
     topoSelRootDeg = {};
@@ -46736,6 +46763,14 @@ Fortfahren?`)) return;
     }
     buildTopoFromStore();
   }
+  function setTopoHideIsolated(on) {
+    state_default.topoHideIsolated = !!on;
+    try {
+      localStorage.setItem("onsite_topo_hide_isolated", on ? "1" : "0");
+    } catch (e2) {
+    }
+    buildTopoFromStore();
+  }
   window.S = state_default;
   window.toggleTheme = toggleTheme;
   window.showTab = showTab;
@@ -46857,6 +46892,7 @@ Fortfahren?`)) return;
   window.setTopoLocFilter = setTopoLocFilter;
   window.setTopoHideAccessPoints = setTopoHideAccessPoints;
   window.setTopoHideUnmanaged = setTopoHideUnmanaged;
+  window.setTopoHideIsolated = setTopoHideIsolated;
   window.searchTopoMac = searchTopoMac;
   window.clearTopoMacSearch = clearTopoMacSearch;
   window.topoBgDragStart = topoBgDragStart;

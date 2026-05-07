@@ -83,6 +83,11 @@ function setTopoHideUnmanaged(on) {
   try { localStorage.setItem('onsite_topo_hide_unmanaged', on ? '1' : '0'); } catch (e) {}
   buildTopoFromStore();
 }
+function setTopoHideIsolated(on) {
+  S.topoHideIsolated = !!on;
+  try { localStorage.setItem('onsite_topo_hide_isolated', on ? '1' : '0'); } catch (e) {}
+  buildTopoFromStore();
+}
 
 // Expose state object for inline handlers that reference vlans[i] etc.
 window.S = S;
@@ -209,6 +214,7 @@ window.toggleTraffic = toggleTraffic;
 window.setTopoLocFilter = setTopoLocFilter;
 window.setTopoHideAccessPoints = setTopoHideAccessPoints;
 window.setTopoHideUnmanaged = setTopoHideUnmanaged;
+window.setTopoHideIsolated = setTopoHideIsolated;
 window.searchTopoMac = searchTopoMac;
 window.clearTopoMacSearch = clearTopoMacSearch;
 window.topoBgDragStart = topoBgDragStart;

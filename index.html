@@ -529,6 +529,10 @@
       <input type="checkbox" id="topo-hide-unmanaged" onchange="setTopoHideUnmanaged(this.checked)" style="cursor:pointer;margin:0">
       Nicht verwaltete Geräte ausblenden
     </label>
+    <label class="topo-toolbar-checkbox" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none" title="Geräte ohne LLDP-, WDS- oder L2TP-Verbindung im aktuellen Graphen ausblenden (einzelne Inseln)">
+      <input type="checkbox" id="topo-hide-isolated" onchange="setTopoHideIsolated(this.checked)" style="cursor:pointer;margin:0">
+      Geräte ohne Verbindung ausblenden
+    </label>
     <div style="position:relative;display:flex;align-items:center">
       <input id="topo-mac-search" class="search-input" placeholder="MAC / IP suchen…" oninput="searchTopoMac(this.value)" style="width:170px;padding-right:24px" title="MAC-Adresse oder IP im Netzwerkplan suchen">
       <span id="topo-mac-clear" onclick="clearTopoMacSearch()" style="display:none;position:absolute;right:6px;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="Suche löschen">✕</span>

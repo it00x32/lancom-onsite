@@ -1653,6 +1653,8 @@ export function buildTopoFromStore() {
   if (hideApCb) hideApCb.checked = !!S.topoHideAccessPoints;
   const hideUnmanagedCb = q('topo-hide-unmanaged');
   if (hideUnmanagedCb) hideUnmanagedCb.checked = !!S.topoHideUnmanaged;
+  const hideIsolatedCb = q('topo-hide-isolated');
+  if (hideIsolatedCb) hideIsolatedCb.checked = !!S.topoHideIsolated;
 
   // LLDP edges
   topoLldpMap = {};
@@ -1724,6 +1726,20 @@ export function buildTopoFromStore() {
     const removeIds = new Set(Object.keys(topoNodes).filter(id => topoNodes[id]?.ghost));
     removeIds.forEach(id => { delete topoNodes[id]; });
     topoEdges = topoEdges.filter(e => !removeIds.has(e.src) && !removeIds.has(e.tgt));
+  }
+
+  if (S.topoHideIsolated) {
+    const deg = {};
+    Object.keys(topoNodes).forEach((id) => { deg[id] = 0; });
+    topoEdges.forEach((e) => {
+      if (topoNodes[e.src] && topoNodes[e.tgt]) {
+        deg[e.src] = (deg[e.src] || 0) + 1;
+        deg[e.tgt] = (deg[e.tgt] || 0) + 1;
+      }
+    });
+    const removeIso = new Set(Object.keys(topoNodes).filter((id) => !deg[id]));
+    removeIso.forEach((id) => { delete topoNodes[id]; });
+    topoEdges = topoEdges.filter((e) => topoNodes[e.src] && topoNodes[e.tgt]);
   }
 
   topoSelCandidateIds = Object.keys(topoNodes).filter((id) => !topoNodes[id]?.ghost);

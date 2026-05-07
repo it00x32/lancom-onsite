@@ -30,6 +30,10 @@ const S = {
   topoHideUnmanaged: (() => {
     try { return localStorage.getItem('onsite_topo_hide_unmanaged') === '1'; } catch (e) { return false; }
   })(),
+  /** Netzwerkplan: Knoten ohne LLDP/WDS/L2TP-Kante ausblenden */
+  topoHideIsolated: (() => {
+    try { return localStorage.getItem('onsite_topo_hide_isolated') === '1'; } catch (e) { return false; }
+  })(),
   meshSort: { col: null, dir: 1 },
   l2tpSort: { col: null, dir: 1 },
   roamSort: { col: null, dir: 1 },
